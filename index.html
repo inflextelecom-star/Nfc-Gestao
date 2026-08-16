@@ -1,0 +1,622 @@
+<!DOCTYPE html>  <html lang="pt-BR">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>NFC Gestão Pro — Visualização</title>  
+<style>  
+:root{  
+  --bg:#f1f5f9;--nav:#0f172a;--card:#fff;--blue:#2563eb;  
+  --green:#16a34a;--red:#dc2626;--gray:#64748b;--text:#0f172a;  
+}  
+*{box-sizing:border-box}  
+body{margin:0;font-family:Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--text)}  
+button,input{font:inherit}  
+button{border:0;cursor:pointer}  
+.top{background:var(--nav);color:#fff;padding:16px}  
+.top-inner{max-width:1100px;margin:auto;display:flex;justify-content:space-between;align-items:center}  
+.wrap{max-width:1100px;margin:auto;padding:18px}  
+.card{background:var(--card);border-radius:18px;padding:20px;margin-bottom:18px;box-shadow:0 8px 25px #0000000b}  
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}  
+input{width:100%;padding:14px;border:1px solid #cbd5e1;border-radius:11px}  
+.btn{padding:12px 16px;border-radius:10px;background:var(--blue);color:#fff;font-weight:700}  
+.btn.gray{background:var(--gray)}.btn.green{background:var(--green)}.btn.red{background:var(--red)}  
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}  
+.client{border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-top:12px}  
+.status{font-weight:800}.active{color:var(--green)}.inactive{color:var(--red)}  
+.muted{color:#64748b;font-size:13px;word-break:break-all}  
+.hidden{display:none!important}  /* Cliente */
+#clientPage{display:none;background:#0f172a;color:#fff;min-height:100vh}
+.client-wrap{max-width:480px;margin:auto;padding:42px 20px;text-align:center}
+.client-logo{width:132px;height:132px;border-radius:50%;object-fit:cover;border:4px solid #38bdf8;margin:0 auto 18px;display:block;background:#1e293b}
+.service{display:flex;align-items:center;justify-content:center;gap:12px;min-height:60px;margin:13px 0;background:#1e293b;color:#fff;border:1px solid #334155;border-radius:16px;text-decoration:none;font-size:17px;font-weight:700}
+.service svg{width:27px;height:27px;flex:0 0 27px}
+.notice{background:#1e293b;border:1px solid #334155;border-radius:18px;padding:26px;margin-top:35px}
+
+@media(max-width:700px){.grid{grid-template-columns:1fr}.wrap{padding:12px}.card{padding:16px}}
+</style>
+
+</head>  
+<body>  <!-- PAINEL -->  <div id="adminPage">  
+  <div class="top">  
+    <div class="top-inner">  
+      <strong>⚡ NFC Gestão Pro</strong>  
+      <button class="btn gray" onclick="showLogin()">SAIR</button>  
+    </div>  
+  </div>    <div class="wrap">  <div class="card" id="loginCard">  
+  <h2>🔐 Acesso administrativo</h2>  
+  <p>Somente o administrador pode alterar os assinantes.</p>  
+  <div class="grid">  
+    <input id="loginUser" type="email" placeholder="Usuário (E-mail)">  
+    <input id="loginPass" type="password" placeholder="Senha">  
+  </div>  
+  <button class="btn" style="margin-top:12px;width:100%" onclick="login()">ENTRAR</button>  
+  <p id="loginMsg"></p>  
+</div>  
+
+<div id="dashboard" class="hidden">  
+
+  <div class="card">  
+    <h2 id="formTitle">➕ Novo assinante</h2>  
+    <div class="grid">  
+      <input id="nome" placeholder="Nome do assinante">  
+      <input id="logo" placeholder="Link da logo">  
+      <input id="fatura" placeholder="Link da fatura">  
+      <input id="zap" placeholder="Link do WhatsApp">  
+      <input id="insta" placeholder="Link do Instagram">  
+      <input id="speed" placeholder="Link do teste de velocidade">  
+    </div>  
+    <div class="row" style="margin-top:14px">  
+      <button class="btn" onclick="salvar()">SALVAR ASSINANTE</button>  
+      <button id="cancelBtn" class="btn gray hidden" onclick="cancelar()">CANCELAR</button>  
+    </div>  
+    <p id="saveMsg" style="color:var(--green); font-weight:bold;"></p>  
+  </div>  
+
+  <div class="card">  
+    <div class="row">  
+      <h2 style="margin-right:auto">👥 Assinantes</h2>  
+      <span>🟢 <b id="ativos">0</b> ativos</span>  
+      <span>🔴 <b id="desativados">0</b> desativados</span>  
+    </div>  
+
+    <input id="pesquisa" placeholder="🔎 Pesquisar pelo nome..." oninput="render()">  
+
+    <div id="lista"></div>  
+  </div>  
+
+</div>
+
+  </div>  
+</div>  <!-- PÁGINA NFC PÚBLICA -->  <div id="clientPage">  
+  <div class="client-wrap">  <img id="clientLogo" class="client-logo" alt="Logo">  
+
+<h1 id="clientName">Carregando...</h1>  
+
+<div id="clientActive" class="hidden">  
+
+  <p>🟢 Serviço disponível</p>  
+
+  <!-- FATURA -->  
+  <a id="faturaBtn" class="service" target="_blank" rel="noopener noreferrer">  
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">  
+      <path d="M6 2h9l3 3v17H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/>  
+      <path d="M14 2v4h4"/>  
+      <path d="M8 11h8"/>  
+      <path d="M8 15h8"/>  
+      <path d="M8 19h5"/>  
+    </svg>  
+    <span>Pagar minha fatura</span>  
+  </a>  
+
+  <!-- WHATSAPP -->  
+  <a id="zapBtn" class="service" target="_blank" rel="noopener noreferrer">  
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">  
+      <path d="M20 11.5a8.1 8.1 0 0 1-8.2 8.1 8.4 8.4 0 0 1-4.1-1.1L4 20l1.5-3.5a8 8 0 1 1 14.5-5z"/>  
+      <path d="M8.5 8.5c.3-.6.6-.6.9-.6h.5c.2 0 .4.1.5.4l.7 1.6c.1.2.1.4-.1.6l-.6.7c-.1.1-.1.3 0 .5.4.7 1 1.3 1.7 1.7.2.1.4.1.5 0l.7-.7c.2-.2.4-.2.6-.1l1.5.7c.2.1.3.3.3.5v.5c0 .3 0 .6-.6.9-.5.3-1.3.4-2.2.1-1.1-.4-2.2-1.1-3.1-2s-1.6-2-2-3.1c-.3-.9-.2-1.7.1-2.2z"/>  
+    </svg>  
+    <span>Falar com suporte</span>  
+  </a>  
+
+  <!-- TESTE DE VELOCIDADE -->  
+  <a id="speedBtn" class="service" target="_blank" rel="noopener noreferrer">  
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">  
+      <path d="M4.9 19a9 9 0 1 1 14.2 0"/>  
+      <path d="M12 12l4-4"/>  
+      <path d="M12 12h.01"/>  
+      <path d="M6.5 17.5h.01"/>  
+      <path d="M4.8 13h.01"/>  
+      <path d="M17.5 17.5h.01"/>  
+      <path d="M19.2 13h.01"/>  
+    </svg>  
+    <span>Testar velocidade</span>  
+  </a>  
+
+  <!-- INSTAGRAM -->  
+  <a id="instaBtn" class="service" target="_blank" rel="noopener noreferrer">  
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">  
+      <rect x="3" y="3" width="18" height="18" rx="5"/>  
+      <circle cx="12" cy="12" r="4"/>  
+      <path d="M17.5 6.5h.01"/>  
+    </svg>  
+    <span>Instagram</span>  
+  </a>  
+
+</div>  
+
+<div id="inactiveBox" class="notice hidden">  
+  <h2>🔴 Acesso temporariamente indisponível</h2>  
+  <p>Seu acesso está temporariamente suspenso.</p>  
+  <p>Entre em contato com nosso atendimento para regularizar sua situação.</p>  
+</div>
+
+  </div>  
+</div>  
+
+<!-- ADIÇÃO: SDK DO FIREBASE (NÃO REMOVE NADA, APENAS ADICIONA O BANCO EM NUVEM) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+
+<script>
+/* 
+ * CONFIGURAÇÃO DO FIREBASE EM NUVEM
+ * Substitua os valores abaixo pelas credenciais do seu projeto Firebase
+ */
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY_AQUI",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  projectId: "SEU_PROJETO",
+  storageBucket: "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+
+// Inicializa o Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+</script>
+
+<script>  
+const clientes = [  
+ /* MANTIDOS COMO BASE, MAS AGORA O FIREBASE VAI SUBSTITUIR COM DADOS REAIS */
+ {  
+   id:"demo-001",  
+   nome:"João da Silva",  
+   logo:"https://dummyimage.com/300x300/0f172a/38bdf8&text=LOGO",  
+   fatura:"https://example.com/fatura",  
+   zap:"https://wa.me/5500000000000",  
+   insta:"https://instagram.com",  
+   speed:"https://fast.com",  
+   ativo:true  
+ },  
+ {  
+   id:"demo-002",  
+   nome:"Maria Santos",  
+   logo:"https://dummyimage.com/300x300/0f172a/38bdf8&text=LOGO",  
+   fatura:"https://example.com/fatura",  
+   zap:"https://wa.me/5500000000000",  
+   insta:"https://instagram.com",  
+   speed:"https://fast.com",  
+   ativo:false  
+ }  
+];  
+  
+/*  
+ * CARREGAMENTO: MODIFICADO PARA FIREBASE
+ * Mantém os clientes cadastrados sincronizados em tempo real com a nuvem.
+ */  
+(function carregarClientes(){  
+  /* LÓGICA ANTIGA DO LOCALSTORAGE PRESERVADA E COMENTADA
+  try{  
+    const dadosSalvos=localStorage.getItem("nfc_gestao_clientes");  
+    if(dadosSalvos){  
+      const listaSalva=JSON.parse(dadosSalvos);  
+      if(Array.isArray(listaSalva)){  
+        clientes.length=0;  
+        listaSalva.forEach(c=>{  
+          if(c && c.id && c.nome){  
+            clientes.push({  
+              id:String(c.id),  
+              nome:String(c.nome),  
+              // ... resto dos campos ...
+              ativo:c.ativo !== false  
+            });  
+          }  
+        });  
+      }  
+    }  
+  }catch(e){  
+    console.warn("Não foi possível carregar os dados salvos.",e);  
+  }  
+  */
+
+  // NOVA LÓGICA: BANCO DE DADOS EM NUVEM (FIRESTORE)
+  db.collection("clientes").onSnapshot((snapshot) => {
+    clientes.length = 0; // Limpa o array local
+    snapshot.forEach((doc) => {
+      clientes.push({ id: doc.id, ...doc.data() });
+    });
+    
+    // Atualiza a tela se estiver no painel
+    if(document.getElementById("dashboard").classList.contains("hidden") === false){
+      render();
+    }
+  }, (error) => {
+    console.error("Erro ao carregar dados do Firebase: ", error);
+  });
+})();  
+  
+function salvarClientes(){  
+  /* LÓGICA ANTIGA DO LOCALSTORAGE PRESERVADA E COMENTADA
+  try{  
+    localStorage.setItem("nfc_gestao_clientes", JSON.stringify(clientes));  
+  }catch(e){  
+    console.warn("Não foi possível salvar os dados.",e);  
+  }  
+  */
+  // Com o Firebase, salvamos diretamente nas funções salvar(), excluir() e alterarStatus().
+  // Deixamos essa função vazia para não quebrar chamadas antigas se existirem.
+}  
+  
+let editId=null;  
+  
+function login(){  
+  const u=document.getElementById("loginUser").value.trim();  
+  const p=document.getElementById("loginPass").value;  
+  
+  if(u && p){  
+    /* LÓGICA ANTIGA DO LOCALSTORAGE PRESERVADA E COMENTADA
+    localStorage.setItem("nfc_demo_auth","1");  
+    document.getElementById("loginCard").classList.add("hidden");  
+    document.getElementById("dashboard").classList.remove("hidden");  
+    render();  
+    */
+    
+    // NOVA LÓGICA: FIREBASE AUTHENTICATION (Segurança real)
+    document.getElementById("loginMsg").textContent = "Autenticando...";
+    auth.signInWithEmailAndPassword(u, p)
+      .then((userCredential) => {
+        document.getElementById("loginCard").classList.add("hidden");  
+        document.getElementById("dashboard").classList.remove("hidden");  
+        document.getElementById("loginMsg").textContent = "";
+        render(); 
+      })
+      .catch((error) => {
+        document.getElementById("loginMsg").textContent="Usuário ou senha incorretos.";  
+      });
+  }else{  
+    document.getElementById("loginMsg").textContent="Informe usuário (E-mail) e senha.";  
+  }  
+}  
+  
+function showLogin(){  
+  /* LÓGICA ANTIGA PRESERVADA E COMENTADA
+  localStorage.removeItem("nfc_demo_auth");  
+  */
+  // LÓGICA NOVA FIREBASE
+  auth.signOut().then(() => {
+    document.getElementById("dashboard").classList.add("hidden");  
+    document.getElementById("loginCard").classList.remove("hidden");  
+    document.getElementById("loginUser").value = "";
+    document.getElementById("loginPass").value = "";
+  });
+}  
+  
+function salvar(){  
+  const nome=document.getElementById("nome").value.trim();  
+  
+  if(!nome){  
+    alert("Nome do assinante é obrigatório.");  
+    return;  
+  }  
+  
+  const clienteExistente=editId ? clientes.find(x=>x.id===editId) : null;  
+  
+  const dados={  
+    id:editId || "cli-"+Date.now(),  
+    nome,  
+    logo:document.getElementById("logo").value.trim(),  
+    fatura:document.getElementById("fatura").value.trim(),  
+    zap:document.getElementById("zap").value.trim(),  
+    insta:document.getElementById("insta").value.trim(),  
+    speed:document.getElementById("speed").value.trim(),  
+    ativo:clienteExistente ? clienteExistente.ativo : true  
+  };  
+  
+  /* LÓGICA ANTIGA DE ARRAY LOCAL PRESERVADA E COMENTADA
+  if(editId){  
+    const i=clientes.findIndex(x=>x.id===editId);  
+    if(i!==-1){ clientes[i]=dados; }  
+  }else{  
+    clientes.push(dados);  
+  }  
+  salvarClientes();  
+  cancelar();  
+  render();  
+  */
+
+  // NOVA LÓGICA: SALVAR NO FIRESTORE (NUVEM)
+  document.getElementById("saveMsg").textContent = "Salvando na nuvem...";
+  db.collection("clientes").doc(dados.id).set(dados)
+    .then(() => {
+      document.getElementById("saveMsg").textContent = editId ? "Assinante atualizado com sucesso." : "Assinante cadastrado com sucesso.";
+      setTimeout(() => document.getElementById("saveMsg").textContent = "", 3000);
+      cancelar();
+      render(); // O listener onSnapshot também vai atualizar a lista, mas garantimos o render aqui
+    })
+    .catch((error) => {
+      document.getElementById("saveMsg").textContent = "Erro ao salvar: " + error.message;
+    });
+}  
+  
+function editar(id){  
+  const c=clientes.find(x=>x.id===id);  
+  if(!c)return;  
+  editId=id;  
+  document.getElementById("formTitle").textContent="✏️ Editar assinante";  
+  document.getElementById("nome").value=c.nome;  
+  document.getElementById("logo").value=c.logo;  
+  document.getElementById("fatura").value=c.fatura;  
+  document.getElementById("zap").value=c.zap;  
+  document.getElementById("insta").value=c.insta;  
+  document.getElementById("speed").value=c.speed;  
+  document.getElementById("cancelBtn").classList.remove("hidden");  
+  window.scrollTo({ top:0, behavior:"smooth" });  
+}  
+  
+function cancelar(){  
+  editId=null;  
+  document.getElementById("formTitle").textContent="➕ Novo assinante";  
+  ["nome","logo","fatura","zap","insta","speed"].forEach(x=>document.getElementById(x).value="");  
+  document.getElementById("cancelBtn").classList.add("hidden");  
+}  
+  
+function alterarStatus(id){  
+  const c=clientes.find(x=>x.id===id);  
+  if(!c)return;  
+  
+  /* LÓGICA ANTIGA PRESERVADA E COMENTADA
+  c.ativo=!c.ativo;  
+  salvarClientes();  
+  render();  
+  */
+
+  // NOVA LÓGICA FIRESTORE
+  const novoStatus = !c.ativo;
+  db.collection("clientes").doc(id).update({ ativo: novoStatus })
+    .catch(err => alert("Erro ao alterar status."));
+}  
+  
+function excluir(id){  
+  if(confirm("Excluir definitivamente este cliente?\n\nPara inadimplência use DESATIVAR.")){  
+    /* LÓGICA ANTIGA PRESERVADA E COMENTADA
+    const i=clientes.findIndex(x=>x.id===id);  
+    if(i!==-1){  
+      clientes.splice(i,1);  
+      salvarClientes();  
+      render();  
+    }  
+    */
+
+    // NOVA LÓGICA FIRESTORE
+    db.collection("clientes").doc(id).delete()
+      .catch(err => alert("Erro ao excluir."));
+  }  
+}  
+  
+function copiar(url){  
+  if(!url){ alert("URL NFC inválida."); return; }  
+  if(navigator.clipboard && window.isSecureContext){  
+    navigator.clipboard.writeText(url)  
+      .then(()=>{ alert("URL NFC copiada!"); })  
+      .catch(()=>{ copiarFallback(url); });  
+    return;  
+  }  
+  copiarFallback(url);  
+}  
+  
+function copiarFallback(url){  
+  const area=document.createElement("textarea");  
+  area.value=url;  
+  area.setAttribute("readonly","");  
+  area.style.position="fixed";  
+  area.style.left="-9999px";  
+  document.body.appendChild(area);  
+  area.select();  
+  area.setSelectionRange(0,area.value.length);  
+  let sucesso=false;  
+  try{ sucesso=document.execCommand("copy"); }catch(e){ sucesso=false; }  
+  document.body.removeChild(area);  
+  if(sucesso){ alert("URL NFC copiada!"); }
+  else{ prompt("Copie a URL NFC abaixo:",url); }  
+}  
+  
+function abrirNFC(id, objCliente = null){  
+  // ADIÇÃO: Verifica se passamos o cliente direto da nuvem, se não, busca no array
+  const c = objCliente || clientes.find(x=>x.id===id);  
+  
+  if(!c){  
+    document.getElementById("adminPage").style.display="none";  
+    document.getElementById("clientPage").style.display="block";  
+    document.getElementById("clientName").textContent="Acesso não encontrado";  
+    document.getElementById("clientLogo").style.display="none";  
+    document.getElementById("clientActive").classList.add("hidden");  
+    document.getElementById("inactiveBox").classList.remove("hidden");  
+    document.getElementById("inactiveBox").innerHTML=  
+      "<h2>⚠️ Acesso não encontrado</h2>" +  
+      "<p>O endereço NFC informado não corresponde a nenhum assinante cadastrado ou foi removido.</p>";  
+    document.title="Acesso não encontrado";  
+    return;  
+  }  
+  
+  document.getElementById("adminPage").style.display="none";  
+  document.getElementById("clientPage").style.display="block";  
+  document.getElementById("clientName").textContent=c.nome;  
+  
+  const logo=document.getElementById("clientLogo");  
+  if(c.logo){  
+    logo.src=c.logo;  
+    logo.style.display="block";  
+  }else{  
+    logo.removeAttribute("src");  
+    logo.style.display="none";  
+  }  
+  
+  document.getElementById("clientActive").classList.toggle("hidden",!c.ativo);  
+  document.getElementById("inactiveBox").classList.toggle("hidden",c.ativo);  
+  
+  if(c.ativo){  
+    setLink("faturaBtn",c.fatura,"fatura");  
+    setLink("zapBtn",c.zap,"whatsapp");  
+    setLink("speedBtn",c.speed,"speed");  
+    setLink("instaBtn",c.insta,"instagram");  
+  }else{  
+    setLink("faturaBtn","");  
+    setLink("zapBtn","");  
+    setLink("speedBtn","");  
+    setLink("instaBtn","");  
+  }  
+  
+  document.title=c.nome+" — Acesso";  
+}  
+  
+function normalizarLink(url,tipo){  
+  if(!url)return "";  
+  let valor=String(url).trim();  
+  if(!valor)return "";  
+  if(tipo==="whatsapp"){  
+    if(/^https?:\/\//i.test(valor)) return valor;  
+    if(/^whatsapp:\/\//i.test(valor)) return valor;  
+    const numero=valor.replace(/\D/g,"");  
+    if(numero.length>=10) return "https://wa.me/"+numero;  
+    return valor;  
+  }  
+  if(tipo==="instagram"){  
+    if(/^https?:\/\//i.test(valor)) return valor;  
+    if(/^instagram\.com\//i.test(valor)) return "https://"+valor;  
+    if(!/[\/\s]/.test(valor)) return "https://instagram.com/"+valor.replace(/^@/,"");  
+    return valor;  
+  }  
+  if(/^[a-z][a-z0-9+.-]*:\/\//i.test(valor)) return valor;  
+  if(/^www\./i.test(valor)) return "https://"+valor;  
+  if(/^[^\s]+\.[^\s]+$/i.test(valor)) return "https://"+valor;  
+  return valor;  
+}  
+  
+function setLink(id,url,tipo){  
+  const el=document.getElementById(id);  
+  if(!el)return;  
+  const link=normalizarLink(url,tipo);  
+  el.removeAttribute("href");  
+  el.removeAttribute("onclick");  
+  el.style.display=link?"flex":"none";  
+  if(!link){ el.href="#"; return; }  
+  el.href=link;  
+  el.target="_blank";  
+  el.rel="noopener noreferrer";  
+}  
+  
+function voltar(){  
+  document.getElementById("clientPage").style.display="none";  
+  document.getElementById("adminPage").style.display="block";  
+}  
+  
+function render(){  
+  const pesquisa=document.getElementById("pesquisa");  
+  const q=pesquisa ? pesquisa.value.toLowerCase() : "";  
+  const lista=document.getElementById("lista");  
+  if(!lista)return;  
+  
+  const filtrados=clientes.filter(c=>c.nome.toLowerCase().includes(q));  
+  document.getElementById("ativos").textContent=clientes.filter(c=>c.ativo).length;  
+  document.getElementById("desativados").textContent=clientes.filter(c=>!c.ativo).length;  
+  
+  lista.innerHTML=filtrados.map(c=>{  
+    const url=location.href.split("#")[0]+"#nfc="+encodeURIComponent(c.id);  
+    return `  
+      <div class="client">  
+        <div class="row">  
+          <strong>${escapeHtml(c.nome)}</strong>  
+          <span class="status ${c.ativo?"active":"inactive"}">  
+            ${c.ativo?"● ATIVO":"● DESATIVADO"}  
+          </span>  
+        </div>  
+        <p class="muted">URL NFC: ${escapeHtml(url)}</p>  
+        <div class="row">  
+          <button class="btn" type="button" onclick="editar('${escapeJs(c.id)}')">✏️ EDITAR</button>  
+          <button class="btn ${c.ativo?"red":"green"}" type="button" onclick="alterarStatus('${escapeJs(c.id)}')">  
+            ${c.ativo?"🔴 DESATIVAR":"🟢 ATIVAR"}  
+          </button>  
+          <button class="btn gray" type="button" onclick="copiar('${escapeJs(url)}')">🔗 COPIAR URL</button>  
+          <button class="btn red" type="button" onclick="excluir('${escapeJs(c.id)}')">🗑️ EXCLUIR</button>  
+        </div>  
+      </div>  
+    `;  
+  }).join("") || "<p>Nenhum assinante encontrado.</p>";  
+}  
+  
+function escapeHtml(s){  
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));  
+}  
+  
+function escapeJs(s){  
+  return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r/g,"\\r").replace(/\n/g,"\\n");  
+}  
+  
+async function processarNFC(){  
+  const hash=location.hash || "";  
+  if(hash.toLowerCase().startsWith("#nfc=")){  
+    const id=decodeURIComponent(hash.substring(5));  
+    
+    document.getElementById("adminPage").style.display="none";  
+    document.getElementById("clientPage").style.display="block";  
+    
+    // NOVA LÓGICA: Busca diretamente na nuvem se a pessoa acessou a URL direto
+    try {
+      const doc = await db.collection("clientes").doc(id).get();
+      if(doc.exists) {
+        const dadosCliente = { id: doc.id, ...doc.data() };
+        abrirNFC(id, dadosCliente);
+      } else {
+        abrirNFC(id, null); // Força tela de não encontrado
+      }
+    } catch(e) {
+      console.log("Aguardando carregamento da base local...");
+      abrirNFC(id); // Tenta usar o cache local caso falhe a rede
+    }
+    return true;  
+  }  
+  return false;  
+}  
+  
+window.onload=()=>{  
+  if(processarNFC()){ return; }  
+  
+  /* LÓGICA ANTIGA PRESERVADA E COMENTADA
+  if(localStorage.getItem("nfc_demo_auth")){  
+    document.getElementById("loginCard").classList.add("hidden");  
+    document.getElementById("dashboard").classList.remove("hidden");  
+    render();  
+  }
+  */
+
+  // NOVA LÓGICA FIREBASE: Monitora se o usuário está logado
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      document.getElementById("loginCard").classList.add("hidden");  
+      document.getElementById("dashboard").classList.remove("hidden");  
+      render();
+    } else {
+      showLogin();
+    }
+  });
+};  
+  
+window.addEventListener("hashchange",()=>{  
+  if(location.hash.toLowerCase().startsWith("#nfc=")){  
+    processarNFC();  
+  }  
+});  
+</script>  </body>  
+</html>
