@@ -1,1 +1,8271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFC Gestão Pro — Visualização</title>
 
+<!-- =====================================================
+     BARREIRA DE PRIMEIRA PINTURA
+     NFC + ÁREA DO PROVEDOR
+     ===================================================== -->
+<script>
+(function(){
+
+  try{
+
+    var hash =
+      window.location.hash || "";
+
+    var hashLower =
+      hash.toLowerCase();
+
+    if(
+      hashLower.indexOf("#nfc=") === 0
+    ){
+
+      document.documentElement.classList.add(
+        "nfc-route"
+      );
+
+    }
+
+    if(
+      hashLower.indexOf("#provedor=") === 0
+    ){
+
+      document.documentElement.classList.add(
+        "provedor-route"
+      );
+
+    }
+
+  }catch(error){
+
+    /*
+    Falha silenciosa proposital.
+    O restante da aplicação continua normalmente.
+    */
+
+  }
+
+})();
+</script>
+
+<style>
+:root{
+  --bg:#f1f5f9;
+  --nav:#0f172a;
+  --card:#fff;
+  --blue:#2563eb;
+  --green:#16a34a;
+  --red:#dc2626;
+  --gray:#64748b;
+  --text:#0f172a;
+  --orange:#ea580c;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  background:#f1f5f9;
+}
+
+/*
+=========================================================
+BARREIRA VISUAL DA ROTA NFC
+=========================================================
+*/
+
+html.nfc-route{
+  background:#020617;
+}
+
+html.nfc-route body{
+  background:#020617;
+}
+
+html.nfc-route #adminPage{
+  display:none!important;
+}
+
+html.nfc-route #painelProvedor{
+  display:none!important;
+}
+
+html.nfc-route #clientPage{
+  display:block!important;
+  visibility:hidden;
+  opacity:0;
+}
+
+html.nfc-route.nfc-ready #clientPage{
+  visibility:visible;
+  opacity:1;
+}
+
+html.nfc-route.nfc-ready #adminPage{
+  display:none!important;
+}
+
+html.nfc-route:not(.nfc-ready) #clientLogo{
+  visibility:hidden!important;
+  opacity:0!important;
+}
+
+html.nfc-route:not(.nfc-ready) #clientName{
+  visibility:hidden!important;
+}
+
+html.nfc-route:not(.nfc-ready) #clientActive,
+html.nfc-route:not(.nfc-ready) #inactiveBox{
+  visibility:hidden!important;
+}
+
+
+/*
+=========================================================
+BARREIRA VISUAL DA ROTA PROVEDOR
+=========================================================
+*/
+
+html.provedor-route{
+  background:#f1f5f9;
+}
+
+html.provedor-route body{
+  background:#f1f5f9;
+}
+
+html.provedor-route #adminPage{
+  display:none!important;
+}
+
+html.provedor-route #clientPage{
+  display:none!important;
+}
+
+html.provedor-route #painelProvedor{
+  display:block!important;
+  visibility:hidden;
+  opacity:0;
+}
+
+html.provedor-route.provedor-ready #painelProvedor{
+  visibility:visible;
+  opacity:1;
+}
+
+html.provedor-route.provedor-ready #adminPage{
+  display:none!important;
+}
+
+html.provedor-route.provedor-ready #clientPage{
+  display:none!important;
+}
+
+
+/*
+=========================================================
+BASE
+=========================================================
+*/
+
+body{
+  margin:0;
+  font-family:Segoe UI,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+button,
+input{
+  font:inherit;
+}
+
+button{
+  border:0;
+  cursor:pointer;
+}
+
+.top{
+  background:var(--nav);
+  color:#fff;
+  padding:16px;
+}
+
+.top-inner{
+  max-width:1100px;
+  margin:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.wrap{
+  max-width:1100px;
+  margin:auto;
+  padding:18px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:20px;
+  margin-bottom:18px;
+  box-shadow:0 8px 25px #0000000b;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.field-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.field-group.full{
+  grid-column:1/-1;
+}
+
+.field-label{
+  font-size:13px;
+  font-weight:700;
+  color:#475569;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border:1px solid #cbd5e1;
+  border-radius:11px;
+  background:#fff;
+}
+
+input:focus{
+  outline:none;
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px #2563eb18;
+}
+
+.btn{
+  padding:12px 16px;
+  border-radius:10px;
+  background:var(--blue);
+  color:#fff;
+  font-weight:700;
+}
+
+.btn.gray{
+  background:var(--gray);
+}
+
+.btn.green{
+  background:var(--green);
+}
+
+.btn.red{
+  background:var(--red);
+}
+
+.btn.orange{
+  background:var(--orange);
+}
+
+.btn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.row{
+  display:flex;
+  gap:9px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.client{
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:16px;
+  margin-top:12px;
+}
+
+.status{
+  font-weight:800;
+}
+
+.active{
+  color:var(--green);
+}
+
+.inactive{
+  color:var(--red);
+}
+
+.expired{
+  color:var(--orange);
+}
+
+.muted{
+  color:#64748b;
+  font-size:13px;
+  word-break:break-all;
+}
+
+.hidden{
+  display:none!important;
+}
+
+.logo-upload{
+  border:1px dashed #94a3b8;
+  border-radius:12px;
+  padding:12px;
+  background:#f8fafc;
+}
+
+.logo-preview-wrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+}
+
+.logo-preview{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid #e2e8f0;
+  background:#fff;
+}
+
+.logo-preview-empty{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#e2e8f0;
+  color:#64748b;
+  font-size:25px;
+}
+
+.form-section{
+  margin-top:18px;
+  padding-top:18px;
+  border-top:1px solid #e2e8f0;
+}
+
+.form-section h3{
+  margin:0 0 12px;
+  font-size:16px;
+}
+
+.date-info{
+  padding:10px 12px;
+  border-radius:10px;
+  background:#f8fafc;
+  color:#475569;
+  font-size:13px;
+  margin-top:10px;
+}
+
+.expiration-warning{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  font-size:13px;
+  font-weight:700;
+}
+
+
+/*
+=========================================================
+ÁREA DO PROVEDOR
+=========================================================
+*/
+
+#painelProvedor{
+  display:none;
+  min-height:100vh;
+  padding:22px 16px 42px;
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(37,99,235,.10),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(14,165,233,.10),
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      #f8fafc,
+      #eef2ff
+    );
+  transition:opacity .2s ease;
+}
+
+.provedor-wrap{
+  width:100%;
+  max-width:760px;
+  margin:auto;
+}
+
+.provedor-header{
+  background:
+    linear-gradient(
+      135deg,
+      #0f172a,
+      #1e293b
+    );
+  color:#fff;
+  border-radius:24px;
+  padding:24px;
+  box-shadow:
+    0 18px 45px rgba(15,23,42,.18);
+  margin-bottom:16px;
+}
+
+.provedor-header-top{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.provedor-logo{
+  width:76px;
+  height:76px;
+  flex:0 0 76px;
+  border-radius:20px;
+  object-fit:cover;
+  background:#fff;
+  border:1px solid rgba(255,255,255,.35);
+  box-shadow:
+    0 10px 25px rgba(0,0,0,.22);
+}
+
+.provedor-logo-empty{
+  width:76px;
+  height:76px;
+  flex:0 0 76px;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.16);
+  font-size:30px;
+}
+
+.provedor-title{
+  min-width:0;
+}
+
+.provedor-title h1{
+  margin:0;
+  font-size:clamp(23px,6vw,34px);
+  line-height:1.15;
+  overflow-wrap:anywhere;
+}
+
+.provedor-title p{
+  margin:7px 0 0;
+  color:#cbd5e1;
+  font-size:14px;
+}
+
+.provedor-status{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  margin-top:16px;
+  padding:7px 13px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:800;
+}
+
+.provedor-status.ativo{
+  color:#bbf7d0;
+  background:rgba(22,163,74,.16);
+  border:1px solid rgba(74,222,128,.25);
+}
+
+.provedor-status.inadimplente{
+  color:#fecaca;
+  background:rgba(220,38,38,.16);
+  border:1px solid rgba(248,113,113,.25);
+}
+
+.provedor-status.desativado{
+  color:#fed7aa;
+  background:rgba(234,88,12,.16);
+  border:1px solid rgba(251,146,60,.25);
+}
+
+.provedor-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.provedor-info-card{
+  background:rgba(255,255,255,.90);
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:
+    0 10px 28px rgba(15,23,42,.07);
+}
+
+.provedor-info-card.full{
+  grid-column:1/-1;
+}
+
+.provedor-info-label{
+  display:block;
+  margin-bottom:7px;
+  color:#64748b;
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+
+.provedor-info-value{
+  color:#0f172a;
+  font-size:17px;
+  font-weight:750;
+  overflow-wrap:anywhere;
+}
+
+.provedor-access-card{
+  grid-column:1/-1;
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #1d4ed8
+    );
+  color:#fff;
+  border-radius:22px;
+  padding:22px;
+  box-shadow:
+    0 18px 38px rgba(37,99,235,.22);
+}
+
+.provedor-access-label{
+  color:#dbeafe;
+  font-size:13px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+
+.provedor-access-value{
+  margin-top:5px;
+  font-size:42px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-1px;
+}
+
+.provedor-access-sub{
+  margin-top:9px;
+  color:#dbeafe;
+  font-size:13px;
+}
+
+.provedor-readonly-note{
+  margin-top:16px;
+  padding:13px 15px;
+  border-radius:14px;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  color:#64748b;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.provedor-loading{
+  text-align:center;
+  padding:70px 20px;
+  color:#64748b;
+}
+
+.provedor-error{
+  max-width:560px;
+  margin:60px auto;
+  padding:25px;
+  border-radius:20px;
+  background:#fff;
+  border:1px solid #fecaca;
+  box-shadow:0 12px 30px rgba(15,23,42,.08);
+}
+
+.provedor-error h2{
+  margin-top:0;
+  color:#991b1b;
+}
+
+#provedorPreAcesso{
+  max-width:560px;
+  margin:60px auto 18px;
+}
+
+#provedorPreAcessoMsg,
+#provedorLinksMsg{
+  font-weight:700;
+}
+
+#provedorHistoricoAcessos{
+  max-height:360px;
+  overflow:auto;
+}
+
+@media(max-width:700px){
+
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .field-group.full{
+    grid-column:auto;
+  }
+
+  .wrap{
+    padding:12px;
+  }
+
+  .card{
+    padding:16px;
+  }
+
+  .provedor-grid{
+    grid-template-columns:1fr;
+  }
+
+  .provedor-info-card.full,
+  .provedor-access-card{
+    grid-column:auto;
+  }
+
+  .provedor-header-top{
+    align-items:flex-start;
+  }
+
+  .provedor-logo,
+  .provedor-logo-empty{
+    width:64px;
+    height:64px;
+    flex-basis:64px;
+  }
+
+}
+
+
+/* =====================================================
+   PÁGINA NFC PÚBLICA
+   ===================================================== */
+
+#clientPage{
+  --nfc-bg-1:#020617;
+  --nfc-bg-2:#0f172a;
+  --nfc-bg-3:#111827;
+
+  --nfc-glow-1:#0ea5e9;
+  --nfc-glow-2:#6366f1;
+  --nfc-glow-3:#0ea5e9;
+
+  --nfc-accent:#38bdf8;
+  --nfc-accent-soft:rgba(56,189,248,.18);
+
+  display:none;
+  position:relative;
+  min-height:100vh;
+  overflow:hidden;
+
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      var(--nfc-accent-soft),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      color-mix(
+        in srgb,
+        var(--nfc-glow-2) 18%,
+        transparent
+      ),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      color-mix(
+        in srgb,
+        var(--nfc-glow-3) 14%,
+        transparent
+      ),
+      transparent 35%
+    ),
+    linear-gradient(
+      145deg,
+      var(--nfc-bg-1) 0%,
+      var(--nfc-bg-2) 45%,
+      var(--nfc-bg-3) 100%
+    );
+
+  color:#fff;
+
+  transition:
+    background .65s ease,
+    opacity .2s ease;
+}
+
+#clientPage::before,
+#clientPage::after{
+  content:"";
+  position:absolute;
+  width:280px;
+  height:280px;
+  border-radius:50%;
+  pointer-events:none;
+  filter:blur(70px);
+  opacity:.35;
+
+  transition:
+    background .65s ease;
+}
+
+#clientPage::before{
+  top:-120px;
+  left:-100px;
+  background:var(--nfc-glow-1);
+}
+
+#clientPage::after{
+  right:-100px;
+  bottom:-120px;
+  background:var(--nfc-glow-2);
+}
+
+.client-wrap{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:500px;
+  min-height:100vh;
+  margin:auto;
+  padding:54px 20px 42px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.client-logo{
+  width:160px;
+  height:160px;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+  margin:0 auto 22px;
+  padding:5px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.98),
+      color-mix(
+        in srgb,
+        var(--nfc-accent) 65%,
+        white
+      )
+    );
+
+  border:1px solid rgba(255,255,255,.48);
+
+  box-shadow:
+    0 0 0 8px rgba(255,255,255,.045),
+    0 0 0 1px var(--nfc-accent-soft),
+    0 22px 55px rgba(0,0,0,.42),
+    0 0 48px var(--nfc-accent-soft);
+
+  animation:
+    nfcLogoIn .65s cubic-bezier(.22,1,.36,1);
+
+  transition:
+    box-shadow .65s ease,
+    background .65s ease,
+    opacity .2s ease;
+}
+
+#clientName{
+  width:100%;
+  margin:0;
+  color:#fff;
+  font-size:clamp(26px,7vw,38px);
+  line-height:1.12;
+  font-weight:800;
+  letter-spacing:-.7px;
+  text-shadow:0 3px 20px rgba(0,0,0,.35);
+  overflow-wrap:anywhere;
+  animation:nfcTextIn .7s .06s both cubic-bezier(.22,1,.36,1);
+}
+
+#clientActive{
+  width:100%;
+  margin-top:14px;
+}
+
+#clientActive > p{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  margin:0 0 12px;
+  padding:7px 13px;
+  border-radius:999px;
+  color:#bbf7d0;
+  background:rgba(22,163,74,.12);
+  border:1px solid rgba(74,222,128,.24);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.2px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 8px 25px rgba(0,0,0,.10);
+}
+
+.service{
+  position:relative;
+  width:100%;
+  min-height:68px;
+  margin:13px 0;
+  padding:13px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:15px;
+  border-radius:19px;
+  text-decoration:none;
+  color:#fff;
+  font-size:16px;
+  font-weight:750;
+  letter-spacing:.1px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.115),
+      rgba(255,255,255,.055)
+    );
+
+  border:1px solid rgba(255,255,255,.14);
+
+  box-shadow:
+    0 12px 32px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(255,255,255,.025);
+
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  overflow:hidden;
+  transform:translateZ(0);
+
+  transition:
+    transform .18s ease,
+    box-shadow .22s ease,
+    border-color .22s ease,
+    background .22s ease;
+
+  animation:
+    serviceIn .65s both cubic-bezier(.22,1,.36,1);
+}
+
+.service::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:12%;
+  right:12%;
+  height:1px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.42),
+      transparent
+    );
+  opacity:.8;
+}
+
+.service::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      rgba(255,255,255,.08) 45%,
+      transparent 70%
+    );
+  transform:translateX(-120%);
+  transition:transform .55s ease;
+  pointer-events:none;
+}
+
+.service:nth-of-type(1){
+  animation-delay:.08s;
+}
+
+.service:nth-of-type(2){
+  animation-delay:.14s;
+}
+
+.service:nth-of-type(3){
+  animation-delay:.20s;
+}
+
+.service:nth-of-type(4){
+  animation-delay:.26s;
+}
+
+@media (hover:hover){
+
+  .service:hover{
+    transform:translateY(-2px) scale(1.012);
+    border-color:rgba(255,255,255,.25);
+
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255,255,255,.15),
+        rgba(255,255,255,.075)
+      );
+
+    box-shadow:
+      0 18px 40px rgba(0,0,0,.28),
+      inset 0 1px 0 rgba(255,255,255,.14),
+      0 0 24px var(--nfc-accent-soft);
+  }
+
+  .service:hover::after{
+    transform:translateX(120%);
+  }
+
+}
+
+.service:active{
+  transform:scale(.965);
+
+  box-shadow:
+    0 7px 18px rgba(0,0,0,.22),
+    inset 0 1px 8px rgba(0,0,0,.10);
+
+  transition-duration:.08s;
+}
+
+.service:focus-visible{
+  outline:
+    3px solid
+    color-mix(
+      in srgb,
+      var(--nfc-accent) 75%,
+      white
+    );
+
+  outline-offset:3px;
+}
+
+.service svg{
+  position:relative;
+  z-index:1;
+  width:29px;
+  height:29px;
+  min-width:29px;
+  flex:0 0 29px;
+  overflow:visible;
+}
+
+.service span{
+  position:relative;
+  z-index:1;
+  flex:1;
+  text-align:left;
+}
+
+#zapBtn{
+  border-color:rgba(37,211,102,.24);
+}
+
+#zapBtn svg{
+  color:#25D366;
+  filter:
+    drop-shadow(
+      0 0 7px rgba(37,211,102,.28)
+    );
+}
+
+#instaBtn{
+  border-color:rgba(225,48,108,.22);
+}
+
+#instaBtn svg{
+  filter:
+    drop-shadow(
+      0 0 8px rgba(225,48,108,.25)
+    );
+}
+
+#speedBtn{
+  border-color:
+    color-mix(
+      in srgb,
+      var(--nfc-accent) 25%,
+      transparent
+    );
+}
+
+#speedBtn svg{
+  color:#38bdf8;
+  filter:
+    drop-shadow(
+      0 0 8px
+      color-mix(
+        in srgb,
+        var(--nfc-accent) 30%,
+        transparent
+      )
+    );
+}
+
+#faturaBtn{
+  border-color:rgba(148,163,184,.24);
+}
+
+#faturaBtn svg{
+  color:#e2e8f0;
+  filter:
+    drop-shadow(
+      0 0 7px rgba(125,211,252,.18)
+    );
+}
+
+.notice{
+  width:100%;
+  margin-top:31px;
+  padding:27px 22px;
+  border-radius:22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(127,29,29,.24),
+      rgba(30,41,59,.72)
+    );
+
+  border:1px solid rgba(248,113,113,.20);
+
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.25),
+    inset 0 1px 0 rgba(255,255,255,.07);
+
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+
+  animation:
+    nfcTextIn .65s .12s both cubic-bezier(.22,1,.36,1);
+}
+
+.notice h2{
+  margin:0 0 12px;
+  color:#fecaca;
+  font-size:20px;
+  line-height:1.3;
+}
+
+.notice p{
+  margin:8px 0;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.6;
+}
+
+@keyframes nfcLogoIn{
+
+  from{
+    opacity:0;
+    transform:
+      translateY(14px)
+      scale(.88);
+  }
+
+  to{
+    opacity:1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+@keyframes nfcTextIn{
+
+  from{
+    opacity:0;
+    transform:translateY(12px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+}
+
+@keyframes serviceIn{
+
+  from{
+    opacity:0;
+    transform:
+      translateY(15px)
+      scale(.985);
+  }
+
+  to{
+    opacity:1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+}
+
+@media(max-width:700px){
+
+  .client-wrap{
+    max-width:500px;
+    padding:
+      42px
+      17px
+      34px;
+  }
+
+  .client-logo{
+    width:148px;
+    height:148px;
+    margin-bottom:20px;
+  }
+
+  #clientName{
+    font-size:29px;
+  }
+
+  .service{
+    min-height:66px;
+    padding:
+      12px
+      17px;
+    border-radius:18px;
+    font-size:16px;
+  }
+
+}
+
+@media(max-width:360px){
+
+  .client-wrap{
+    padding-left:14px;
+    padding-right:14px;
+  }
+
+  .client-logo{
+    width:132px;
+    height:132px;
+  }
+
+  #clientName{
+    font-size:26px;
+  }
+
+  .service{
+    min-height:62px;
+    padding-left:15px;
+    padding-right:15px;
+    gap:12px;
+  }
+
+  .service svg{
+    width:27px;
+    height:27px;
+    min-width:27px;
+  }
+
+}
+
+@media(prefers-reduced-motion:reduce){
+
+  *,
+  *::before,
+  *::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<div id="adminPage">
+
+  <div class="top">
+    <div class="top-inner">
+      <strong>⚡ NFC Gestão Pro</strong>
+
+      <button
+        class="btn gray"
+        onclick="showLogin()"
+      >
+        SAIR
+      </button>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="card" id="loginCard">
+
+      <h2>🔐 Acesso administrativo</h2>
+
+      <p>
+        Somente o administrador pode alterar os provedores.
+      </p>
+
+      <div class="grid">
+
+        <input
+          id="loginUser"
+          type="text"
+          placeholder="Usuário (E-mail)"
+          autocomplete="username"
+        >
+
+        <input
+          id="loginPass"
+          type="password"
+          placeholder="Senha"
+          autocomplete="current-password"
+        >
+
+      </div>
+
+      <button
+        class="btn"
+        style="margin-top:12px;width:100%"
+        onclick="login()"
+      >
+        ENTRAR
+      </button>
+
+      <p id="loginMsg"></p>
+
+    </div>
+
+    <div id="dashboard" class="hidden">
+
+      <div class="card">
+
+        <h2 id="formTitle">
+          ➕ Novo provedor
+        </h2>
+
+        <div class="grid">
+
+          <div class="field-group">
+
+            <label class="field-label" for="nome">
+              Nome do Provedor
+            </label>
+
+            <input
+              id="nome"
+              placeholder="Nome do Provedor"
+            >
+
+          </div>
+
+          <div class="field-group">
+
+            <label class="field-label" for="documento">
+              CNPJ ou CPF
+            </label>
+
+            <input
+              id="documento"
+              placeholder="CNPJ ou CPF"
+              inputmode="numeric"
+            >
+
+          </div>
+
+          <div class="field-group">
+
+            <label class="field-label" for="telefone">
+              Telefone / Contato do Provedor
+            </label>
+
+            <input
+              id="telefone"
+              placeholder="Telefone / WhatsApp"
+              inputmode="tel"
+            >
+
+          </div>
+
+          <div class="field-group">
+
+            <label class="field-label" for="dataAtivacao">
+              Data de ativação
+            </label>
+
+            <input
+              id="dataAtivacao"
+              type="date"
+            >
+
+          </div>
+
+          <div class="field-group">
+
+            <label class="field-label" for="dataVencimento">
+              Data de vencimento
+            </label>
+
+            <input
+              id="dataVencimento"
+              type="date"
+            >
+
+            <div
+              id="vencimentoInfo"
+              class="date-info"
+            >
+              O vencimento será calculado automaticamente.
+            </div>
+
+          </div>
+
+          <div class="field-group full">
+
+            <label class="field-label" for="logo">
+              Logo do Provedor
+            </label>
+
+            <input
+              id="logo"
+              placeholder="Link da logo ou imagem Base64"
+            >
+
+            <div class="logo-upload">
+
+              <div class="row">
+
+                <label
+                  for="logoArquivo"
+                  class="btn gray"
+                  style="display:inline-block"
+                >
+                  📷 CARREGAR LOGO
+                </label>
+
+                <input
+                  id="logoArquivo"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                >
+
+                <button
+                  type="button"
+                  class="btn red"
+                  onclick="removerLogo()"
+                >
+                  ✕ REMOVER
+                </button>
+
+              </div>
+
+              <div class="muted" style="margin-top:8px">
+                A imagem será otimizada e convertida automaticamente
+                para Base64 antes de ser salva.
+              </div>
+
+              <div class="logo-preview-wrap">
+
+                <div
+                  id="logoPreviewEmpty"
+                  class="logo-preview-empty"
+                >
+                  🖼️
+                </div>
+
+                <img
+                  id="logoPreview"
+                  class="logo-preview hidden"
+                  alt="Pré-visualização da logo"
+                >
+
+                <span
+                  id="logoPreviewText"
+                  class="muted"
+                >
+                  Nenhuma logo selecionada.
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="form-section">
+
+          <h3>
+            🔗 Links da página NFC
+          </h3>
+
+          <div class="grid">
+
+            <div class="field-group">
+
+              <label class="field-label" for="fatura">
+                Link da fatura
+              </label>
+
+              <input
+                id="fatura"
+                placeholder="Link da fatura"
+              >
+
+            </div>
+
+            <div class="field-group">
+
+              <label class="field-label" for="zap">
+                Link do WhatsApp
+              </label>
+
+              <input
+                id="zap"
+                placeholder="Link ou número do WhatsApp"
+              >
+
+            </div>
+
+            <div class="field-group">
+
+              <label class="field-label" for="insta">
+                Link do Instagram
+              </label>
+
+              <input
+                id="insta"
+                placeholder="Instagram"
+              >
+
+            </div>
+
+            <div class="field-group">
+
+              <label class="field-label" for="speed">
+                Link do teste de velocidade
+              </label>
+
+              <input
+                id="speed"
+                placeholder="Link do teste de velocidade"
+              >
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="row" style="margin-top:18px">
+
+          <button
+            class="btn"
+            onclick="salvar()"
+          >
+            💾 SALVAR PROVEDOR
+          </button>
+
+          <button
+            id="cancelBtn"
+            class="btn gray hidden"
+            onclick="cancelar()"
+          >
+            CANCELAR
+          </button>
+
+        </div>
+
+        <p
+          id="saveMsg"
+          style="color:var(--green);font-weight:bold;"
+        ></p>
+
+      </div>
+
+      <div class="card">
+
+        <div class="row">
+
+          <h2 style="margin-right:auto">
+            👥 Provedores
+          </h2>
+
+          <span>
+            🟢 <b id="ativos">0</b> ativos
+          </span>
+
+          <span>
+            🔴 <b id="desativados">0</b> desativados
+          </span>
+
+        </div>
+
+        <input
+          id="pesquisa"
+          placeholder="🔎 Pesquisar pelo nome do provedor..."
+          oninput="render()"
+        >
+
+        <div id="lista"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     ÁREA DO PROVEDOR
+     ===================================================== -->
+
+<div id="painelProvedor">
+
+  <div class="provedor-wrap">
+
+    <div
+      id="provedorLoading"
+      class="provedor-loading"
+    >
+      <h2>Carregando painel...</h2>
+      <p>Aguarde enquanto os dados do provedor são carregados.</p>
+    </div>
+
+    <div
+      id="provedorPreAcesso"
+      class="card"
+    >
+
+      <h2>🔐 Confirmação de acesso</h2>
+
+      <p>
+        Confirme o CPF ou CNPJ cadastrado para visualizar o painel.
+      </p>
+
+      <div class="field-group">
+
+        <label
+          class="field-label"
+          for="provedorDocumentoEntrada"
+        >
+          CPF ou CNPJ
+        </label>
+
+        <input
+          id="provedorDocumentoEntrada"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Digite o documento cadastrado"
+        >
+
+      </div>
+
+      <button
+        id="provedorConfirmarAcesso"
+        class="btn"
+        type="button"
+        style="margin-top:12px;width:100%"
+      >
+        CONFIRMAR DOCUMENTO
+      </button>
+
+      <p id="provedorPreAcessoMsg"></p>
+
+    </div>
+
+    <div
+      id="provedorConteudo"
+      class="hidden"
+    >
+
+      <div class="provedor-header">
+
+        <div class="provedor-header-top">
+
+          <div
+            id="provedorLogoEmpty"
+            class="provedor-logo-empty"
+          >
+            🏢
+          </div>
+
+          <img
+            id="provedorLogo"
+            class="provedor-logo hidden"
+            alt="Logo do provedor"
+          >
+
+          <div class="provedor-title">
+
+            <h1 id="provedorNome">
+              —
+            </h1>
+
+            <p>
+              Área do Provedor
+            </p>
+
+          </div>
+
+        </div>
+
+        <div
+          id="provedorStatus"
+          class="provedor-status"
+        >
+          ● CARREGANDO
+        </div>
+
+      </div>
+
+      <div class="provedor-grid">
+
+        <div class="provedor-access-card">
+
+          <div class="provedor-access-label">
+            Total de acessos
+          </div>
+
+          <div
+            id="provedorAcessos"
+            class="provedor-access-value"
+          >
+            0
+          </div>
+
+          <div class="provedor-access-sub">
+            Acessos hoje:
+            <strong id="provedorAcessosHoje">0</strong>
+          </div>
+
+        </div>
+
+        <div class="provedor-info-card">
+
+          <span class="provedor-info-label">
+            CNPJ / CPF
+          </span>
+
+          <div
+            id="provedorDocumento"
+            class="provedor-info-value"
+          >
+            Não informado
+          </div>
+
+        </div>
+
+        <div class="provedor-info-card">
+
+          <span class="provedor-info-label">
+            Telefone
+          </span>
+
+          <div
+            id="provedorTelefone"
+            class="provedor-info-value"
+          >
+            Não informado
+          </div>
+
+        </div>
+
+        <div class="provedor-info-card">
+
+          <span class="provedor-info-label">
+            Data de vencimento
+          </span>
+
+          <div
+            id="provedorVencimento"
+            class="provedor-info-value"
+          >
+            Não informado
+          </div>
+
+        </div>
+
+        <div class="provedor-info-card">
+
+          <span class="provedor-info-label">
+            Status atual
+          </span>
+
+          <div
+            id="provedorStatusTexto"
+            class="provedor-info-value"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="provedor-info-card full">
+
+          <span class="provedor-info-label">
+            Histórico de acessos
+          </span>
+
+          <div id="provedorHistoricoAcessos">
+            Nenhum acesso registrado.
+          </div>
+
+        </div>
+
+        <div class="provedor-info-card full">
+
+          <div class="provedor-readonly-note">
+            🔒 Esta área é exclusiva para o provedor autenticado.
+            Os dados de cadastro e de outros provedores não são
+            disponibilizados neste painel.
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="card">
+
+        <h3>🔗 Editar links da página NFC</h3>
+
+        <div class="grid">
+
+          <div class="field-group">
+
+            <label
+              class="field-label"
+              for="provedorFatura"
+            >
+              Link da fatura
+            </label>
+
+            <input
+              id="provedorFatura"
+              placeholder="Link da fatura"
+            >
+
+          </div>
+
+          <div class="field-group">
+
+            <label
+              class="field-label"
+              for="provedorZap"
+            >
+              Link do WhatsApp
+            </label>
+
+            <input
+              id="provedorZap"
+              placeholder="Link ou número do WhatsApp"
+            >
+
+          </div>
+
+          <div class="field-group">
+
+            <label
+              class="field-label"
+              for="provedorInsta"
+            >
+              Link do Instagram
+            </label>
+
+            <input
+              id="provedorInsta"
+              placeholder="Instagram"
+            >
+
+          </div>
+
+          <div class="field-group">
+
+            <label
+              class="field-label"
+              for="provedorSpeed"
+            >
+              Link do teste de velocidade
+            </label>
+
+            <input
+              id="provedorSpeed"
+              placeholder="Link do teste de velocidade"
+            >
+
+          </div>
+
+        </div>
+
+        <button
+          id="salvarLinksProvedor"
+          class="btn green"
+          type="button"
+          style="margin-top:14px"
+        >
+          💾 SALVAR LINKS
+        </button>
+
+        <p id="provedorLinksMsg"></p>
+
+      </div>
+
+    </div>
+
+    <div
+      id="provedorErro"
+      class="provedor-error hidden"
+    >
+
+      <h2 id="provedorErroTitulo">
+        Acesso indisponível
+      </h2>
+
+      <p id="provedorErroMensagem">
+        Não foi possível carregar este provedor.
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     PÁGINA NFC PÚBLICA
+     ===================================================== -->
+
+<div id="clientPage">
+
+  <div class="client-wrap">
+
+    <img
+      id="clientLogo"
+      class="client-logo"
+      alt="Logo do Provedor"
+    >
+
+    <h1 id="clientName">
+      Carregando...
+    </h1>
+
+    <div id="clientActive" class="hidden">
+
+      <p>
+        🟢 Serviço disponível
+      </p>
+
+      <a
+        id="faturaBtn"
+        class="service"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+          <path
+            d="M6 2.75h8.8L19 6.95v14.3H6a2.25 2.25 0 0 1-2.25-2.25V5A2.25 2.25 0 0 1 6 2.75Z"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M14.5 2.9v4.2H18.7"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M8 11h8M8 14.5h8M8 18h4.5"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+          />
+
+          <path
+            d="M16.5 15.8h.01"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+
+        </svg>
+
+        <span>Pagar minha fatura</span>
+
+      </a>
+
+      <a
+        id="zapBtn"
+        class="service"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+          <path
+            d="M20.05 11.6a8.15 8.15 0 0 1-12.1 7.08L4 20l1.4-3.7A8.15 8.15 0 1 1 20.05 11.6Z"
+            stroke="#25D366"
+            stroke-width="1.7"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M8.25 8.55c.25-.55.52-.58.86-.58h.5c.2 0 .38.1.47.32l.68 1.62c.09.2.05.43-.1.58l-.62.67c-.12.13-.14.3-.04.46.43.7 1.03 1.3 1.73 1.73.16.1.33.08.46-.04l.67-.62c.15-.15.38-.19.58-.1l1.62.68c.22.09.32.27.32.47v.5c0 .34-.03.61-.58.86-.53.25-1.27.28-2.15-.05-1.02-.39-2.02-1.08-2.88-1.94-.86-.86-1.55-1.86-1.94-2.88-.33-.88-.3-1.62-.05-2.15Z"
+            fill="#25D366"
+          />
+
+        </svg>
+
+        <span>Falar com suporte</span>
+
+      </a>
+
+      <a
+        id="speedBtn"
+        class="service"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+          <path
+            d="M4.9 18.5a9 9 0 1 1 14.2 0"
+            stroke="#38BDF8"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+
+          <path
+            d="M12 12l4.2-4.2"
+            stroke="#22D3EE"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+
+          <circle
+            cx="12"
+            cy="12"
+            r="1.35"
+            fill="#22D3EE"
+          />
+
+          <path
+            d="M6.5 16.9h.01M4.8 12.7h.01M17.5 16.9h.01M19.2 12.7h.01"
+            stroke="#38BDF8"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+
+          <path
+            d="M8.1 7.3l.01.01M15.9 7.3l.01.01"
+            stroke="#67E8F9"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+
+        </svg>
+
+        <span>Testar velocidade</span>
+
+      </a>
+
+      <a
+        id="instaBtn"
+        class="service"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+
+          <defs>
+
+            <linearGradient
+              id="instagramGradient"
+              x1="4"
+              y1="20"
+              x2="20"
+              y2="4"
+              gradientUnits="userSpaceOnUse"
+            >
+
+              <stop offset="0" stop-color="#FFDC80"/>
+              <stop offset=".25" stop-color="#FCB045"/>
+              <stop offset=".5" stop-color="#F77737"/>
+              <stop offset=".72" stop-color="#E1306C"/>
+              <stop offset="1" stop-color="#833AB4"/>
+
+            </linearGradient>
+
+          </defs>
+
+          <rect
+            x="3"
+            y="3"
+            width="18"
+            height="18"
+            rx="5"
+            stroke="url(#instagramGradient)"
+            stroke-width="1.8"
+          />
+
+          <circle
+            cx="12"
+            cy="12"
+            r="4.15"
+            stroke="url(#instagramGradient)"
+            stroke-width="1.8"
+          />
+
+          <circle
+            cx="17.25"
+            cy="6.75"
+            r="1"
+            fill="#F77737"
+          />
+
+        </svg>
+
+        <span>Instagram</span>
+
+      </a>
+
+    </div>
+
+    <div
+      id="inactiveBox"
+      class="notice hidden"
+    >
+
+      <h2>
+        🔴 Acesso temporariamente indisponível
+      </h2>
+
+      <p>
+        Seu acesso está temporariamente suspenso.
+      </p>
+
+      <p>
+        Entre em contato com nosso atendimento para regularizar sua situação.
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  doc,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  increment,
+  arrayUnion,
+  serverTimestamp,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/*
+=========================================================
+CONFIGURAÇÃO FIREBASE
+=========================================================
+*/
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDMZ1faLyK_N77UE3B2Vtdrtmdpbh9FS8",
+  authDomain: "nfc-gestao.firebaseapp.com",
+  projectId: "nfc-gestao",
+  storageBucket: "nfc-gestao.firebasestorage.app",
+  messagingSenderId: "276463620862",
+  appId: "1:276463620862:web:4bbfa8b5c59f36f4bd0baf",
+  measurementId: "G-QDVQX0TJ6X"
+};
+
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getFirestore(app);
+
+
+/*
+=========================================================
+LOGIN FIXO
+=========================================================
+*/
+
+const LOGIN_USUARIO =
+  "Varejaoeverton@gmail.com";
+
+const LOGIN_SENHA =
+  "Enzo777.@";
+
+const ADMIN_SESSION_KEY =
+  "nfc_admin_authenticated";
+
+const CLIENTES_COLLECTION =
+  "clientes";
+
+
+/*
+=========================================================
+ESTADO
+=========================================================
+*/
+
+let clientes = [];
+
+let editId = null;
+
+let unsubscribeClientes = null;
+
+let unsubscribeProvedor = null;
+
+let ultimoTemaLogo = "";
+
+let ultimoAcessoNFCRegistrado =
+  null;
+
+let ultimoProvedorId =
+  null;
+
+let provedorDocumentoValidado =
+  false;
+
+let provedorClienteAtual =
+  null;
+
+const rotaNFC =
+  location.hash
+    .toLowerCase()
+    .startsWith("#nfc=");
+
+const rotaProvedor =
+  location.hash
+    .toLowerCase()
+    .startsWith("#provedor=");
+
+
+/*
+=========================================================
+CONTROLE VISUAL DE PRONTIDÃO NFC
+=========================================================
+*/
+
+function marcarNFCPronto(){
+
+  if(
+    !location.hash
+      .toLowerCase()
+      .startsWith("#nfc=")
+  ){
+
+    return;
+
+  }
+
+  requestAnimationFrame(
+    () => {
+
+      requestAnimationFrame(
+        () => {
+
+          document.documentElement
+            .classList
+            .add("nfc-ready");
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/*
+=========================================================
+CONTROLE VISUAL DE PRONTIDÃO PROVEDOR
+=========================================================
+*/
+
+function marcarProvedorPronto(){
+
+  if(
+    !location.hash
+      .toLowerCase()
+      .startsWith("#provedor=")
+  ){
+
+    return;
+
+  }
+
+  requestAnimationFrame(
+    () => {
+
+      requestAnimationFrame(
+        () => {
+
+          document.documentElement
+            .classList
+            .add("provedor-ready");
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/*
+=========================================================
+MOSTRAR ERRO NFC
+=========================================================
+*/
+
+function mostrarErroNFC(
+  titulo,
+  mensagem
+){
+
+  const admin =
+    document.getElementById(
+      "adminPage"
+    );
+
+  const pagina =
+    document.getElementById(
+      "clientPage"
+    );
+
+  const nome =
+    document.getElementById(
+      "clientName"
+    );
+
+  const logo =
+    document.getElementById(
+      "clientLogo"
+    );
+
+  const active =
+    document.getElementById(
+      "clientActive"
+    );
+
+  const inactive =
+    document.getElementById(
+      "inactiveBox"
+    );
+
+  if(admin){
+    admin.style.display = "none";
+  }
+
+  if(pagina){
+    pagina.style.display = "block";
+  }
+
+  if(logo){
+    logo.style.display = "none";
+    logo.removeAttribute("src");
+  }
+
+  if(nome){
+    nome.textContent =
+      titulo ||
+      "Acesso indisponível";
+  }
+
+  if(active){
+    active.classList.add("hidden");
+  }
+
+  if(inactive){
+
+    inactive.classList.remove(
+      "hidden"
+    );
+
+    inactive.innerHTML =
+      "<h2>⚠️ " +
+      escapeHtml(
+        titulo ||
+        "Acesso indisponível"
+      ) +
+      "</h2>" +
+      "<p>" +
+      escapeHtml(
+        mensagem ||
+        "Não foi possível carregar este acesso NFC."
+      ) +
+      "</p>";
+
+  }
+
+  restaurarTemaNFC();
+
+  document.title =
+    titulo ||
+    "Acesso indisponível";
+
+  marcarNFCPronto();
+
+}
+
+
+/*
+=========================================================
+UTILITÁRIOS DE DATA
+=========================================================
+*/
+
+function parseDataLocal(
+  valor
+){
+
+  if(!valor){
+    return null;
+  }
+
+  if(valor instanceof Date){
+
+    return Number.isNaN(
+      valor.getTime()
+    )
+      ? null
+      : new Date(
+          valor.getTime()
+        );
+
+  }
+
+  if(
+    valor &&
+    typeof valor.toDate ===
+      "function"
+  ){
+
+    const data =
+      valor.toDate();
+
+    return data instanceof Date &&
+      !Number.isNaN(
+        data.getTime()
+      )
+        ? data
+        : null;
+
+  }
+
+  if(
+    valor &&
+    typeof valor.seconds ===
+      "number"
+  ){
+
+    const data =
+      new Date(
+        valor.seconds * 1000 +
+        Math.floor(
+          Number(
+            valor.nanoseconds || 0
+          ) / 1000000
+        )
+      );
+
+    return Number.isNaN(
+      data.getTime()
+    )
+      ? null
+      : data;
+
+  }
+
+  if(
+    typeof valor ===
+      "number"
+  ){
+
+    const data =
+      new Date(valor);
+
+    return Number.isNaN(
+      data.getTime()
+    )
+      ? null
+      : data;
+
+  }
+
+  const texto =
+    String(valor).trim();
+
+  if(!texto){
+    return null;
+  }
+
+  const somenteData =
+    /^(\d{4})-(\d{2})-(\d{2})$/
+      .exec(texto);
+
+  if(somenteData){
+
+    const ano =
+      Number(
+        somenteData[1]
+      );
+
+    const mes =
+      Number(
+        somenteData[2]
+      );
+
+    const dia =
+      Number(
+        somenteData[3]
+      );
+
+    const data =
+      new Date(
+        ano,
+        mes - 1,
+        dia
+      );
+
+    if(
+      data.getFullYear() !== ano ||
+      data.getMonth() !== mes - 1 ||
+      data.getDate() !== dia
+    ){
+
+      return null;
+
+    }
+
+    return data;
+
+  }
+
+  const data =
+    new Date(texto);
+
+  return Number.isNaN(
+    data.getTime()
+  )
+    ? null
+    : data;
+
+}
+
+
+function formatarDataInput(
+  data
+){
+
+  if(!data){
+    return "";
+  }
+
+  const ano =
+    data.getFullYear();
+
+  const mes =
+    String(
+      data.getMonth() + 1
+    ).padStart(2,"0");
+
+  const dia =
+    String(
+      data.getDate()
+    ).padStart(2,"0");
+
+  return (
+    ano +
+    "-" +
+    mes +
+    "-" +
+    dia
+  );
+
+}
+
+
+function formatarDataHoraBR(
+  valor
+){
+
+  const data =
+    parseDataLocal(
+      valor
+    );
+
+  if(!data){
+    return "Não informado";
+  }
+
+  return data.toLocaleString(
+    "pt-BR",
+    {
+      dateStyle:"short",
+      timeStyle:"short"
+    }
+  );
+
+}
+
+
+function adicionarDias(
+  data,
+  dias
+){
+
+  const nova =
+    new Date(data);
+
+  nova.setDate(
+    nova.getDate() + dias
+  );
+
+  return nova;
+
+}
+
+
+function calcularVencimento(
+  dataAtivacao
+){
+
+  const data =
+    parseDataLocal(
+      dataAtivacao
+    );
+
+  if(!data){
+    return "";
+  }
+
+  return formatarDataInput(
+    adicionarDias(
+      data,
+      30
+    )
+  );
+
+}
+
+
+function estaVencido(
+  dataVencimento
+){
+
+  const vencimento =
+    parseDataLocal(
+      dataVencimento
+    );
+
+  if(!vencimento){
+    return false;
+  }
+
+  const hoje =
+    new Date();
+
+  hoje.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  vencimento.setHours(
+    23,
+    59,
+    59,
+    999
+  );
+
+  return hoje > vencimento;
+
+}
+
+
+function diasAteVencimento(
+  dataVencimento
+){
+
+  const vencimento =
+    parseDataLocal(
+      dataVencimento
+    );
+
+  if(!vencimento){
+    return null;
+  }
+
+  const hoje =
+    new Date();
+
+  hoje.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  vencimento.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  const diferenca =
+    vencimento.getTime() -
+    hoje.getTime();
+
+  return Math.ceil(
+    diferenca /
+    (1000 * 60 * 60 * 24)
+  );
+
+}
+
+
+function formatarDataBR(
+  valor
+){
+
+  const data =
+    parseDataLocal(
+      valor
+    );
+
+  if(!data){
+    return "Não informado";
+  }
+
+  return data.toLocaleDateString(
+    "pt-BR"
+  );
+
+}
+
+
+/*
+=========================================================
+SESSÃO
+=========================================================
+*/
+
+function adminAutenticado(){
+
+  return (
+    sessionStorage.getItem(
+      ADMIN_SESSION_KEY
+    ) === "true"
+  );
+
+}
+
+
+/*
+=========================================================
+DOCUMENTO DO PROVEDOR
+=========================================================
+*/
+
+function normalizarDocumento(
+  valor
+){
+
+  return String(valor || "")
+    .replace(
+      /\D/g,
+      ""
+    );
+
+}
+
+/**
+ * Valida um CPF ou CNPJ.
+ * @param {string} documento O CPF ou CNPJ a ser validado.
+ * @returns {boolean} True se o documento for válido, false caso contrário.
+ */
+function validarDocumento(documento) {
+  const docLimpo = normalizarDocumento(documento);
+
+  if (docLimpo.length === 11) {
+    // Validação de CPF
+    if (docLimpo === '00000000000' || docLimpo === '11111111111' ||
+        docLimpo === '22222222222' || docLimpo === '33333333333' ||
+        docLimpo === '44444444444' || docLimpo === '55555555555' ||
+        docLimpo === '66666666666' || docLimpo === '77777777777' ||
+        docLimpo === '88888888888' || docLimpo === '99999999999') {
+      return false;
+    }
+
+    let soma = 0;
+    let resto;
+
+    for (let i = 1; i <= 9; i++) {
+      soma = soma + parseInt(docLimpo.substring(i - 1, i)) * (11 - i);
+    }
+    resto = (soma * 10) % 11;
+
+    if ((resto === 10) || (resto === 11)) {
+      resto = 0;
+    }
+    if (resto !== parseInt(docLimpo.substring(9, 10))) {
+      return false;
+    }
+
+    soma = 0;
+    for (let i = 1; i <= 10; i++) {
+      soma = soma + parseInt(docLimpo.substring(i - 1, i)) * (12 - i);
+    }
+    resto = (soma * 10) % 11;
+
+    if ((resto === 10) || (resto === 11)) {
+      resto = 0;
+    }
+    if (resto !== parseInt(docLimpo.substring(10, 11))) {
+      return false;
+    }
+    return true;
+
+  } else if (docLimpo.length === 14) {
+    // Validação de CNPJ
+    if (docLimpo === '00000000000000' || docLimpo === '11111111111111' ||
+        docLimpo === '22222222222222' || docLimpo === '33333333333333' ||
+        docLimpo === '44444444444444' || docLimpo === '55555555555555' ||
+        docLimpo === '66666666666666' || docLimpo === '77777777777777' ||
+        docLimpo === '88888888888888' || docLimpo === '99999999999999') {
+      return false;
+    }
+
+    let tamanho = docLimpo.length - 2;
+    let numeros = docLimpo.substring(0, tamanho);
+    let digitos = docLimpo.substring(tamanho);
+    let soma = 0;
+    let pos = tamanho - 7;
+
+    for (let i = tamanho; i >= 1; i--) {
+      soma += parseInt(numeros.charAt(i - 1)) * pos--;
+      if (pos < 2) {
+        pos = 9;
+      }
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado !== parseInt(digitos.charAt(0))) {
+      return false;
+    }
+
+    tamanho = tamanho + 1;
+    numeros = docLimpo.substring(0, tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += parseInt(numeros.charAt(i - 1)) * pos--;
+      if (pos < 2) {
+        pos = 9;
+      }
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
+    if (resultado !== parseInt(digitos.charAt(1))) {
+      return false;
+    }
+
+    return true;
+  }
+
+  return false; // Não é CPF nem CNPJ válido pelo tamanho
+}
+
+
+function documentoConfere(
+  informado,
+  cadastrado
+){
+
+  const documentoInformado =
+    normalizarDocumento(
+      informado
+    );
+
+  const documentoCadastrado =
+    normalizarDocumento(
+      cadastrado
+    );
+
+  return Boolean(
+    documentoInformado &&
+    documentoCadastrado &&
+    documentoInformado ===
+      documentoCadastrado
+  );
+
+}
+
+
+/*
+=========================================================
+CHAVE DO DIA ATUAL
+=========================================================
+*/
+
+function chaveDiaAtual(){
+
+  const hoje =
+    new Date();
+
+  return [
+    hoje.getFullYear(),
+    String(
+      hoje.getMonth() + 1
+    ).padStart(2,"0"),
+    String(
+      hoje.getDate()
+    ).padStart(2,"0")
+  ].join("-");
+
+}
+
+
+/*
+=========================================================
+NORMALIZA CLIENTE
+=========================================================
+*/
+
+function normalizarCliente(
+  c
+){
+
+  if(!c){
+    return null;
+  }
+
+  // Garante que dataAtivacao e dataVencimento são strings YYYY-MM-DD
+  const dataAtivacao =
+    typeof c.dataAtivacao === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.dataAtivacao)
+      ? c.dataAtivacao
+      : formatarDataInput(parseDataLocal(c.dataAtivacao));
+
+  const dataVencimento =
+    typeof c.dataVencimento === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.dataVencimento)
+      ? c.dataVencimento
+      : formatarDataInput(parseDataLocal(c.dataVencimento));
+
+  return {
+
+    id:
+      String(c.id || ""),
+
+    nome:
+      String(c.nome || ""),
+
+    logo:
+      String(c.logo || ""),
+
+    fatura:
+      String(c.fatura || ""),
+
+    zap:
+      String(c.zap || ""),
+
+    insta:
+      String(c.insta || ""),
+
+    speed:
+      String(c.speed || ""),
+
+    documento:
+      String(c.documento || ""),
+
+    telefone:
+      String(c.telefone || ""),
+
+    dataAtivacao,
+
+    dataVencimento,
+
+    ativo:
+      c.ativo !== false,
+
+    vencido:
+      estaVencido(
+        dataVencimento
+      ),
+
+    acessos:
+      Number(
+        c.acessos || 0
+      ),
+
+    acessosDiarios:
+      c.acessosDiarios &&
+      typeof c.acessosDiarios ===
+        "object"
+          ? c.acessosDiarios
+          : {},
+
+    historicoAcessos:
+      Array.isArray(
+        c.historicoAcessos
+      )
+        ? c.historicoAcessos
+        : []
+
+  };
+
+}
+
+
+/*
+=========================================================
+CONTROLE DE PRÉ-ACESSO
+=========================================================
+*/
+
+function mostrarPreAcessoProvedor(
+  cliente
+){
+
+  provedorDocumentoValidado =
+    false;
+
+  provedorClienteAtual =
+    cliente;
+
+  const preAcesso =
+    document.getElementById(
+      "provedorPreAcesso"
+    );
+
+  const conteudo =
+    document.getElementById(
+      "provedorConteudo"
+    );
+
+  const loading =
+    document.getElementById(
+      "provedorLoading"
+    );
+
+  const entrada =
+    document.getElementById(
+      "provedorDocumentoEntrada"
+    );
+
+  const mensagem =
+    document.getElementById(
+      "provedorPreAcessoMsg"
+    );
+
+  if(preAcesso){
+
+    preAcesso.classList.remove(
+      "hidden"
+    );
+
+  }
+
+  if(conteudo){
+
+    conteudo.classList.add(
+      "hidden"
+    );
+
+  }
+
+  if(loading){
+
+    loading.classList.add(
+      "hidden"
+    );
+
+  }
+
+  if(entrada){
+
+    entrada.value =
+      "";
+
+    entrada.focus();
+
+  }
+
+  if(mensagem){
+
+    mensagem.textContent =
+      "";
+
+  }
+
+  marcarProvedorPronto();
+
+}
+
+
+function liberarPainelProvedor(){
+
+  provedorDocumentoValidado =
+    true;
+
+  const preAcesso =
+    document.getElementById(
+      "provedorPreAcesso"
+    );
+
+  if(preAcesso){
+
+    preAcesso.classList.add(
+      "hidden"
+    );
+
+  }
+
+  if(provedorClienteAtual){
+
+    renderPainelProvedor(
+      provedorClienteAtual
+    );
+
+  }
+
+}
+
+
+document
+  .getElementById(
+    "provedorConfirmarAcesso"
+  )
+  ?.addEventListener(
+    "click",
+    () => {
+
+      const entrada =
+        document.getElementById(
+          "provedorDocumentoEntrada"
+        );
+
+      const mensagem =
+        document.getElementById(
+          "provedorPreAcessoMsg"
+        );
+
+      if(
+        !entrada ||
+        !mensagem ||
+        !provedorClienteAtual
+      ){
+
+        return;
+
+      }
+
+      const documentoDigitado = entrada.value.trim();
+      const documentoCadastrado = provedorClienteAtual.documento;
+
+      if (!documentoDigitado) {
+        mensagem.textContent = "Por favor, digite o CPF ou CNPJ.";
+        return;
+      }
+
+      if (!validarDocumento(documentoDigitado)) {
+        mensagem.textContent = "CPF/CNPJ digitado é inválido. Por favor, verifique.";
+        return;
+      }
+
+      if(
+        documentoConfere(
+          documentoDigitado,
+          documentoCadastrado
+        )
+      ){
+
+        mensagem.textContent =
+          "";
+
+        liberarPainelProvedor();
+
+      }else{
+
+        mensagem.textContent =
+          "CPF/CNPJ não confere com o documento cadastrado.";
+
+      }
+
+    }
+  );
+
+
+/*
+=========================================================
+ATUALIZAÇÃO AUTOMÁTICA DE INADIMPLÊNCIA
+=========================================================
+*/
+
+async function verificarVencimentos(){
+
+  if(!adminAutenticado()){
+    return;
+  }
+
+  const vencidos =
+    clientes.filter(
+      c =>
+        c &&
+        c.id &&
+        c.vencido &&
+        c.ativo === true
+    );
+
+  if(!vencidos.length){
+    return;
+  }
+
+  for(
+    const cliente
+    of vencidos
+  ){
+
+    try{
+
+      await updateDoc(
+
+        doc(
+          db,
+          CLIENTES_COLLECTION,
+          cliente.id
+        ),
+
+        {
+          ativo:false
+        }
+
+      );
+
+    }catch(error){
+
+      console.error(
+        "Erro ao desativar provedor vencido:",
+        cliente.id,
+        error
+      );
+
+    }
+
+  }
+
+}
+
+
+/*
+=========================================================
+LISTENER MASTER
+=========================================================
+*/
+
+function iniciarListenerClientes(){
+
+  if(unsubscribeClientes){
+
+    unsubscribeClientes();
+
+    unsubscribeClientes =
+      null;
+
+  }
+
+  const referencia =
+    collection(
+      db,
+      CLIENTES_COLLECTION
+    );
+
+  const consulta =
+    query(
+      referencia,
+      orderBy("nome")
+    );
+
+  unsubscribeClientes =
+    onSnapshot(
+
+      consulta,
+
+      snapshot => {
+
+        clientes =
+          snapshot.docs
+            .map(
+              docSnap => {
+
+                const dados =
+                  docSnap.data();
+
+                return normalizarCliente({
+
+                  id:
+                    docSnap.id,
+
+                  ...dados
+
+                });
+
+              }
+            )
+            .filter(
+              c =>
+                c &&
+                c.id &&
+                c.nome
+            );
+
+        render();
+
+        verificarVencimentos();
+
+        if(
+          location.hash
+            .toLowerCase()
+            .startsWith(
+              "#nfc="
+            )
+        ){
+
+          processarNFC();
+
+        }
+
+      },
+
+      error => {
+
+        console.error(
+          "Erro no listener do Firestore:",
+          error
+        );
+
+        const msg =
+          document.getElementById(
+            "saveMsg"
+          );
+
+        if(msg){
+
+          msg.textContent =
+            "⚠️ Erro de conexão com o banco de dados.";
+
+        }
+
+        if(
+          location.hash
+            .toLowerCase()
+            .startsWith(
+              "#nfc="
+            )
+        ){
+
+          mostrarErroNFC(
+            "Acesso temporariamente indisponível",
+            "Não foi possível carregar os dados deste acesso NFC. Tente novamente."
+          );
+
+        }
+
+      }
+
+    );
+
+}
+
+
+/*
+=========================================================
+LISTENER INDIVIDUAL DO PROVEDOR
+=========================================================
+*/
+
+function iniciarListenerProvedor(
+  id
+){
+
+  if(unsubscribeProvedor){
+
+    unsubscribeProvedor();
+
+    unsubscribeProvedor =
+      null;
+
+  }
+
+  ultimoProvedorId =
+    id;
+
+  if(!id){
+
+    mostrarErroProvedor(
+      "Acesso inválido",
+      "O identificador do provedor não foi informado."
+    );
+
+    return;
+
+  }
+
+  const referencia =
+    doc(
+      db,
+      CLIENTES_COLLECTION,
+      id
+    );
+
+  unsubscribeProvedor =
+    onSnapshot(
+
+      referencia,
+
+      snapshot => {
+
+        if(!snapshot.exists()){
+
+          mostrarErroProvedor(
+            "Provedor não encontrado",
+            "O identificador informado não corresponde a um provedor cadastrado."
+          );
+
+          return;
+
+        }
+
+        const cliente =
+          normalizarCliente({
+
+            id:
+              snapshot.id,
+
+            ...snapshot.data()
+
+          });
+
+        provedorClienteAtual =
+          cliente;
+
+        if(
+          provedorDocumentoValidado
+        ){
+
+          renderPainelProvedor(
+            cliente
+          );
+
+        }else{
+
+          mostrarPreAcessoProvedor(
+            cliente
+          );
+
+        }
+
+      },
+
+      error => {
+
+        console.error(
+          "Erro no listener individual do provedor:",
+          error
+        );
+
+        mostrarErroProvedor(
+          "Acesso temporariamente indisponível",
+          "Não foi possível consultar os dados deste provedor."
+        );
+
+      }
+
+    );
+
+}
+
+
+/*
+=========================================================
+LOGO — PREVIEW
+=========================================================
+*/
+
+function atualizarPreviewLogo(
+  valor
+){
+
+  const img =
+    document.getElementById(
+      "logoPreview"
+    );
+
+  const vazio =
+    document.getElementById(
+      "logoPreviewEmpty"
+    );
+
+  const texto =
+    document.getElementById(
+      "logoPreviewText"
+    );
+
+  if(!img || !vazio || !texto){
+    return;
+  }
+
+  if(!valor){
+
+    img.classList.add(
+      "hidden"
+    );
+
+    vazio.classList.remove(
+      "hidden"
+    );
+
+    texto.textContent =
+      "Nenhuma logo selecionada.";
+
+    return;
+
+  }
+
+  img.src =
+    valor;
+
+  img.classList.remove(
+    "hidden"
+  );
+
+  vazio.classList.add(
+    "hidden"
+  );
+
+  texto.textContent =
+    "Logo carregada.";
+
+}
+
+
+/*
+=========================================================
+LOGO — COMPRESSÃO BASE64
+=========================================================
+*/
+
+function imagemParaBase64(
+  arquivo
+){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const leitor =
+        new FileReader();
+
+      leitor.onerror =
+        () =>
+          reject(
+            new Error(
+              "Não foi possível ler a imagem."
+            )
+          );
+
+      leitor.onload =
+        () => {
+
+          const imagem =
+            new Image();
+
+          imagem.onerror =
+            () =>
+              reject(
+                new Error(
+                  "Arquivo de imagem inválido."
+                )
+              );
+
+          imagem.onload =
+            () => {
+
+              const MAX_DIMENSAO =
+                900;
+
+              let largura =
+                imagem.naturalWidth;
+
+              let altura =
+                imagem.naturalHeight;
+
+              if(
+                largura > MAX_DIMENSAO ||
+                altura > MAX_DIMENSAO
+              ){
+
+                const escala =
+                  Math.min(
+                    MAX_DIMENSAO / largura,
+                    MAX_DIMENSAO / altura
+                  );
+
+                largura =
+                  Math.round(
+                    largura * escala
+                  );
+
+                altura =
+                  Math.round(
+                    altura * escala
+                  );
+
+              }
+
+              const canvas =
+                document.createElement(
+                  "canvas"
+                );
+
+              canvas.width =
+                largura;
+
+              canvas.height =
+                altura;
+
+              const contexto =
+                canvas.getContext(
+                  "2d"
+                );
+
+              if(!contexto){
+
+                reject(
+                  new Error(
+                    "Não foi possível processar a imagem."
+                  )
+                );
+
+                return;
+
+              }
+
+              contexto.drawImage(
+                imagem,
+                0,
+                0,
+                largura,
+                altura
+              );
+
+              let base64 =
+                canvas.toDataURL(
+                  "image/webp",
+                  .82
+                );
+
+              if(
+                !base64.startsWith(
+                  "data:image/webp"
+                )
+              ){
+
+                base64 =
+                  canvas.toDataURL(
+                    "image/jpeg",
+                    .82
+                  );
+
+              }
+
+              const tamanho =
+                base64.length;
+
+              if(
+                tamanho > 900000
+              ){
+
+                reject(
+                  new Error(
+                    "A logo ainda ficou muito grande. Escolha uma imagem menor."
+                  )
+                );
+
+                return;
+
+              }
+
+              resolve(
+                base64
+              );
+
+            };
+
+          imagem.src =
+            leitor.result;
+
+        };
+
+      leitor.readAsDataURL(
+        arquivo
+      );
+
+    }
+  );
+
+}
+
+
+/*
+=========================================================
+UPLOAD DA LOGO
+=========================================================
+*/
+
+document
+  .getElementById(
+    "logoArquivo"
+  )
+  ?.addEventListener(
+    "change",
+    async event => {
+
+      const arquivo =
+        event.target.files &&
+        event.target.files[0];
+
+      if(!arquivo){
+        return;
+      }
+
+      if(
+        !arquivo.type.startsWith(
+          "image/"
+        )
+      ){
+
+        alert(
+          "Selecione um arquivo de imagem válido."
+        );
+
+        event.target.value =
+          "";
+
+        return;
+
+      }
+
+      try{
+
+        const base64 =
+          await imagemParaBase64(
+            arquivo
+          );
+
+        document
+          .getElementById(
+            "logo"
+          )
+          .value =
+            base64;
+
+        atualizarPreviewLogo(
+          base64
+        );
+
+      }catch(error){
+
+        console.error(
+          "Erro ao processar logo:",
+          error
+        );
+
+        alert(
+          error.message ||
+          "Não foi possível carregar a logo."
+        );
+
+        event.target.value =
+          "";
+
+      }
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "logo"
+  )
+  ?.addEventListener(
+    "input",
+    event => {
+
+      atualizarPreviewLogo(
+        event.target.value.trim()
+      );
+
+    }
+  );
+
+
+window.removerLogo =
+  function(){
+
+    const logo =
+      document.getElementById(
+        "logo"
+      );
+
+    const arquivo =
+      document.getElementById(
+        "logoArquivo"
+      );
+
+    if(logo){
+      logo.value =
+        "";
+    }
+
+    if(arquivo){
+      arquivo.value =
+        "";
+    }
+
+    atualizarPreviewLogo(
+      ""
+    );
+
+  };
+
+
+/*
+=========================================================
+DATA DE ATIVAÇÃO
+=========================================================
+*/
+
+document
+  .getElementById(
+    "dataAtivacao"
+  )
+  ?.addEventListener(
+    "change",
+    () => {
+
+      const ativacao =
+        document
+          .getElementById(
+            "dataAtivacao"
+          )
+          .value;
+
+      if(!ativacao){
+        return;
+      }
+
+      const vencimento =
+        calcularVencimento(
+          ativacao
+        );
+
+      document
+        .getElementById(
+          "dataVencimento"
+        )
+        .value =
+          vencimento;
+
+      atualizarInfoVencimento();
+
+    }
+  );
+
+
+function atualizarInfoVencimento(){
+
+  const campo =
+    document.getElementById(
+      "dataVencimento"
+    );
+
+  const info =
+    document.getElementById(
+      "vencimentoInfo"
+    );
+
+  if(!campo || !info){
+    return;
+  }
+
+  const valor =
+    campo.value;
+
+  if(!valor){
+
+    info.textContent =
+      "O vencimento será calculado automaticamente.";
+
+    info.className =
+      "date-info";
+
+    return;
+
+  }
+
+  const dias =
+    diasAteVencimento(
+      valor
+    );
+
+  if(
+    dias !== null &&
+    dias < 0
+  ){
+
+    info.textContent =
+      "🔴 Vencimento expirado. O provedor será considerado inadimplente.";
+
+    info.className =
+      "expiration-warning";
+
+    return;
+
+  }
+
+  if(dias === 0){
+
+    info.textContent =
+      "⚠️ Vencimento hoje.";
+
+    info.className =
+      "expiration-warning";
+
+    return;
+
+  }
+
+  info.textContent =
+    "🟢 Vencimento em " +
+    dias +
+    " dia(s).";
+
+  info.className =
+    "date-info";
+
+}
+
+
+/*
+=========================================================
+LOGIN
+=========================================================
+*/
+
+window.login =
+  async function(){
+
+    const usuario =
+      document
+        .getElementById(
+          "loginUser"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+    const senha =
+      document
+        .getElementById(
+          "loginPass"
+        )
+        .value
+        .trim();
+
+    const mensagem =
+      document.getElementById(
+        "loginMsg"
+      );
+
+    if(!usuario || !senha){
+
+      mensagem.textContent =
+        "Informe usuário (E-mail) e senha.";
+
+      return;
+
+    }
+
+    if(
+      usuario !==
+        LOGIN_USUARIO
+          .trim()
+          .toLowerCase() ||
+      senha !==
+        LOGIN_SENHA.trim()
+    ){
+
+      mensagem.textContent =
+        "Usuário ou senha incorretos.";
+
+      return;
+
+    }
+
+    try{
+
+      sessionStorage.setItem(
+        ADMIN_SESSION_KEY,
+        "true"
+      );
+
+      mensagem.textContent =
+        "";
+
+      document
+        .getElementById(
+          "loginCard"
+        )
+        .classList
+        .add(
+          "hidden"
+        );
+
+      document
+        .getElementById(
+          "dashboard"
+        )
+        .classList
+        .remove(
+          "hidden"
+        );
+
+    }catch(error){
+
+      console.error(
+        "Erro ao iniciar sessão administrativa:",
+        error
+      );
+
+      sessionStorage.removeItem(
+        ADMIN_SESSION_KEY
+      );
+
+      mensagem.textContent =
+        "Não foi possível iniciar a sessão.";
+
+      return;
+
+    }
+
+    try{
+
+      iniciarListenerClientes();
+
+      render();
+
+      verificarVencimentos();
+
+    }catch(errorPainel){
+
+      console.error(
+        "Erro ao inicializar conteúdo do painel:",
+        errorPainel
+      );
+
+    }
+
+  };
+
+
+/*
+=========================================================
+SAIR
+=========================================================
+*/
+
+window.showLogin =
+  function(){
+
+    sessionStorage.removeItem(
+      ADMIN_SESSION_KEY
+    );
+
+    editId =
+      null;
+
+    document
+      .getElementById(
+        "dashboard"
+      )
+      .classList
+      .add(
+        "hidden"
+      );
+
+    document
+      .getElementById(
+        "loginCard"
+      )
+      .classList
+      .remove(
+        "hidden"
+      );
+
+    document
+      .getElementById(
+        "loginUser"
+      )
+      .value =
+        "";
+
+    document
+      .getElementById(
+        "loginPass"
+      )
+      .value =
+        "";
+
+    document
+      .getElementById(
+        "loginMsg"
+      )
+      .textContent =
+        "";
+
+    cancelar();
+
+  };
+
+
+/*
+=========================================================
+SALVAR PROVEDOR
+=========================================================
+*/
+
+window.salvar =
+  async function(){
+
+    if(!adminAutenticado()){
+
+      alert(
+        "Sua sessão administrativa expirou. Faça login novamente."
+      );
+
+      showLogin();
+
+      return;
+
+    }
+
+    const nome =
+      document
+        .getElementById(
+          "nome"
+        )
+        .value
+        .trim();
+
+    if(!nome){
+
+      alert(
+        "Nome do Provedor é obrigatório."
+      );
+
+      return;
+
+    }
+
+    let dataAtivacao =
+      document
+        .getElementById(
+          "dataAtivacao"
+        )
+        .value;
+
+    let dataVencimento =
+      document
+        .getElementById(
+          "dataVencimento"
+        )
+        .value;
+
+    if(!dataAtivacao){
+
+      dataAtivacao =
+        formatarDataInput(
+          new Date()
+        );
+
+    }
+
+    if(!dataVencimento){
+
+      dataVencimento =
+        calcularVencimento(
+          dataAtivacao
+        );
+
+    }
+
+    const vencido =
+      estaVencido(
+        dataVencimento
+      );
+
+    const documento =
+      document
+        .getElementById(
+          "documento"
+        )
+        .value
+        .trim();
+
+    // Validação de CPF/CNPJ no painel administrativo
+    if (documento && !validarDocumento(documento)) {
+      alert("O CPF/CNPJ digitado é inválido. Por favor, corrija.");
+      return;
+    }
+
+    const telefone =
+      document
+        .getElementById(
+          "telefone"
+        )
+        .value
+        .trim();
+
+    const clienteExistente =
+      editId
+        ? clientes.find(
+            cliente =>
+              cliente.id === editId
+          )
+        : null;
+
+    const dados = {
+
+      nome,
+
+      logo:
+        document
+          .getElementById(
+            "logo"
+          )
+          .value
+          .trim(),
+
+      fatura:
+        document
+          .getElementById(
+            "fatura"
+          )
+          .value
+          .trim(),
+
+      zap:
+        document
+          .getElementById(
+            "zap"
+          )
+          .value
+          .trim(),
+
+      insta:
+        document
+          .getElementById(
+            "insta"
+          )
+          .value
+          .trim(),
+
+      speed:
+        document
+          .getElementById(
+            "speed"
+          )
+          .value
+          .trim(),
+
+      documento,
+
+      telefone,
+
+      dataAtivacao,
+
+      dataVencimento,
+
+      ativo:
+        vencido
+          ? false
+          : true,
+
+      acessos:
+        clienteExistente
+          ? Number(
+              clienteExistente.acessos ||
+              0
+            )
+          : 0,
+
+      acessosDiarios:
+        clienteExistente
+          ? (
+              clienteExistente
+                .acessosDiarios ||
+              {}
+            )
+          : {},
+
+      historicoAcessos:
+        clienteExistente
+          ? (
+              clienteExistente
+                .historicoAcessos ||
+              []
+            )
+          : []
+
+    };
+
+    try{
+
+      if(editId){
+
+        if(
+          clienteExistente &&
+          !vencido
+        ){
+
+          dados.ativo =
+            clienteExistente.ativo;
+
+        }
+
+        await setDoc(
+
+          doc(
+            db,
+            CLIENTES_COLLECTION,
+            editId
+          ),
+
+          dados
+
+        );
+
+        document
+          .getElementById(
+            "saveMsg"
+          )
+          .textContent =
+            vencido
+              ? "Provedor atualizado e marcado como inadimplente."
+              : "Provedor atualizado com sucesso.";
+
+      }else{
+
+        await addDoc(
+
+          collection(
+            db,
+            CLIENTES_COLLECTION
+          ),
+
+          dados
+
+        );
+
+        document
+          .getElementById(
+            "saveMsg"
+          )
+          .textContent =
+            vencido
+              ? "Provedor cadastrado como inadimplente."
+              : "Provedor cadastrado com sucesso.";
+
+      }
+
+      setTimeout(
+        () => {
+
+          const elemento =
+            document.getElementById(
+              "saveMsg"
+            );
+
+          if(elemento){
+
+            elemento.textContent =
+              "";
+
+          }
+
+        },
+        3000
+      );
+
+      cancelar();
+
+    }catch(error){
+
+      console.error(
+        "Erro ao salvar provedor:",
+        error
+      );
+
+      alert(
+        "Não foi possível salvar o provedor.\n\n" +
+        "Verifique as regras de segurança do Firestore."
+      );
+
+    }
+
+  };
+
+
+/*
+=========================================================
+EDITAR
+=========================================================
+*/
+
+window.editar =
+  function(id){
+
+    const cliente =
+      clientes.find(
+        item =>
+          item.id === id
+      );
+
+    if(!cliente){
+      return;
+    }
+
+    editId =
+      id;
+
+    document
+      .getElementById(
+        "formTitle"
+      )
+      .textContent =
+        "✏️ Editar provedor";
+
+    document
+      .getElementById(
+        "nome"
+      )
+      .value =
+        cliente.nome ||
+        "";
+
+    document
+      .getElementById(
+        "documento"
+      )
+      .value =
+        cliente.documento ||
+        "";
+
+    document
+      .getElementById(
+        "telefone"
+      )
+      .value =
+        cliente.telefone ||
+        "";
+
+    document
+      .getElementById(
+        "dataAtivacao"
+      )
+      .value =
+        cliente.dataAtivacao ||
+        "";
+
+    document
+      .getElementById(
+        "dataVencimento"
+      )
+      .value =
+        cliente.dataVencimento ||
+        "";
+
+    document
+      .getElementById(
+        "logo"
+      )
+      .value =
+        cliente.logo ||
+        "";
+
+    document
+      .getElementById(
+        "fatura"
+      )
+      .value =
+        cliente.fatura ||
+        "";
+
+    document
+      .getElementById(
+        "zap"
+      )
+      .value =
+        cliente.zap ||
+        "";
+
+    document
+      .getElementById(
+        "insta"
+      )
+      .value =
+        cliente.insta ||
+        "";
+
+    document
+      .getElementById(
+        "speed"
+      )
+      .value =
+        cliente.speed ||
+        "";
+
+    atualizarPreviewLogo(
+      cliente.logo ||
+      ""
+    );
+
+    atualizarInfoVencimento();
+
+    document
+      .getElementById(
+        "cancelBtn"
+      )
+      .classList
+      .remove(
+        "hidden"
+      );
+
+    window.scrollTo(
+      {
+        top:0,
+        behavior:"smooth"
+      }
+    );
+
+  };
+
+
+/*
+=========================================================
+CANCELAR
+=========================================================
+*/
+
+window.cancelar =
+  function(){
+
+    editId =
+      null;
+
+    document
+      .getElementById(
+        "formTitle"
+      )
+      .textContent =
+        "➕ Novo provedor";
+
+    [
+      "nome",
+      "documento",
+      "telefone",
+      "dataAtivacao",
+      "dataVencimento",
+      "logo",
+      "fatura",
+      "zap",
+      "insta",
+      "speed"
+    ].forEach(
+      id => {
+
+        const elemento =
+          document.getElementById(
+            id
+          );
+
+        if(elemento){
+
+          elemento.value =
+            "";
+
+        }
+
+      }
+    );
+
+    const arquivo =
+      document.getElementById(
+        "logoArquivo"
+      );
+
+    if(arquivo){
+
+      arquivo.value =
+        "";
+
+    }
+
+    atualizarPreviewLogo(
+      ""
+    );
+
+    atualizarInfoVencimento();
+
+    document
+      .getElementById(
+        "cancelBtn"
+      )
+      .classList
+      .add(
+        "hidden"
+      );
+
+  };
+
+
+/*
+=========================================================
+DAR BAIXA / PAGAMENTO
+=========================================================
+*/
+
+window.darBaixa =
+  async function(id){
+
+    if(!adminAutenticado()){
+
+      alert(
+        "Faça login como administrador."
+      );
+
+      showLogin();
+
+      return;
+
+    }
+
+    const cliente =
+      clientes.find(
+        item =>
+          item.id === id
+      );
+
+    if(!cliente){
+      return;
+    }
+
+    if(
+      !confirm(
+        "Confirmar baixa/pagamento deste provedor?\n\n" +
+        "O acesso será reativado por mais 30 dias."
+      )
+    ){
+
+      return;
+
+    }
+
+    const hoje =
+      formatarDataInput(
+        new Date()
+      );
+
+    const novoVencimento =
+      calcularVencimento(
+        hoje
+      );
+
+    try{
+
+      await updateDoc(
+
+        doc(
+          db,
+          CLIENTES_COLLECTION,
+          id
+        ),
+
+        {
+          ativo:true,
+          dataAtivacao:hoje,
+          dataVencimento:
+            novoVencimento
+        }
+
+      );
+
+    }catch(error){
+
+      console.error(
+        "Erro ao registrar baixa:",
+        error
+      );
+
+      alert(
+        "Não foi possível registrar a baixa."
+      );
+
+    }
+
+  };
+
+
+/*
+=========================================================
+ALTERAR STATUS MANUAL
+=========================================================
+*/
+
+window.alterarStatus =
+  async function(id){
+
+    if(!adminAutenticado()){
+
+      alert(
+        "Faça login como administrador."
+      );
+
+      showLogin();
+
+      return;
+
+    }
+
+    const cliente =
+      clientes.find(
+        item =>
+          item.id === id
+      );
+
+    if(!cliente){
+      return;
+    }
+
+    if(
+      !cliente.ativo &&
+      cliente.vencido
+    ){
+
+      alert(
+        "Este provedor está inadimplente e com vencimento expirado.\n\n" +
+        "Use DAR BAIXA / PAGAMENTO para reativar e gerar novo vencimento de 30 dias."
+      );
+
+      return;
+
+    }
+
+    try{
+
+      await updateDoc(
+
+        doc(
+          db,
+          CLIENTES_COLLECTION,
+          id
+        ),
+
+        {
+          ativo:
+            !cliente.ativo
+        }
+
+      );
+
+    }catch(error){
+
+      console.error(
+        "Erro ao alterar status:",
+        error
+      );
+
+      alert(
+        "Não foi possível alterar o status."
+      );
+
+    }
+
+  };
+
+
+/*
+=========================================================
+EXCLUIR
+=========================================================
+*/
+
+window.excluir =
+  async function(id){
+
+    if(!adminAutenticado()){
+
+      alert(
+        "Faça login como administrador."
+      );
+
+      showLogin();
+
+      return;
+
+    }
+
+    if(
+      !confirm(
+        "Excluir definitivamente este provedor?\n\n" +
+        "Para inadimplência use DESATIVAR."
+      )
+    ){
+
+      return;
+
+    }
+
+    try{
+
+      await deleteDoc(
+
+        doc(
+          db,
+          CLIENTES_COLLECTION,
+          id
+        )
+
+      );
+
+    }catch(error){
+
+      console.error(
+        "Erro ao excluir:",
+        error
+      );
+
+      alert(
+        "Não foi possível excluir o provedor."
+      );
+
+    }
+
+  };
+
+
+/*
+=========================================================
+COPIAR URL
+=========================================================
+*/
+
+window.copiar =
+  function(url){
+
+    if(!url){
+
+      alert(
+        "URL NFC inválida."
+      );
+
+      return;
+
+    }
+
+    if(
+      navigator.clipboard &&
+      window.isSecureContext
+    ){
+
+      navigator.clipboard
+        .writeText(
+          url
+        )
+        .then(
+          () => {
+
+            alert(
+              "URL copiada!"
+            );
+
+          }
+        )
+        .catch(
+          () => {
+
+            copiarFallback(
+              url
+            );
+
+          }
+        );
+
+      return;
+
+    }
+
+    copiarFallback(
+      url
+    );
+
+  };
+
+
+function copiarFallback(
+  url
+){
+
+  const area =
+    document.createElement(
+      "textarea"
+    );
+
+  area.value =
+    url;
+
+  area.setAttribute(
+    "readonly",
+    ""
+  );
+
+  area.style.position =
+    "fixed";
+
+  area.style.left =
+    "-9999px";
+
+  document.body.appendChild(
+    area
+  );
+
+  area.select();
+
+  area.setSelectionRange(
+    0,
+    area.value.length
+  );
+
+  let sucesso =
+    false;
+
+  try{
+
+    sucesso =
+      document.execCommand(
+        "copy"
+      );
+
+  }catch(error){
+
+    sucesso =
+      false;
+
+  }
+
+  document.body.removeChild(
+    area
+  );
+
+  if(sucesso){
+
+    alert(
+      "URL copiada!"
+    );
+
+  }else{
+
+    prompt(
+      "Copie a URL abaixo:",
+      url
+    );
+
+  }
+
+}
+
+
+/*
+=========================================================
+TEMA DINÂMICO NFC
+=========================================================
+*/
+
+function restaurarTemaNFC(){
+
+  const pagina =
+    document.getElementById(
+      "clientPage"
+    );
+
+  if(!pagina){
+    return;
+  }
+
+  pagina.style.setProperty(
+    "--nfc-bg-1",
+    "#020617"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-bg-2",
+    "#0f172a"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-bg-3",
+    "#111827"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-1",
+    "#0ea5e9"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-2",
+    "#6366f1"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-3",
+    "#0ea5e9"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-accent",
+    "#38bdf8"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-accent-soft",
+    "rgba(56,189,248,.18)"
+  );
+
+}
+
+
+function rgbParaHsl(
+  r,
+  g,
+  b
+){
+
+  r /=
+    255;
+
+  g /=
+    255;
+
+  b /=
+    255;
+
+  const max =
+    Math.max(
+      r,
+      g,
+      b
+    );
+
+  const min =
+    Math.min(
+      r,
+      g,
+      b
+    );
+
+  let h =
+    0;
+
+  let s =
+    0;
+
+  const l =
+    (max + min) /
+    2;
+
+  const diferenca =
+    max - min;
+
+  if(diferenca !== 0){
+
+    s =
+      l > .5
+        ? diferenca /
+          (2 - max - min)
+        : diferenca /
+          (max + min);
+
+    switch(max){
+
+      case r:
+
+        h =
+          (
+            (g - b) /
+            diferenca +
+            (g < b ? 6 : 0)
+          ) /
+          6;
+
+        break;
+
+      case g:
+
+        h =
+          (
+            (b - r) /
+            diferenca +
+            2
+          ) /
+          6;
+
+        break;
+
+      case b:
+
+        h =
+          (
+            (r - g) /
+            diferenca +
+            4
+          ) /
+          6;
+
+        break;
+
+    }
+
+  }
+
+  return {
+    h:h * 360,
+    s:s * 100,
+    l:l * 100
+  };
+
+}
+
+
+function hslParaHex(
+  h,
+  s,
+  l
+){
+
+  s /=
+    100;
+
+  l /=
+    100;
+
+  const k =
+    n =>
+      (
+        n +
+        h / 30
+      ) %
+      12;
+
+  const a =
+    s *
+    Math.min(
+      l,
+      1 - l
+    );
+
+  const f =
+    n =>
+      l -
+      a *
+      Math.max(
+        -1,
+        Math.min(
+          k(n) - 3,
+          Math.min(
+            9 - k(n),
+            1
+          )
+        )
+      );
+
+  const r =
+    Math.round(
+      255 *
+      f(0)
+    );
+
+  const g =
+    Math.round(
+      255 *
+      f(8)
+    );
+
+  const b =
+    Math.round(
+      255 *
+      f(4)
+    );
+
+  return (
+    "#" +
+    [r,g,b]
+      .map(
+        valor =>
+          valor
+            .toString(16)
+            .padStart(
+              2,
+              "0"
+            )
+      )
+      .join("")
+  );
+
+}
+
+
+function hexParaRgb(
+  hex
+){
+
+  const valor =
+    String(
+      hex || ""
+    )
+      .replace(
+        "#",
+        ""
+      );
+
+  if(
+    valor.length !== 6
+  ){
+
+    return null;
+
+  }
+
+  const numero =
+    parseInt(
+      valor,
+      16
+    );
+
+  if(
+    Number.isNaN(
+      numero
+    )
+  ){
+
+    return null;
+
+  }
+
+  return {
+
+    r:
+      (numero >> 16) &
+      255,
+
+    g:
+      (numero >> 8) &
+      255,
+
+    b:
+      numero &
+      255
+
+  };
+
+}
+
+
+function gerarTemaNFC(
+  rgb
+){
+
+  const pagina =
+    document.getElementById(
+      "clientPage"
+    );
+
+  if(
+    !pagina ||
+    !rgb
+  ){
+
+    return;
+
+  }
+
+  const hsl =
+    rgbParaHsl(
+      rgb.r,
+      rgb.g,
+      rgb.b
+    );
+
+  const saturacaoBase =
+    Math.max(
+      42,
+      Math.min(
+        hsl.s,
+        78
+      )
+    );
+
+  const bg1 =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        55,
+        saturacaoBase
+      ),
+      4
+    );
+
+  const bg2 =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        58,
+        saturacaoBase
+      ),
+      8
+    );
+
+  const bg3 =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        55,
+        saturacaoBase
+      ),
+      11
+    );
+
+  const glow1 =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        88,
+        Math.max(
+          58,
+          hsl.s
+        )
+      ),
+      48
+    );
+
+  const glow2 =
+    hslParaHex(
+      (
+        hsl.h + 42
+      ) %
+      360,
+      Math.min(
+        82,
+        Math.max(
+          55,
+          hsl.s
+        )
+      ),
+      42
+    );
+
+  const glow3 =
+    hslParaHex(
+      (
+        hsl.h + 18
+      ) %
+      360,
+      Math.min(
+        85,
+        Math.max(
+          55,
+          hsl.s
+        )
+      ),
+      45
+    );
+
+  const accent =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        88,
+        Math.max(
+          60,
+          hsl.s
+        )
+      ),
+      66
+    );
+
+  const accentRgb =
+    hexParaRgb(
+      accent
+    );
+
+  if(!accentRgb){
+
+    restaurarTemaNFC();
+
+    return;
+
+  }
+
+  const accentSoft =
+    "rgba(" +
+    accentRgb.r +
+    "," +
+    accentRgb.g +
+    "," +
+    accentRgb.b +
+    ",.20)";
+
+  pagina.style.setProperty(
+    "--nfc-bg-1",
+    bg1
+  );
+
+  pagina.style.setProperty(
+    "--nfc-bg-2",
+    bg2
+  );
+
+  pagina.style.setProperty(
+    "--nfc-bg-3",
+    bg3
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-1",
+    glow1
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-2",
+    glow2
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-3",
+    glow3
+  );
+
+  pagina.style.setProperty(
+    "--nfc-accent",
+    accent
+  );
+
+  pagina.style.setProperty(
+    "--nfc-accent-soft",
+    accentSoft
+  );
+
+}
+
+
+/*
+=========================================================
+EXTRAÇÃO DE COR DA LOGO
+=========================================================
+*/
+
+function extrairCorPredominante(
+  imagem
+){
+
+  return new Promise(
+    resolve => {
+
+      try{
+
+        if(
+          !imagem ||
+          !imagem.naturalWidth ||
+          !imagem.naturalHeight
+        ){
+
+          resolve(
+            null
+          );
+
+          return;
+
+        }
+
+        const canvas =
+          document.createElement(
+            "canvas"
+          );
+
+        const TAMANHO =
+          96;
+
+        canvas.width =
+          TAMANHO;
+
+        canvas.height =
+          TAMANHO;
+
+        const contexto =
+          canvas.getContext(
+            "2d",
+            {
+              willReadFrequently:true
+            }
+          );
+
+        if(!contexto){
+
+          resolve(
+            null
+          );
+
+          return;
+
+        }
+
+        contexto.clearRect(
+          0,
+          0,
+          TAMANHO,
+          TAMANHO
+        );
+
+        contexto.drawImage(
+          imagem,
+          0,
+          0,
+          TAMANHO,
+          TAMANHO
+        );
+
+        const dados =
+          contexto.getImageData(
+            0,
+            0,
+            TAMANHO,
+            TAMANHO
+          ).data;
+
+        const mapa =
+          new Map();
+
+        for(
+          let i = 0;
+          i < dados.length;
+          i += 4
+        ){
+
+          const r =
+            dados[i];
+
+          const g =
+            dados[i + 1];
+
+          const b =
+            dados[i + 2];
+
+          const a =
+            dados[i + 3];
+
+          if(a < 100){
+            continue;
+          }
+
+          const maior =
+            Math.max(
+              r,
+              g,
+              b
+            );
+
+          const menor =
+            Math.min(
+              r,
+              g,
+              b
+            );
+
+          if(
+            maior > 242 &&
+            menor > 225
+          ){
+
+            continue;
+
+          }
+
+          if(
+            maior < 18
+          ){
+
+            continue;
+
+          }
+
+          const qr =
+            Math.round(
+              r / 16
+            ) *
+            16;
+
+          const qg =
+            Math.round(
+              g / 16
+            ) *
+            16;
+
+          const qb =
+            Math.round(
+              b / 16
+            ) *
+            16;
+
+          const chave =
+            qr +
+            "," +
+            qg +
+            "," +
+            qb;
+
+          mapa.set(
+            chave,
+            (
+              mapa.get(
+                chave
+              ) ||
+              0
+            ) +
+            1
+          );
+
+        }
+
+        if(!mapa.size){
+
+          resolve(
+            null
+          );
+
+          return;
+
+        }
+
+        let melhor =
+          null;
+
+        let maiorPeso =
+          0;
+
+        mapa.forEach(
+          (
+            peso,
+            chave
+          ) => {
+
+            const partes =
+              chave
+                .split(",")
+                .map(
+                  Number
+                );
+
+            const r =
+              partes[0];
+
+            const g =
+              partes[1];
+
+            const b =
+              partes[2];
+
+            const hsl =
+              rgbParaHsl(
+                r,
+                g,
+                b
+              );
+
+            const saturacaoBonus =
+              1 +
+              (
+                Math.min(
+                  hsl.s,
+                  80
+                ) /
+                100
+              );
+
+            const luminosidadeBonus =
+              (
+                hsl.l >= 15 &&
+                hsl.l <= 82
+              )
+                ? 1.15
+                : .85;
+
+            const pesoFinal =
+              peso *
+              saturacaoBonus *
+              luminosidadeBonus;
+
+            if(
+              pesoFinal >
+              maiorPeso
+            ){
+
+              maiorPeso =
+                pesoFinal;
+
+              melhor = {
+                r,
+                g,
+                b
+              };
+
+            }
+
+          }
+        );
+
+        resolve(
+          melhor
+        );
+
+      }catch(error){
+
+        console.warn(
+          "Não foi possível extrair a cor da logo:",
+          error
+        );
+
+        resolve(
+          null
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/*
+=========================================================
+PREPARAÇÃO DA LOGO PÚBLICA
+=========================================================
+*/
+
+function configurarLogoPublica(
+  src
+){
+
+  const logo =
+    document.getElementById(
+      "clientLogo"
+    );
+
+  if(!logo){
+
+    return Promise.resolve();
+
+  }
+
+  ultimoTemaLogo =
+    "";
+
+  restaurarTemaNFC();
+
+  logo.style.visibility =
+    "hidden";
+
+  logo.style.opacity =
+    "0";
+
+  return new Promise(
+    resolve => {
+
+      let concluido =
+        false;
+
+      const finalizar =
+        () => {
+
+          if(concluido){
+
+            return;
+
+          }
+
+          concluido =
+            true;
+
+          resolve();
+
+        };
+
+      logo.onload =
+        async () => {
+
+          try{
+
+            const cor =
+              await extrairCorPredominante(
+                logo
+              );
+
+            if(cor){
+
+              gerarTemaNFC(
+                cor
+              );
+
+            }else{
+
+              restaurarTemaNFC();
+
+            }
+
+          }catch(error){
+
+            console.warn(
+              "Falha ao preparar tema da logo:",
+              error
+            );
+
+            restaurarTemaNFC();
+
+          }
+
+          logo.style.visibility =
+            "visible";
+
+          logo.style.opacity =
+            "1";
+
+          ultimoTemaLogo =
+            src;
+
+          finalizar();
+
+        };
+
+      logo.onerror =
+        () => {
+
+          ultimoTemaLogo =
+            "";
+
+          restaurarTemaNFC();
+
+          logo.style.display =
+            "none";
+
+          logo.style.visibility =
+            "hidden";
+
+          finalizar();
+
+        };
+
+      try{
+
+        if(
+          !String(
+            src
+          ).startsWith(
+            "data:"
+          )
+        ){
+
+          logo.crossOrigin =
+            "anonymous";
+
+        }
+
+      }catch(error){
+
+        console.warn(
+          "Não foi possível configurar CORS da logo:",
+          error
+        );
+
+      }
+
+      logo.src =
+        src;
+
+    }
+  );
+
+}
+
+
+/*
+=========================================================
+REGISTRO DE ACESSO NFC
+=========================================================
+*/
+
+async function registrarAcessoNFC(
+  id
+){
+
+  if(!id){
+    return;
+  }
+
+  if(
+    ultimoAcessoNFCRegistrado ===
+      id
+  ){
+
+    return;
+
+  }
+
+  ultimoAcessoNFCRegistrado =
+    id;
+
+  const dia =
+    chaveDiaAtual();
+
+  const referencia =
+    doc(
+      db,
+      CLIENTES_COLLECTION,
+      id
+    );
+
+  const registro = {
+    data:
+      serverTimestamp(),
+    timestamp:
+      Date.now()
+  };
+
+  try{
+
+    await updateDoc(
+      referencia,
+      {
+
+        acessos:
+          increment(
+            1
+          ),
+
+        [`acessosDiarios.${dia}`]:
+          increment(
+            1
+          ),
+
+        historicoAcessos:
+          arrayUnion(
+            registro
+          ),
+
+        ultimoAcesso:
+          serverTimestamp()
+
+      }
+    );
+
+  }catch(error){
+
+    console.error(
+      "Não foi possível registrar acesso NFC:",
+      error
+    );
+
+  }
+
+}
+/*
+=========================================================
+ABRIR NFC
+=========================================================
+*/
+
+window.abrirNFC =
+  async function(
+    id,
+    objCliente = null
+  ){
+
+    const cliente =
+      objCliente ||
+      clientes.find(
+        item =>
+          item.id === id
+      );
+
+    if(!cliente){
+
+      mostrarErroNFC(
+        "Acesso não encontrado",
+        "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
+      );
+
+      return;
+
+    }
+
+    registrarAcessoNFC(
+      cliente.id
+    );
+
+    const admin =
+      document.getElementById(
+        "adminPage"
+      );
+
+    const pagina =
+      document.getElementById(
+        "clientPage"
+      );
+
+    const nome =
+      document.getElementById(
+        "clientName"
+      );
+
+    const logo =
+      document.getElementById(
+        "clientLogo"
+      );
+
+    const active =
+      document.getElementById(
+        "clientActive"
+      );
+
+    const inactive =
+      document.getElementById(
+        "inactiveBox"
+      );
+
+    if(admin){
+
+      admin.style.display =
+        "none";
+
+    }
+
+    if(pagina){
+
+      pagina.style.display =
+        "block";
+
+    }
+
+    if(logo){
+
+      logo.style.visibility =
+        "hidden";
+
+      logo.style.opacity =
+        "0";
+
+      logo.style.display =
+        "none";
+
+      logo.removeAttribute(
+        "src"
+      );
+
+    }
+
+    ultimoTemaLogo =
+      "";
+
+    restaurarTemaNFC();
+
+    if(nome){
+
+      nome.textContent =
+        cliente.nome;
+
+    }
+
+    const acessoAtivo =
+      cliente.ativo &&
+      !cliente.vencido;
+
+    if(active){
+
+      active.classList.toggle(
+        "hidden",
+        !acessoAtivo
+      );
+
+    }
+
+    if(inactive){
+
+      inactive.classList.toggle(
+        "hidden",
+        acessoAtivo
+      );
+
+    }
+
+    if(acessoAtivo){
+
+      setLink(
+        "faturaBtn",
+        cliente.fatura,
+        "fatura"
+      );
+
+      setLink(
+        "zapBtn",
+        cliente.zap,
+        "whatsapp"
+      );
+
+      setLink(
+        "speedBtn",
+        cliente.speed,
+        "speed"
+      );
+
+      setLink(
+        "instaBtn",
+        cliente.insta,
+        "instagram"
+      );
+
+    }else{
+
+      setLink(
+        "faturaBtn",
+        "",
+        "fatura"
+      );
+
+      setLink(
+        "zapBtn",
+        "",
+        "whatsapp"
+      );
+
+      setLink(
+        "speedBtn",
+        "",
+        "speed"
+      );
+
+      setLink(
+        "instaBtn",
+        "",
+        "instagram"
+      );
+
+      if(inactive){
+
+        if(cliente.vencido){
+
+          inactive.innerHTML =
+            "<h2>🔴 Acesso temporariamente indisponível</h2>" +
+            "<p>O período de utilização deste provedor terminou.</p>" +
+            "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
+
+        }else{
+
+          inactive.innerHTML =
+            "<h2>🔴 Acesso temporariamente indisponível</h2>" +
+            "<p>Seu acesso está temporariamente suspenso.</p>" +
+            "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
+
+        }
+
+      }
+
+    }
+
+    document.title =
+      cliente.nome +
+      " — Acesso";
+
+    if(cliente.logo && logo){
+
+      logo.style.display =
+        "block";
+
+      await configurarLogoPublica(
+        cliente.logo
+      );
+
+    }else if(logo){
+
+      restaurarTemaNFC();
+
+      logo.removeAttribute(
+        "src"
+      );
+
+      logo.style.display =
+        "none";
+
+      logo.style.visibility =
+        "hidden";
+
+      logo.style.opacity =
+        "0";
+
+    }
+
+    marcarNFCPronto();
+
+  };
+
+
+/*
+=========================================================
+NORMALIZAR LINKS
+=========================================================
+*/
+
+function normalizarLink(
+  url,
+  tipo
+){
+
+  if(!url){
+    return "";
+  }
+
+  let valor =
+    String(url).trim();
+
+  if(!valor){
+    return "";
+  }
+
+  if(tipo === "whatsapp"){
+
+    if(
+      /^https?:\/\//i.test(valor)
+    ){
+      return valor;
+    }
+
+    if(
+      /^whatsapp:/i.test(valor)
+    ){
+      return valor;
+    }
+
+    const numero =
+      valor.replace(
+        /\D/g,
+        ""
+      );
+
+    if(numero.length >= 10){
+
+      return (
+        "https://wa.me/" +
+        numero
+      );
+
+    }
+
+    return valor;
+
+  }
+
+  if(tipo === "instagram"){
+
+    if(
+      /^https?:\/\//i.test(valor)
+    ){
+      return valor;
+    }
+
+    if(
+      /^instagram\.com\//i.test(valor)
+    ){
+
+      return (
+        "https://" +
+        valor
+      );
+
+    }
+
+    if(
+      !/[/\s]/.test(valor)
+    ){
+
+      return (
+        "https://instagram.com/" +
+        valor.replace(
+          /^@/,
+          ""
+        )
+      );
+
+    }
+
+    return valor;
+
+  }
+
+  if(
+    /^[a-z][a-z0-9+.-]*:\/\//i.test(valor)
+  ){
+    return valor;
+  }
+
+  if(
+    /^www\./i.test(valor)
+  ){
+
+    return (
+      "https://" +
+      valor
+    );
+
+  }
+
+  if(
+    /^[^\s]+\.[^\s]+$/i.test(valor)
+  ){
+
+    return (
+      "https://" +
+      valor
+    );
+
+  }
+
+  return valor;
+
+}
+
+
+/*
+=========================================================
+SET LINK
+=========================================================
+*/
+
+function setLink(
+  id,
+  url,
+  tipo
+){
+
+  const el =
+    document.getElementById(
+      id
+    );
+
+  if(!el){
+    return;
+  }
+
+  const link =
+    normalizarLink(
+      url,
+      tipo
+    );
+
+  el.removeAttribute(
+    "href"
+  );
+
+  el.removeAttribute(
+    "onclick"
+  );
+
+  el.style.display =
+    link
+      ? "flex"
+      : "none";
+
+  if(!link){
+
+    el.href =
+      "#";
+
+    return;
+
+  }
+
+  el.href =
+    link;
+
+  el.target =
+    "_blank";
+
+  el.rel =
+    "noopener noreferrer";
+
+}
+
+
+/*
+=========================================================
+ESCAPE HTML
+=========================================================
+*/
+
+function escapeHtml(s){
+
+  return String(s).replace(
+    /[&<>"']/g,
+    m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[m])
+  );
+
+}
+
+
+/*
+=========================================================
+ESCAPE JS
+=========================================================
+*/
+
+function escapeJs(s){
+
+  return String(s)
+    .replace(
+      /\\/g,
+      "\\\\"
+    )
+    .replace(
+      /'/g,
+      "\\'"
+    )
+    .replace(
+      /\r/g,
+      "\\r"
+    )
+    .replace(
+      /\n/g,
+      "\\n"
+    );
+
+}
+
+
+/*
+=========================================================
+RENDER
+=========================================================
+*/
+
+window.render =
+  function(){
+
+    const pesquisa =
+      document.getElementById(
+        "pesquisa"
+      );
+
+    const q =
+      pesquisa
+        ? pesquisa.value.toLowerCase()
+        : "";
+
+    const lista =
+      document.getElementById(
+        "lista"
+      );
+
+    if(!lista){
+      return;
+    }
+
+    const filtrados =
+      clientes.filter(
+        cliente =>
+          String(cliente.nome || "")
+            .toLowerCase()
+            .includes(q)
+      );
+
+    const ativosElement =
+      document.getElementById(
+        "ativos"
+      );
+
+    const desativadosElement =
+      document.getElementById(
+        "desativados"
+      );
+
+    if(ativosElement){
+
+      ativosElement.textContent =
+        clientes.filter(
+          cliente =>
+            cliente.ativo &&
+            !cliente.vencido
+        ).length;
+
+    }
+
+    if(desativadosElement){
+
+      desativadosElement.textContent =
+        clientes.filter(
+          cliente =>
+            !cliente.ativo ||
+            cliente.vencido
+        ).length;
+
+    }
+
+    const baseUrl =
+      location.href.split("#")[0];
+
+    lista.innerHTML =
+      filtrados
+        .map(
+          cliente => {
+
+            const url =
+              baseUrl +
+              "#nfc=" +
+              encodeURIComponent(
+                cliente.id
+              );
+
+            const urlProvedor =
+              baseUrl +
+              "#provedor=" +
+              encodeURIComponent(
+                cliente.id
+              );
+
+            const vencimentoTexto =
+              cliente.dataVencimento
+                ? formatarDataBR(
+                    cliente.dataVencimento
+                  )
+                : "Não informado";
+
+            const ativacaoTexto =
+              cliente.dataAtivacao
+                ? formatarDataBR(
+                    cliente.dataAtivacao
+                  )
+                : "Não informado";
+
+            const statusTexto =
+              cliente.vencido
+                ? "● INADIMPLENTE"
+                : cliente.ativo
+                  ? "● ATIVO"
+                  : "● DESATIVADO";
+
+            const statusClasse =
+              cliente.vencido
+                ? "expired"
+                : cliente.ativo
+                  ? "active"
+                  : "inactive";
+
+            const botaoStatus =
+              cliente.vencido
+                ? `
+                  <button
+                    class="btn orange"
+                    type="button"
+                    onclick="darBaixa('${escapeJs(cliente.id)}')"
+                  >
+                    💳 DAR BAIXA / PAGAMENTO
+                  </button>
+                `
+                : `
+                  <button
+                    class="btn ${cliente.ativo ? "red" : "green"}"
+                    type="button"
+                    onclick="alterarStatus('${escapeJs(cliente.id)}')"
+                  >
+                    ${cliente.ativo ? "🔴 DESATIVAR" : "🟢 ATIVAR"}
+                  </button>
+                `;
+
+            return `
+              <div class="client">
+                <div class="row">
+                  <strong>
+                    ${escapeHtml(cliente.nome)}
+                  </strong>
+                  <span
+                    class="status ${statusClasse}"
+                  >
+                    ${statusTexto}
+                  </span>
+                </div>
+                <p class="muted">
+                  ${cliente.documento
+                    ? `Documento: ${escapeHtml(cliente.documento)}<br>`
+                    : ""}
+                  ${cliente.telefone
+                    ? `Contato: ${escapeHtml(cliente.telefone)}<br>`
+                    : ""}
+                  Data de ativação:
+                  ${escapeHtml(ativacaoTexto)}
+                  <br>
+                  Data de vencimento:
+                  ${escapeHtml(vencimentoTexto)}
+                </p>
+                <p class="muted">
+                  URL NFC:
+                  ${escapeHtml(url)}
+                </p>
+                <div class="row">
+                  <button
+                    class="btn"
+                    type="button"
+                    onclick="editar('${escapeJs(cliente.id)}')"
+                  >
+                    ✏️ EDITAR
+                  </button>
+                  ${botaoStatus}
+                  <button
+                    class="btn gray"
+                    type="button"
+                    onclick="copiar('${escapeJs(url)}')"
+                  >
+                    🔗 COPIAR URL
+                  </button>
+                  <button
+                    class="btn red"
+                    type="button"
+                    onclick="excluir('${escapeJs(cliente.id)}')"
+                  >
+                    🗑️ EXCLUIR
+                  </button>
+                </div>
+                <p
+                  class="muted"
+                  style="margin-top:12px"
+                >
+                  Área do provedor:
+                  ${escapeHtml(urlProvedor)}
+                </p>
+                <div class="row">
+                  <button
+                    class="btn gray"
+                    type="button"
+                    onclick="copiar('${escapeJs(urlProvedor)}')"
+                  >
+                    🔗 COPIAR LINK DO PROVEDOR
+                  </button>
+                </div>
+              </div>
+            `;
+
+          }
+        )
+        .join("") ||
+      "<p>Nenhum provedor encontrado.</p>";
+
+  };
+
+
+/*
+=========================================================
+PAINEL DO PROVEDOR
+=========================================================
+*/
+
+function limparPainelProvedor(){
+
+  const conteudo =
+    document.getElementById(
+      "provedorConteudo"
+    );
+
+  const loading =
+    document.getElementById(
+      "provedorLoading"
+    );
+
+  const erro =
+    document.getElementById(
+      "provedorErro"
+    );
+
+  if(conteudo){
+
+    conteudo.classList.add(
+      "hidden"
+    );
+
+  }
+
+  if(erro){
+
+    erro.classList.add(
+      "hidden"
+    );
+
+  }
+
+  if(loading){
+
+    loading.classList.remove(
+      "hidden"
+    );
+
+  }
+
+}
+
+
+function mostrarErroProvedor(
+  titulo,
+  mensagem
+){
+
+  const loading =
+    document.getElementById(
+      "provedorLoading"
+    );
+
+  const conteudo =
+    document.getElementById(
+      "provedorConteudo"
+    );
+
+  const erro =
+    document.getElementById(
+      "provedorErro"
+    );
+
+  const erroTitulo =
+    document.getElementById(
+      "provedorErroTitulo"
+    );
+
+  const erroMensagem =
+    document.getElementById(
+      "provedorErroMensagem"
+    );
+
+  const preAcesso =
+    document.getElementById(
+      "provedorPreAcesso"
+    );
+
+  if(loading){
+
+    loading.classList.add(
+      "hidden"
+    );
+
+  }
+
+  if(conteudo){
+
+    conteudo.classList.add(
+      "hidden"
+    );
+
+  }
+
+  if(preAcesso){
+
+    preAcesso.classList.add(
+      "hidden"
+    );
+
+  }
+
+  if(erroTitulo){
+
+    erroTitulo.textContent =
+      titulo ||
+      "Acesso indisponível";
+
+  }
+
+  if(erroMensagem){
+
+    erroMensagem.textContent =
+      mensagem ||
+      "Não foi possível carregar os dados.";
+
+  }
+
+  if(erro){
+
+    erro.classList.remove(
+      "hidden"
+    );
+
+  }
+
+  document.title =
+    titulo ||
+    "Área do Provedor";
+
+  marcarProvedorPronto();
+
+}
+
+
+function formatarNumero(
+  valor
+){
+
+  const numero =
+    Number(valor);
+
+  if(
+    !Number.isFinite(numero)
+  ){
+
+    return "0";
+
+  }
+
+  return numero.toLocaleString(
+    "pt-BR"
+  );
+
+}
+
+
+function renderHistoricoAcessos(
+  cliente
+){
+
+  const elemento =
+    document.getElementById(
+      "provedorHistoricoAcessos"
+    );
+
+  if(!elemento){
+    return;
+  }
+
+  const historico =
+    Array.isArray(
+      cliente.historicoAcessos
+    )
+      ? [
+          ...cliente.historicoAcessos
+        ]
+      : [];
+
+  historico.sort(
+    (a,b) => {
+
+      const dataA =
+        parseDataLocal(
+          a?.data || a?.timestamp
+        );
+
+      const dataB =
+        parseDataLocal(
+          b?.data || b?.timestamp
+        );
+
+      return (
+        (
+          dataB?.getTime() || 0
+        ) -
+        (
+          dataA?.getTime() || 0
+        )
+      );
+
+    }
+  );
+
+  if(!historico.length){
+
+    elemento.textContent =
+      "Nenhum acesso registrado.";
+
+    return;
+
+  }
+
+  elemento.innerHTML =
+    historico
+      .slice(0,100)
+      .map(
+        item => {
+
+          const data =
+            item?.data ||
+            item?.timestamp;
+
+          return `
+            <div class="date-info">
+              ${escapeHtml(
+                formatarDataHoraBR(data)
+              )}
+            </div>
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+function preencherLinksProvedor(
+  cliente
+){
+
+  const campos = {
+
+    provedorFatura:
+      cliente.fatura || "",
+
+    provedorZap:
+      cliente.zap || "",
+
+    provedorInsta:
+      cliente.insta || "",
+
+    provedorSpeed:
+      cliente.speed || ""
+
+  };
+
+  Object.entries(
+    campos
+  ).forEach(
+    ([id,valor]) => {
+
+      const campo =
+        document.getElementById(
+          id
+        );
+
+      if(campo){
+
+        campo.value =
+          valor;
+
+      }
+
+    }
+  );
+
+}
+
+
+document
+  .getElementById(
+    "salvarLinksProvedor"
+  )
+  ?.addEventListener(
+    "click",
+    async () => {
+
+      if(
+        !provedorDocumentoValidado ||
+        !provedorClienteAtual?.id
+      ){
+
+        return;
+
+      }
+
+      const mensagem =
+        document.getElementById(
+          "provedorLinksMsg"
+        );
+
+      const dados = {
+
+        fatura:
+          document.getElementById(
+            "provedorFatura"
+          )?.value.trim() || "",
+
+        zap:
+          document.getElementById(
+            "provedorZap"
+          )?.value.trim() || "",
+
+        insta:
+          document.getElementById(
+            "provedorInsta"
+          )?.value.trim() || "",
+
+        speed:
+          document.getElementById(
+            "provedorSpeed"
+          )?.value.trim() || ""
+
+      };
+
+      try{
+
+        await updateDoc(
+
+          doc(
+            db,
+            CLIENTES_COLLECTION,
+            provedorClienteAtual.id
+          ),
+
+          dados
+
+        );
+
+        if(mensagem){
+
+          mensagem.style.color =
+            "var(--green)";
+
+          mensagem.textContent =
+            "Links atualizados com sucesso.";
+
+        }
+
+      }catch(error){
+
+        console.error(
+          "Erro ao atualizar links:",
+          error
+        );
+
+        if(mensagem){
+
+          mensagem.style.color =
+            "var(--red)";
+
+          mensagem.textContent =
+            "Não foi possível atualizar os links.";
+
+        }
+
+      }
+
+    }
+  );
+
+
+function renderPainelProvedor(
+  cliente
+){
+
+  if(!cliente){
+
+    mostrarErroProvedor(
+      "Acesso indisponível",
+      "Não foi possível carregar os dados do provedor."
+    );
+
+    return;
+
+  }
+
+  if(!provedorDocumentoValidado){
+
+    mostrarPreAcessoProvedor(
+      cliente
+    );
+
+    return;
+
+  }
+
+  const loading =
+    document.getElementById(
+      "provedorLoading"
+    );
+
+  const conteudo =
+    document.getElementById(
+      "provedorConteudo"
+    );
+
+  const erro =
+    document.getElementById(
+      "provedorErro"
+    );
+
+  const nome =
+    document.getElementById(
+      "provedorNome"
+    );
+
+  const documento =
+    document.getElementById(
+      "provedorDocumento"
+    );
+
+  const telefone =
+    document.getElementById(
+      "provedorTelefone"
+    );
+
+  const vencimento =
+    document.getElementById(
+      "provedorVencimento"
+    );
+
+  const acessos =
+    document.getElementById(
+      "provedorAcessos"
+    );
+
+  const acessosHoje =
+    document.getElementById(
+      "provedorAcessosHoje"
+    );
+
+  const status =
+    document.getElementById(
+      "provedorStatus"
+    );
+
+  const statusTexto =
+    document.getElementById(
+      "provedorStatusTexto"
+    );
+
+  const logo =
+    document.getElementById(
+      "provedorLogo"
+    );
+
+  const logoEmpty =
+    document.getElementById(
+      "provedorLogoEmpty"
+);
+
+
+  if(nome){
+
+
+    nome.textContent =
+      cliente.nome ||
+      "Provedor";
+
+
+  }
+
+
+  if(documento){
+
+
+    documento.textContent =
+      cliente.documento ||
+      "Não informado";
+
+
+  }
+
+
+  if(telefone){
+
+
+    telefone.textContent =
+      cliente.telefone ||
+      "Não informado";
+
+
+  }
+
+
+  if(vencimento){
+
+
+    vencimento.textContent =
+      cliente.dataVencimento
+        ? formatarDataBR(
+            cliente.dataVencimento
+          )
+        : "Não informado";
+
+
+  }
+
+
+  if(acessos){
+
+
+    acessos.textContent =
+      formatarNumero(
+        cliente.acessos
+      );
+
+
+  }
+
+
+  if(acessosHoje){
+
+
+    acessosHoje.textContent =
+      formatarNumero(
+        cliente.acessosDiarios?.[
+          chaveDiaAtual()
+        ] || 0
+      );
+
+
+  }
+
+
+  if(status){
+
+
+    status.className =
+      "provedor-status";
+
+
+    if(
+      cliente.vencido
+    ){
+
+
+      status.classList.add(
+        "inadimplente"
+      );
+
+
+      status.textContent =
+        "● INADIMPLENTE";
+
+
+    }else if(
+      cliente.ativo
+    ){
+
+
+      status.classList.add(
+        "ativo"
+      );
+
+
+      status.textContent =
+        "● ATIVO";
+
+
+    }else{
+
+
+      status.classList.add(
+        "desativado"
+      );
+
+
+      status.textContent =
+        "● DESATIVADO";
+
+
+    }
+
+
+  }
+
+
+  if(statusTexto){
+
+
+    statusTexto.textContent =
+      cliente.vencido
+        ? "Inadimplente"
+        : cliente.ativo
+          ? "Ativo"
+          : "Desativado";
+
+
+  }
+
+
+  if(cliente.logo && logo && logoEmpty){
+
+
+    logo.src =
+      cliente.logo;
+
+
+    logo.classList.remove(
+      "hidden"
+    );
+
+
+    logoEmpty.classList.add(
+      "hidden"
+    );
+
+
+    logo.onerror =
+      () => {
+
+
+        logo.classList.add(
+          "hidden"
+        );
+
+
+        logoEmpty.classList.remove(
+          "hidden"
+        );
+
+
+      };
+
+
+  }else if(logo && logoEmpty){
+
+
+    logo.removeAttribute(
+      "src"
+    );
+
+
+    logo.classList.add(
+      "hidden"
+    );
+
+
+    logoEmpty.classList.remove(
+      "hidden"
+    );
+
+
+  }
+
+
+  if(loading){
+
+
+    loading.classList.add(
+      "hidden"
+    );
+
+
+  }
+
+
+  if(erro){
+
+
+    erro.classList.add(
+      "hidden"
+    );
+
+
+  }
+
+
+  if(conteudo){
+
+
+    conteudo.classList.remove(
+      "hidden"
+    );
+
+
+  }
+
+
+  document.title =
+    (
+      cliente.nome ||
+      "Provedor"
+    ) +
+    " — Área do Provedor";
+
+
+  renderHistoricoAcessos(
+    cliente
+  );
+
+
+  preencherLinksProvedor(
+    cliente
+  );
+
+
+  marcarProvedorPronto();
+
+
+}
+
+
+/*
+=========================================================
+PROCESSAR ROTA PROVEDOR
+=========================================================
+*/
+
+
+function processarProvedor(){
+
+
+  const hash =
+    location.hash || "";
+
+
+  if(
+    !hash
+      .toLowerCase()
+      .startsWith(
+        "provedor="
+      )
+  ){
+
+
+    return false;
+
+
+  }
+
+
+  let id = "";
+
+
+  try{
+
+
+    id =
+      decodeURIComponent(
+        hash.substring(
+          "provedor=".length
+        )
+      );
+
+
+  }catch(error){
+
+
+    console.error(
+      "Hash do provedor inválido:",
+      error
+    );
+
+
+    id =
+      "";
+
+
+  }
+
+
+  const admin =
+    document.getElementById(
+      "adminPage"
+    );
+
+
+  const client =
+    document.getElementById(
+      "clientPage"
+    );
+
+
+  const painel =
+    document.getElementById(
+      "painelProvedor"
+    );
+
+
+  if(admin){
+
+
+    admin.style.display =
+      "none";
+
+
+  }
+
+
+  if(client){
+
+
+    client.style.display =
+      "none";
+
+
+  }
+
+
+  if(painel){
+
+
+    painel.style.display =
+      "block";
+
+
+  }
+
+
+  document.documentElement
+    .classList
+    .add(
+      "provedor-route"
+    );
+
+
+  document.documentElement
+    .classList
+    .remove(
+      "provedor-ready"
+    );
+
+
+  provedorDocumentoValidado =
+    false;
+
+
+  provedorClienteAtual =
+    null;
+
+
+  limparPainelProvedor();
+
+
+  iniciarListenerProvedor(
+    id
+  );
+
+
+  return true;
+
+
+}
+
+
+/*
+=========================================================
+PROCESSAR NFC
+=========================================================
+*/
+
+
+async function processarNFC(){
+
+
+  const hash =
+    location.hash || "";
+
+
+  if(
+    hash
+      .toLowerCase()
+      .startsWith(
+        "#nfc="
+      )
+  ){
+
+
+    let id = "";
+
+
+    try{
+
+
+      id =
+        decodeURIComponent(
+          hash.substring(5)
+        );
+
+
+    }catch(error){
+
+
+      console.error(
+        "Hash NFC inválido:",
+        error
+      );
+
+
+      id =
+        "";
+
+
+    }
+
+
+    let cliente =
+      clientes.find(
+        item =>
+          item.id === id
+      ) ||
+      null;
+
+
+    if(!cliente){
+
+
+      const admin =
+        document.getElementById(
+          "adminPage"
+        );
+
+
+      const pagina =
+        document.getElementById(
+          "clientPage"
+        );
+
+
+      const nome =
+        document.getElementById(
+          "clientName"
+        );
+
+
+      const active =
+        document.getElementById(
+          "clientActive"
+        );
+
+
+      const inactive =
+        document.getElementById(
+          "inactiveBox"
+        );
+
+
+      if(admin){
+
+
+        admin.style.display =
+          "none";
+
+
+      }
+
+
+      if(pagina){
+
+
+        pagina.style.display =
+          "block";
+
+
+      }
+
+
+      if(nome){
+
+
+        nome.textContent =
+          "Carregando...";
+
+
+      }
+
+
+      if(active){
+
+
+        active.classList.add(
+          "hidden"
+        );
+
+
+      }
+
+
+      if(inactive){
+
+
+        inactive.classList.add(
+          "hidden"
+        );
+
+
+      }
+
+
+      try{
+
+
+        const docRef =
+          doc(
+            db,
+            CLIENTES_COLLECTION,
+            id
+          );
+
+
+        const docSnap =
+          await getDoc(
+            docRef
+          );
+
+
+        if(docSnap.exists()){
+
+
+          cliente =
+            normalizarCliente({
+
+              id:
+                docSnap.id,
+
+              ...docSnap.data()
+
+            });
+
+
+        }
+
+
+      }catch(error){
+
+
+        console.error(
+          "Erro ao buscar provedor NFC no Firestore:",
+          error
+        );
+
+
+      }
+
+
+    }
+
+
+    if(!cliente){
+
+
+      mostrarErroNFC(
+        "Acesso não encontrado",
+        "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
+      );
+
+
+      return true;
+
+
+    }
+
+
+    abrirNFC(
+      id,
+      cliente
+    );
+
+
+    return true;
+
+
+  }
+
+
+  return false;
+
+
+}
+
+
+/*
+=========================================================
+INICIALIZAÇÃO
+=========================================================
+*/
+
+
+window.addEventListener(
+  "load",
+  () => {
+
+
+    const hash =
+      location.hash
+        .toLowerCase();
+
+
+    const estaNaRotaNFC =
+      hash.startsWith(
+        "nfc="
+      );
+
+
+    const estaNaRotaProvedor =
+      hash.startsWith(
+        "provedor="
+      );
+
+
+    if(
+      !estaNaRotaProvedor &&
+      !estaNaRotaNFC
+    ){
+
+
+      iniciarListenerClientes();
+
+
+    }
+
+
+    restaurarTemaNFC();
+
+
+    atualizarPreviewLogo(
+      ""
+    );
+
+
+    if(estaNaRotaProvedor){
+
+
+      processarProvedor();
+
+
+      return;
+
+
+    }
+
+
+    if(estaNaRotaNFC){
+
+
+      iniciarListenerClientes();
+
+
+      processarNFC();
+
+
+      return;
+
+
+    }
+
+
+    if(
+      adminAutenticado()
+    ){
+
+
+      document
+        .getElementById(
+          "loginCard"
+        )
+        .classList
+        .add(
+          "hidden"
+        );
+
+
+      document
+        .getElementById(
+          "dashboard"
+        )
+        .classList
+        .remove(
+          "hidden"
+        );
+
+
+      render();
+
+
+      verificarVencimentos();
+
+
+    }else{
+
+
+      document
+        .getElementById(
+          "loginCard"
+        )
+        .classList
+        .remove(
+          "hidden"
+        );
+
+
+      document
+        .getElementById(
+          "dashboard"
+        )
+        .classList
+        .add(
+          "hidden"
+        );
+
+
+    }
+
+
+  }
+);
+
+
+/*
+=========================================================
+ALTERAÇÃO DA URL
+=========================================================
+*/
+
+
+window.addEventListener(
+  "hashchange",
+  () => {
+
+
+    const hash =
+      location.hash
+        .toLowerCase();
+
+
+    const novaRotaNFC =
+      hash.startsWith(
+        "nfc="
+      );
+
+
+    const novaRotaProvedor =
+      hash.startsWith(
+        "provedor="
+      );
+
+
+    /*
+
+
+    ROTA PROVEDOR
+
+
+    */
+
+
+    if(novaRotaProvedor){
+
+
+      document.documentElement
+        .classList
+        .remove(
+          "nfc-route",
+          "nfc-ready"
+        );
+
+
+      document.documentElement
+        .classList
+        .add(
+          "provedor-route"
+        );
+
+
+      document.documentElement
+        .classList
+        .remove(
+          "provedor-ready"
+        );
+
+
+      if(unsubscribeClientes){
+
+
+        unsubscribeClientes();
+
+
+        unsubscribeClientes =
+          null;
+
+
+      }
+
+
+      provedorDocumentoValidado =
+        false;
+
+
+      provedorClienteAtual =
+        null;
+
+
+      processarProvedor();
+
+
+      return;
+
+
+    }
+
+
+    /*
+
+
+    ROTA NFC
+
+
+    */
+
+
+    if(novaRotaNFC){
+
+
+      document.documentElement
+        .classList
+        .remove(
+          "provedor-route",
+          "provedor-ready"
+        );
+
+
+      document.documentElement
+        .classList
+        .add(
+          "nfc-route"
+        );
+
+
+      document.documentElement
+        .classList
+        .remove(
+          "nfc-ready"
+        );
+
+
+      ultimoTemaLogo =
+        "";
+
+
+      ultimoAcessoNFCRegistrado =
+        null;
+
+
+      restaurarTemaNFC();
+
+
+      if(unsubscribeProvedor){
+
+
+        unsubscribeProvedor();
+
+
+        unsubscribeProvedor =
+          null;
+
+
+      }
+
+
+      provedorDocumentoValidado =
+        false;
+
+
+      provedorClienteAtual =
+        null;
+
+
+      iniciarListenerClientes();
+
+
+      processarNFC();
+
+
+      return;
+
+
+    }
+
+
+    /*
+
+
+    VOLTA PARA MASTER
+
+
+    */
+
+
+    document.documentElement
+      .classList
+      .remove(
+        "nfc-route",
+        "nfc-ready",
+        "provedor-route",
+        "provedor-ready"
+      );
+
+
+    if(unsubscribeProvedor){
+
+
+      unsubscribeProvedor();
+
+
+      unsubscribeProvedor =
+        null;
+
+
+    }
+
+
+    const clientPage =
+      document.getElementById(
+        "clientPage"
+      );
+
+
+    const painelProvedor =
+      document.getElementById(
+        "painelProvedor"
+      );
+
+
+    const adminPage =
+      document.getElementById(
+        "adminPage"
+      );
+
+
+    if(clientPage){
+
+
+      clientPage.style.display =
+        "none";
+
+
+    }
+
+
+    if(painelProvedor){
+
+
+      painelProvedor.style.display =
+        "none";
+
+
+    }
+
+
+    if(adminPage){
+
+
+      adminPage.style.display =
+        "block";
+
+
+    }
+
+
+    if(!unsubscribeClientes){
+
+
+      iniciarListenerClientes();
+
+
+    }
+
+
+    if(adminAutenticado()){
+
+
+      document
+        .getElementById(
+          "loginCard"
+        )
+        .classList
+        .add(
+          "hidden"
+        );
+
+
+      document
+        .getElementById(
+          "dashboard"
+        )
+        .classList
+        .remove(
+          "hidden"
+        );
+
+
+      render();
+
+
+    }
+
+
+  }
+);
+
+
+/*
+=========================================================
+VERIFICAÇÃO PERIÓDICA
+=========================================================
+*/
+
+
+setInterval(
+  () => {
+
+
+    if(
+      location.hash
+        .toLowerCase()
+        .startsWith(
+          "provedor="
+        )
+    ){
+
+
+      return;
+
+
+    }
+
+
+    clientes =
+      clientes.map(
+        normalizarCliente
+      );
+
+
+    render();
+
+
+    verificarVencimentos();
+
+
+    if(
+      location.hash
+        .toLowerCase()
+        .startsWith(
+          "nfc="
+        )
+    ){
+
+
+      processarNFC();
+
+
+    }
+
+
+  },
+  60000
+);
+
+
+</script>
+
+
+</body>
+</html>
