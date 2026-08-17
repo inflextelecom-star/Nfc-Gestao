@@ -15,6 +15,7 @@
   --red:#dc2626;
   --gray:#64748b;
   --text:#0f172a;
+  --orange:#ea580c;
 }
 
 *{
@@ -72,11 +73,34 @@ button{
   gap:12px;
 }
 
+.field-group{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.field-group.full{
+  grid-column:1/-1;
+}
+
+.field-label{
+  font-size:13px;
+  font-weight:700;
+  color:#475569;
+}
+
 input{
   width:100%;
   padding:14px;
   border:1px solid #cbd5e1;
   border-radius:11px;
+  background:#fff;
+}
+
+input:focus{
+  outline:none;
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px #2563eb18;
 }
 
 .btn{
@@ -97,6 +121,15 @@ input{
 
 .btn.red{
   background:var(--red);
+}
+
+.btn.orange{
+  background:var(--orange);
+}
+
+.btn:disabled{
+  opacity:.6;
+  cursor:not-allowed;
 }
 
 .row{
@@ -125,6 +158,10 @@ input{
   color:var(--red);
 }
 
+.expired{
+  color:var(--orange);
+}
+
 .muted{
   color:#64748b;
   font-size:13px;
@@ -133,6 +170,72 @@ input{
 
 .hidden{
   display:none!important;
+}
+
+.logo-upload{
+  border:1px dashed #94a3b8;
+  border-radius:12px;
+  padding:12px;
+  background:#f8fafc;
+}
+
+.logo-preview-wrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+}
+
+.logo-preview{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid #e2e8f0;
+  background:#fff;
+}
+
+.logo-preview-empty{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#e2e8f0;
+  color:#64748b;
+  font-size:25px;
+}
+
+.form-section{
+  margin-top:18px;
+  padding-top:18px;
+  border-top:1px solid #e2e8f0;
+}
+
+.form-section h3{
+  margin:0 0 12px;
+  font-size:16px;
+}
+
+.date-info{
+  padding:10px 12px;
+  border-radius:10px;
+  background:#f8fafc;
+  color:#475569;
+  font-size:13px;
+  margin-top:10px;
+}
+
+.expiration-warning{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#9a3412;
+  font-size:13px;
+  font-weight:700;
 }
 
 
@@ -170,12 +273,6 @@ input{
   color:#fff;
 }
 
-
-/*
- Camada decorativa de fundo.
- Não interfere em nenhum elemento funcional.
-*/
-
 #clientPage::before,
 #clientPage::after{
   content:"";
@@ -200,9 +297,6 @@ input{
   background:#6366f1;
 }
 
-
-/* Container público */
-
 .client-wrap{
   position:relative;
   z-index:1;
@@ -216,11 +310,6 @@ input{
   flex-direction:column;
   align-items:center;
 }
-
-
-/* =====================================================
-   LOGO DO ASSINANTE
-   ===================================================== */
 
 .client-logo{
   width:136px;
@@ -245,11 +334,6 @@ input{
   animation:nfcLogoIn .65s cubic-bezier(.22,1,.36,1);
 }
 
-
-/* =====================================================
-   NOME DO ASSINANTE
-   ===================================================== */
-
 #clientName{
   width:100%;
   margin:0;
@@ -262,11 +346,6 @@ input{
   overflow-wrap:anywhere;
   animation:nfcTextIn .7s .06s both cubic-bezier(.22,1,.36,1);
 }
-
-
-/* =====================================================
-   STATUS
-   ===================================================== */
 
 #clientActive{
   width:100%;
@@ -292,11 +371,6 @@ input{
     0 8px 25px rgba(0,0,0,.10);
 }
 
-
-/* =====================================================
-   BOTÕES DE SERVIÇO — GLASSMORPHISM
-   ===================================================== */
-
 .service{
   position:relative;
   width:100%;
@@ -313,42 +387,29 @@ input{
   font-size:16px;
   font-weight:750;
   letter-spacing:.1px;
-
   background:
     linear-gradient(
       135deg,
       rgba(255,255,255,.115),
       rgba(255,255,255,.055)
     );
-
   border:1px solid rgba(255,255,255,.14);
-
   box-shadow:
     0 12px 32px rgba(0,0,0,.22),
     inset 0 1px 0 rgba(255,255,255,.10),
     inset 0 -1px 0 rgba(255,255,255,.025);
-
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
-
   overflow:hidden;
-
   transform:translateZ(0);
-
   transition:
     transform .18s ease,
     box-shadow .22s ease,
     border-color .22s ease,
     background .22s ease;
-
   animation:
     serviceIn .65s both cubic-bezier(.22,1,.36,1);
 }
-
-
-/*
- Reflexo superior dos botões.
-*/
 
 .service::before{
   content:"";
@@ -366,11 +427,6 @@ input{
   opacity:.8;
 }
 
-
-/*
- Brilho de interação.
-*/
-
 .service::after{
   content:"";
   position:absolute;
@@ -387,9 +443,6 @@ input{
   pointer-events:none;
 }
 
-
-/* Delays suaves */
-
 .service:nth-of-type(1){
   animation-delay:.08s;
 }
@@ -405,9 +458,6 @@ input{
 .service:nth-of-type(4){
   animation-delay:.26s;
 }
-
-
-/* Hover para dispositivos com mouse */
 
 @media (hover:hover){
   .service:hover{
@@ -429,9 +479,6 @@ input{
   }
 }
 
-
-/* Feedback de toque */
-
 .service:active{
   transform:scale(.965);
   box-shadow:
@@ -440,18 +487,10 @@ input{
   transition-duration:.08s;
 }
 
-
-/* Acessibilidade */
-
 .service:focus-visible{
   outline:3px solid rgba(125,211,252,.75);
   outline-offset:3px;
 }
-
-
-/* =====================================================
-   ÍCONES
-   ===================================================== */
 
 .service svg{
   position:relative;
@@ -463,25 +502,12 @@ input{
   overflow:visible;
 }
 
-
-/*
- Área de texto.
-*/
-
 .service span{
   position:relative;
   z-index:1;
   flex:1;
   text-align:left;
 }
-
-
-/* =====================================================
-   CORES ESPECÍFICAS DOS SERVIÇOS
-   ===================================================== */
-
-
-/* WhatsApp */
 
 #zapBtn{
   border-color:rgba(37,211,102,.24);
@@ -495,9 +521,6 @@ input{
     );
 }
 
-
-/* Instagram */
-
 #instaBtn{
   border-color:rgba(225,48,108,.22);
 }
@@ -508,9 +531,6 @@ input{
       0 0 8px rgba(225,48,108,.25)
     );
 }
-
-
-/* Teste de velocidade */
 
 #speedBtn{
   border-color:rgba(56,189,248,.25);
@@ -524,9 +544,6 @@ input{
     );
 }
 
-
-/* Fatura */
-
 #faturaBtn{
   border-color:rgba(148,163,184,.24);
 }
@@ -539,33 +556,23 @@ input{
     );
 }
 
-
-/* =====================================================
-   AVISO DE INATIVIDADE
-   ===================================================== */
-
 .notice{
   width:100%;
   margin-top:31px;
   padding:27px 22px;
   border-radius:22px;
-
   background:
     linear-gradient(
       135deg,
       rgba(127,29,29,.24),
       rgba(30,41,59,.72)
     );
-
   border:1px solid rgba(248,113,113,.20);
-
   box-shadow:
     0 18px 45px rgba(0,0,0,.25),
     inset 0 1px 0 rgba(255,255,255,.07);
-
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
-
   animation:
     nfcTextIn .65s .12s both cubic-bezier(.22,1,.36,1);
 }
@@ -583,11 +590,6 @@ input{
   font-size:14px;
   line-height:1.6;
 }
-
-
-/* =====================================================
-   ANIMAÇÕES
-   ===================================================== */
 
 @keyframes nfcLogoIn{
   from{
@@ -633,15 +635,14 @@ input{
   }
 }
 
-
-/* =====================================================
-   MOBILE
-   ===================================================== */
-
 @media(max-width:700px){
 
   .grid{
     grid-template-columns:1fr;
+  }
+
+  .field-group.full{
+    grid-column:auto;
   }
 
   .wrap{
@@ -680,11 +681,6 @@ input{
   }
 }
 
-
-/* =====================================================
-   TELAS MUITO PEQUENAS
-   ===================================================== */
-
 @media(max-width:360px){
 
   .client-wrap{
@@ -715,11 +711,6 @@ input{
   }
 }
 
-
-/* =====================================================
-   REDUÇÃO DE MOVIMENTO
-   ===================================================== */
-
 @media(prefers-reduced-motion:reduce){
 
   *,
@@ -736,7 +727,10 @@ input{
 
 <body>
 
-<!-- PAINEL -->
+<!-- =====================================================
+     PAINEL ADMINISTRATIVO
+     ===================================================== -->
+
 <div id="adminPage">
 
   <div class="top">
@@ -759,7 +753,7 @@ input{
       <h2>🔐 Acesso administrativo</h2>
 
       <p>
-        Somente o administrador pode alterar os assinantes.
+        Somente o administrador pode alterar os provedores.
       </p>
 
       <div class="grid">
@@ -797,49 +791,242 @@ input{
 
       <div class="card">
 
-        <h2 id="formTitle">➕ Novo assinante</h2>
+        <h2 id="formTitle">
+          ➕ Novo provedor
+        </h2>
 
         <div class="grid">
 
-          <input
-            id="nome"
-            placeholder="Nome do assinante"
-          >
+          <div class="field-group">
 
-          <input
-            id="logo"
-            placeholder="Link da logo"
-          >
+            <label class="field-label" for="nome">
+              Nome do Provedor
+            </label>
 
-          <input
-            id="fatura"
-            placeholder="Link da fatura"
-          >
+            <input
+              id="nome"
+              placeholder="Nome do Provedor"
+            >
 
-          <input
-            id="zap"
-            placeholder="Link do WhatsApp"
-          >
+          </div>
 
-          <input
-            id="insta"
-            placeholder="Link do Instagram"
-          >
 
-          <input
-            id="speed"
-            placeholder="Link do teste de velocidade"
-          >
+          <div class="field-group">
+
+            <label class="field-label" for="documento">
+              CNPJ ou CPF
+            </label>
+
+            <input
+              id="documento"
+              placeholder="CNPJ ou CPF"
+              inputmode="numeric"
+            >
+
+          </div>
+
+
+          <div class="field-group">
+
+            <label class="field-label" for="telefone">
+              Telefone / Contato do Provedor
+            </label>
+
+            <input
+              id="telefone"
+              placeholder="Telefone / WhatsApp"
+              inputmode="tel"
+            >
+
+          </div>
+
+
+          <div class="field-group">
+
+            <label class="field-label" for="dataAtivacao">
+              Data de ativação
+            </label>
+
+            <input
+              id="dataAtivacao"
+              type="date"
+            >
+
+          </div>
+
+
+          <div class="field-group">
+
+            <label class="field-label" for="dataVencimento">
+              Data de vencimento
+            </label>
+
+            <input
+              id="dataVencimento"
+              type="date"
+            >
+
+            <div
+              id="vencimentoInfo"
+              class="date-info"
+            >
+              O vencimento será calculado automaticamente.
+            </div>
+
+          </div>
+
+
+          <div class="field-group full">
+
+            <label class="field-label" for="logo">
+              Logo do Provedor
+            </label>
+
+            <input
+              id="logo"
+              placeholder="Link da logo ou imagem Base64"
+            >
+
+            <div class="logo-upload">
+
+              <div class="row">
+
+                <label
+                  for="logoArquivo"
+                  class="btn gray"
+                  style="display:inline-block"
+                >
+                  📷 CARREGAR LOGO
+                </label>
+
+                <input
+                  id="logoArquivo"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                >
+
+                <button
+                  type="button"
+                  class="btn red"
+                  onclick="removerLogo()"
+                >
+                  ✕ REMOVER
+                </button>
+
+              </div>
+
+              <div class="muted" style="margin-top:8px">
+                A imagem será otimizada e convertida automaticamente
+                para Base64 antes de ser salva.
+              </div>
+
+              <div class="logo-preview-wrap">
+
+                <div
+                  id="logoPreviewEmpty"
+                  class="logo-preview-empty"
+                >
+                  🖼️
+                </div>
+
+                <img
+                  id="logoPreview"
+                  class="logo-preview hidden"
+                  alt="Pré-visualização da logo"
+                >
+
+                <span
+                  id="logoPreviewText"
+                  class="muted"
+                >
+                  Nenhuma logo selecionada.
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
 
         </div>
 
-        <div class="row" style="margin-top:14px">
+
+        <div class="form-section">
+
+          <h3>
+            🔗 Links da página NFC
+          </h3>
+
+          <div class="grid">
+
+            <div class="field-group">
+
+              <label class="field-label" for="fatura">
+                Link da fatura
+              </label>
+
+              <input
+                id="fatura"
+                placeholder="Link da fatura"
+              >
+
+            </div>
+
+
+            <div class="field-group">
+
+              <label class="field-label" for="zap">
+                Link do WhatsApp
+              </label>
+
+              <input
+                id="zap"
+                placeholder="Link ou número do WhatsApp"
+              >
+
+            </div>
+
+
+            <div class="field-group">
+
+              <label class="field-label" for="insta">
+                Link do Instagram
+              </label>
+
+              <input
+                id="insta"
+                placeholder="Instagram"
+              >
+
+            </div>
+
+
+            <div class="field-group">
+
+              <label class="field-label" for="speed">
+                Link do teste de velocidade
+              </label>
+
+              <input
+                id="speed"
+                placeholder="Link do teste de velocidade"
+              >
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="row" style="margin-top:18px">
 
           <button
             class="btn"
             onclick="salvar()"
           >
-            SALVAR ASSINANTE
+            💾 SALVAR PROVEDOR
           </button>
 
           <button
@@ -865,7 +1052,7 @@ input{
         <div class="row">
 
           <h2 style="margin-right:auto">
-            👥 Assinantes
+            👥 Provedores
           </h2>
 
           <span>
@@ -880,7 +1067,7 @@ input{
 
         <input
           id="pesquisa"
-          placeholder="🔎 Pesquisar pelo nome..."
+          placeholder="🔎 Pesquisar pelo nome do provedor..."
           oninput="render()"
         >
 
@@ -906,7 +1093,7 @@ input{
     <img
       id="clientLogo"
       class="client-logo"
-      alt="Logo"
+      alt="Logo do Provedor"
     >
 
     <h1 id="clientName">
@@ -921,10 +1108,6 @@ input{
       </p>
 
 
-      <!-- =================================================
-           FATURA
-           ================================================= -->
-
       <a
         id="faturaBtn"
         class="service"
@@ -937,6 +1120,7 @@ input{
           fill="none"
           aria-hidden="true"
         >
+
           <path
             d="M6 2.75h8.8L19 6.95v14.3H6a2.25 2.25 0 0 1-2.25-2.25V5A2.25 2.25 0 0 1 6 2.75Z"
             stroke="currentColor"
@@ -964,6 +1148,7 @@ input{
             stroke-width="2.5"
             stroke-linecap="round"
           />
+
         </svg>
 
         <span>
@@ -972,10 +1157,6 @@ input{
 
       </a>
 
-
-      <!-- =================================================
-           WHATSAPP
-           ================================================= -->
 
       <a
         id="zapBtn"
@@ -989,6 +1170,7 @@ input{
           fill="none"
           aria-hidden="true"
         >
+
           <path
             d="M20.05 11.6a8.15 8.15 0 0 1-12.1 7.08L4 20l1.4-3.7A8.15 8.15 0 1 1 20.05 11.6Z"
             stroke="#25D366"
@@ -1000,6 +1182,7 @@ input{
             d="M8.25 8.55c.25-.55.52-.58.86-.58h.5c.2 0 .38.1.47.32l.68 1.62c.09.2.05.43-.1.58l-.62.67c-.12.13-.14.3-.04.46.43.7 1.03 1.3 1.73 1.73.16.1.33.08.46-.04l.67-.62c.15-.15.38-.19.58-.1l1.62.68c.22.09.32.27.32.47v.5c0 .34-.03.61-.58.86-.53.25-1.27.28-2.15-.05-1.02-.39-2.02-1.08-2.88-1.94-.86-.86-1.55-1.86-1.94-2.88-.33-.88-.3-1.62-.05-2.15Z"
             fill="#25D366"
           />
+
         </svg>
 
         <span>
@@ -1008,10 +1191,6 @@ input{
 
       </a>
 
-
-      <!-- =================================================
-           TESTE DE VELOCIDADE
-           ================================================= -->
 
       <a
         id="speedBtn"
@@ -1070,10 +1249,6 @@ input{
       </a>
 
 
-      <!-- =================================================
-           INSTAGRAM
-           ================================================= -->
-
       <a
         id="instaBtn"
         class="service"
@@ -1097,6 +1272,7 @@ input{
               y2="4"
               gradientUnits="userSpaceOnUse"
             >
+
               <stop
                 offset="0"
                 stop-color="#FFDC80"
@@ -1121,6 +1297,7 @@ input{
                 offset="1"
                 stop-color="#833AB4"
               />
+
             </linearGradient>
 
           </defs>
@@ -1161,10 +1338,6 @@ input{
     </div>
 
 
-    <!-- =================================================
-         ACESSO INATIVO
-         ================================================= -->
-
     <div
       id="inactiveBox"
       class="notice hidden"
@@ -1195,21 +1368,6 @@ input{
 
 <script type="module">
 
-/*
-=========================================================
-NFC GESTÃO PRO
-FIREBASE FIRESTORE
-GITHUB PAGES
-=========================================================
-*/
-
-
-/*
----------------------------------------------------------
-IMPORTAÇÕES FIREBASE VIA CDN
----------------------------------------------------------
-*/
-
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -1229,9 +1387,9 @@ import {
 
 
 /*
----------------------------------------------------------
-CONFIGURAÇÃO OFICIAL
----------------------------------------------------------
+=========================================================
+CONFIGURAÇÃO FIREBASE
+=========================================================
 */
 
 const firebaseConfig = {
@@ -1245,24 +1403,17 @@ const firebaseConfig = {
 };
 
 
-/*
----------------------------------------------------------
-INICIALIZA FIREBASE
----------------------------------------------------------
-*/
-
 const app =
   initializeApp(firebaseConfig);
-
 
 const db =
   getFirestore(app);
 
 
 /*
----------------------------------------------------------
+=========================================================
 LOGIN FIXO
----------------------------------------------------------
+=========================================================
 */
 
 const LOGIN_USUARIO =
@@ -1272,30 +1423,18 @@ const LOGIN_SENHA =
   "Enzo777.@";
 
 
-/*
----------------------------------------------------------
-SESSÃO ADMINISTRATIVA LOCAL
----------------------------------------------------------
-*/
-
 const ADMIN_SESSION_KEY =
   "nfc_admin_authenticated";
 
-
-/*
----------------------------------------------------------
-COLEÇÃO FIRESTORE
----------------------------------------------------------
-*/
 
 const CLIENTES_COLLECTION =
   "clientes";
 
 
 /*
----------------------------------------------------------
-ESTADO LOCAL DA INTERFACE
----------------------------------------------------------
+=========================================================
+ESTADO
+=========================================================
 */
 
 let clientes = [];
@@ -1306,9 +1445,262 @@ let unsubscribeClientes = null;
 
 
 /*
----------------------------------------------------------
-VERIFICA SESSÃO ADMINISTRATIVA
----------------------------------------------------------
+=========================================================
+UTILITÁRIOS DE DATA
+=========================================================
+*/
+
+/*
+Converte uma data YYYY-MM-DD para
+uma data local sem problemas de timezone.
+*/
+
+function parseDataLocal(valor){
+
+  if(!valor){
+    return null;
+  }
+
+  const partes =
+    String(valor).split("-");
+
+  if(partes.length !== 3){
+    return null;
+  }
+
+  const ano =
+    Number(partes[0]);
+
+  const mes =
+    Number(partes[1]);
+
+  const dia =
+    Number(partes[2]);
+
+  if(
+    !ano ||
+    !mes ||
+    !dia
+  ){
+    return null;
+  }
+
+  const data =
+    new Date(
+      ano,
+      mes - 1,
+      dia
+    );
+
+  return isNaN(
+    data.getTime()
+  )
+    ? null
+    : data;
+
+}
+
+
+/*
+Formata Date para YYYY-MM-DD.
+*/
+
+function formatarDataInput(data){
+
+  if(!data){
+    return "";
+  }
+
+  const ano =
+    data.getFullYear();
+
+  const mes =
+    String(
+      data.getMonth() + 1
+    ).padStart(2,"0");
+
+  const dia =
+    String(
+      data.getDate()
+    ).padStart(2,"0");
+
+  return (
+    ano +
+    "-" +
+    mes +
+    "-" +
+    dia
+  );
+
+}
+
+
+/*
+Adiciona dias preservando calendário local.
+*/
+
+function adicionarDias(
+  data,
+  dias
+){
+
+  const nova =
+    new Date(data);
+
+  nova.setDate(
+    nova.getDate() + dias
+  );
+
+  return nova;
+
+}
+
+
+/*
+Calcula automaticamente vencimento.
+*/
+
+function calcularVencimento(
+  dataAtivacao
+){
+
+  const data =
+    parseDataLocal(
+      dataAtivacao
+    );
+
+  if(!data){
+    return "";
+  }
+
+  return formatarDataInput(
+    adicionarDias(
+      data,
+      30
+    )
+  );
+
+}
+
+
+/*
+Verifica se uma data de vencimento
+já passou.
+
+O vencimento expira no início
+do dia seguinte à data informada.
+*/
+
+function estaVencido(
+  dataVencimento
+){
+
+  const vencimento =
+    parseDataLocal(
+      dataVencimento
+    );
+
+  if(!vencimento){
+    return false;
+  }
+
+  const hoje =
+    new Date();
+
+  hoje.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  vencimento.setHours(
+    23,
+    59,
+    59,
+    999
+  );
+
+  return hoje > vencimento;
+
+}
+
+
+/*
+Retorna quantidade de dias
+até o vencimento.
+*/
+
+function diasAteVencimento(
+  dataVencimento
+){
+
+  const vencimento =
+    parseDataLocal(
+      dataVencimento
+    );
+
+  if(!vencimento){
+    return null;
+  }
+
+  const hoje =
+    new Date();
+
+  hoje.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  vencimento.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  const diferenca =
+    vencimento.getTime() -
+    hoje.getTime();
+
+  return Math.ceil(
+    diferenca /
+    (1000 * 60 * 60 * 24)
+  );
+
+}
+
+
+/*
+Formatação visual brasileira.
+*/
+
+function formatarDataBR(
+  valor
+){
+
+  const data =
+    parseDataLocal(
+      valor
+    );
+
+  if(!data){
+    return "Não informado";
+  }
+
+  return data.toLocaleDateString(
+    "pt-BR"
+  );
+
+}
+
+
+/*
+=========================================================
+SESSÃO
+=========================================================
 */
 
 function adminAutenticado(){
@@ -1323,9 +1715,9 @@ function adminAutenticado(){
 
 
 /*
----------------------------------------------------------
+=========================================================
 NORMALIZA CLIENTE
----------------------------------------------------------
+=========================================================
 */
 
 function normalizarCliente(c){
@@ -1333,6 +1725,25 @@ function normalizarCliente(c){
   if(!c){
     return null;
   }
+
+
+  const dataAtivacao =
+    String(
+      c.dataAtivacao || ""
+    );
+
+
+  const dataVencimento =
+    String(
+      c.dataVencimento || ""
+    );
+
+
+  const vencido =
+    estaVencido(
+      dataVencimento
+    );
+
 
   return {
 
@@ -1357,8 +1768,20 @@ function normalizarCliente(c){
     speed:
       String(c.speed || ""),
 
+    documento:
+      String(c.documento || ""),
+
+    telefone:
+      String(c.telefone || ""),
+
+    dataAtivacao,
+
+    dataVencimento,
+
     ativo:
-      c.ativo !== false
+      c.ativo !== false,
+
+    vencido
 
   };
 
@@ -1366,9 +1789,81 @@ function normalizarCliente(c){
 
 
 /*
----------------------------------------------------------
-ASSINA FIRESTORE EM TEMPO REAL
----------------------------------------------------------
+=========================================================
+ATUALIZAÇÃO AUTOMÁTICA DE INADIMPLÊNCIA
+=========================================================
+*/
+
+async function verificarVencimentos(){
+
+  /*
+  Só escreve no Firestore quando existe
+  sessão administrativa válida.
+
+  A página pública ainda consegue
+  considerar o vencimento visualmente.
+  */
+
+  if(!adminAutenticado()){
+    return;
+  }
+
+
+  const vencidos =
+    clientes.filter(
+      c =>
+        c &&
+        c.id &&
+        c.vencido &&
+        c.ativo === true
+    );
+
+
+  if(!vencidos.length){
+    return;
+  }
+
+
+  for(
+    const cliente
+    of vencidos
+  ){
+
+    try{
+
+      await updateDoc(
+
+        doc(
+          db,
+          CLIENTES_COLLECTION,
+          cliente.id
+        ),
+
+        {
+          ativo:false
+        }
+
+      );
+
+    }catch(error){
+
+      console.error(
+        "Erro ao desativar provedor vencido:",
+        cliente.id,
+        error
+      );
+
+    }
+
+  }
+
+}
+
+
+/*
+=========================================================
+LISTENER FIRESTORE
+=========================================================
 */
 
 function iniciarListenerClientes(){
@@ -1398,6 +1893,7 @@ function iniciarListenerClientes(){
 
   unsubscribeClientes =
     onSnapshot(
+
       consulta,
 
       snapshot => {
@@ -1430,11 +1926,8 @@ function iniciarListenerClientes(){
         render();
 
 
-        /*
-        Se a URL atual for NFC,
-        atualiza a página pública
-        imediatamente.
-        */
+        verificarVencimentos();
+
 
         if(
           location.hash
@@ -1455,16 +1948,12 @@ function iniciarListenerClientes(){
           error
         );
 
-        /*
-        Não apaga os dados que já estão
-        na memória caso ocorra uma falha
-        temporária de conexão.
-        */
 
         const msg =
           document.getElementById(
             "saveMsg"
           );
+
 
         if(msg){
 
@@ -1481,9 +1970,538 @@ function iniciarListenerClientes(){
 
 
 /*
----------------------------------------------------------
+=========================================================
+LOGO — PREVIEW
+=========================================================
+*/
+
+function atualizarPreviewLogo(
+  valor
+){
+
+  const img =
+    document.getElementById(
+      "logoPreview"
+    );
+
+  const vazio =
+    document.getElementById(
+      "logoPreviewEmpty"
+    );
+
+  const texto =
+    document.getElementById(
+      "logoPreviewText"
+    );
+
+
+  if(!valor){
+
+    img.classList.add(
+      "hidden"
+    );
+
+    vazio.classList.remove(
+      "hidden"
+    );
+
+    texto.textContent =
+      "Nenhuma logo selecionada.";
+
+    return;
+
+  }
+
+
+  img.src =
+    valor;
+
+  img.classList.remove(
+    "hidden"
+  );
+
+  vazio.classList.add(
+    "hidden"
+  );
+
+  texto.textContent =
+    "Logo carregada.";
+
+}
+
+
+/*
+=========================================================
+LOGO — COMPRESSÃO BASE64
+=========================================================
+*/
+
+function imagemParaBase64(
+  arquivo
+){
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const leitor =
+        new FileReader();
+
+
+      leitor.onerror =
+        () =>
+          reject(
+            new Error(
+              "Não foi possível ler a imagem."
+            )
+          );
+
+
+      leitor.onload =
+        () => {
+
+          const imagem =
+            new Image();
+
+
+          imagem.onerror =
+            () =>
+              reject(
+                new Error(
+                  "Arquivo de imagem inválido."
+                )
+              );
+
+
+          imagem.onload =
+            () => {
+
+              const MAX_DIMENSAO =
+                900;
+
+
+              let largura =
+                imagem.naturalWidth;
+
+              let altura =
+                imagem.naturalHeight;
+
+
+              if(
+                largura >
+                  MAX_DIMENSAO ||
+                altura >
+                  MAX_DIMENSAO
+              ){
+
+                const escala =
+                  Math.min(
+                    MAX_DIMENSAO / largura,
+                    MAX_DIMENSAO / altura
+                  );
+
+
+                largura =
+                  Math.round(
+                    largura * escala
+                  );
+
+
+                altura =
+                  Math.round(
+                    altura * escala
+                  );
+
+              }
+
+
+              const canvas =
+                document.createElement(
+                  "canvas"
+                );
+
+
+              canvas.width =
+                largura;
+
+              canvas.height =
+                altura;
+
+
+              const contexto =
+                canvas.getContext(
+                  "2d"
+                );
+
+
+              if(!contexto){
+
+                reject(
+                  new Error(
+                    "Não foi possível processar a imagem."
+                  )
+                );
+
+                return;
+
+              }
+
+
+              contexto.drawImage(
+                imagem,
+                0,
+                0,
+                largura,
+                altura
+              );
+
+
+              /*
+              WebP normalmente gera uma
+              Base64 bem menor que a imagem
+              original.
+              */
+
+              let base64 =
+                canvas.toDataURL(
+                  "image/webp",
+                  .82
+                );
+
+
+              /*
+              Fallback para navegadores
+              que não suportem WebP.
+              */
+
+              if(
+                !base64.startsWith(
+                  "data:image/webp"
+                )
+              ){
+
+                base64 =
+                  canvas.toDataURL(
+                    "image/jpeg",
+                    .82
+                  );
+
+              }
+
+
+              /*
+              Proteção contra documentos
+              exageradamente grandes.
+              */
+
+              const tamanho =
+                base64.length;
+
+
+              if(
+                tamanho >
+                900000
+              ){
+
+                reject(
+                  new Error(
+                    "A logo ainda ficou muito grande. Escolha uma imagem menor."
+                  )
+                );
+
+                return;
+
+              }
+
+
+              resolve(base64);
+
+            };
+
+
+          imagem.src =
+            leitor.result;
+
+        };
+
+
+      leitor.readAsDataURL(
+        arquivo
+      );
+
+    }
+  );
+
+}
+
+
+/*
+=========================================================
+UPLOAD DA LOGO
+=========================================================
+*/
+
+document
+  .getElementById(
+    "logoArquivo"
+  )
+  .addEventListener(
+    "change",
+    async event => {
+
+      const arquivo =
+        event.target.files &&
+        event.target.files[0];
+
+
+      if(!arquivo){
+        return;
+      }
+
+
+      if(
+        !arquivo.type.startsWith(
+          "image/"
+        )
+      ){
+
+        alert(
+          "Selecione um arquivo de imagem válido."
+        );
+
+        event.target.value =
+          "";
+
+        return;
+
+      }
+
+
+      try{
+
+        const base64 =
+          await imagemParaBase64(
+            arquivo
+          );
+
+
+        document
+          .getElementById("logo")
+          .value =
+            base64;
+
+
+        atualizarPreviewLogo(
+          base64
+        );
+
+
+      }catch(error){
+
+        console.error(
+          "Erro ao processar logo:",
+          error
+        );
+
+
+        alert(
+          error.message ||
+          "Não foi possível carregar a logo."
+        );
+
+
+        event.target.value =
+          "";
+
+      }
+
+    }
+  );
+
+
+/*
+Atualiza preview quando o usuário
+digita/cola uma URL manualmente.
+*/
+
+document
+  .getElementById("logo")
+  .addEventListener(
+    "input",
+    event => {
+
+      atualizarPreviewLogo(
+        event.target.value.trim()
+      );
+
+    }
+  );
+
+
+/*
+=========================================================
+REMOVER LOGO
+=========================================================
+*/
+
+window.removerLogo = function(){
+
+  document
+    .getElementById("logo")
+    .value = "";
+
+
+  document
+    .getElementById("logoArquivo")
+    .value = "";
+
+
+  atualizarPreviewLogo("");
+
+};
+
+
+/*
+=========================================================
+DATA DE ATIVAÇÃO
+=========================================================
+*/
+
+document
+  .getElementById(
+    "dataAtivacao"
+  )
+  .addEventListener(
+    "change",
+    () => {
+
+      const ativacao =
+        document
+          .getElementById(
+            "dataAtivacao"
+          )
+          .value;
+
+
+      if(!ativacao){
+        return;
+      }
+
+
+      /*
+      Em cadastro novo, o vencimento
+      é sempre recalculado.
+
+      Em edição, só recalcula quando
+      o usuário alterar explicitamente
+      a data de ativação.
+      */
+
+      const vencimento =
+        calcularVencimento(
+          ativacao
+        );
+
+
+      document
+        .getElementById(
+          "dataVencimento"
+        )
+        .value =
+          vencimento;
+
+
+      atualizarInfoVencimento();
+
+    }
+  );
+
+
+/*
+=========================================================
+INFORMAÇÃO DE VENCIMENTO
+=========================================================
+*/
+
+function atualizarInfoVencimento(){
+
+  const valor =
+    document
+      .getElementById(
+        "dataVencimento"
+      )
+      .value;
+
+
+  const info =
+    document
+      .getElementById(
+        "vencimentoInfo"
+      );
+
+
+  if(!valor){
+
+    info.textContent =
+      "O vencimento será calculado automaticamente.";
+
+    info.className =
+      "date-info";
+
+    return;
+
+  }
+
+
+  const dias =
+    diasAteVencimento(
+      valor
+    );
+
+
+  if(
+    dias !== null &&
+    dias < 0
+  ){
+
+    info.textContent =
+      "🔴 Vencimento expirado. O provedor será considerado inadimplente.";
+
+    info.className =
+      "expiration-warning";
+
+    return;
+
+  }
+
+
+  if(dias === 0){
+
+    info.textContent =
+      "⚠️ Vencimento hoje.";
+
+    info.className =
+      "expiration-warning";
+
+    return;
+
+  }
+
+
+  info.textContent =
+    "🟢 Vencimento em " +
+    dias +
+    " dia(s).";
+
+  info.className =
+    "date-info";
+
+}
+
+
+/*
+=========================================================
 LOGIN
----------------------------------------------------------
+=========================================================
 */
 
 window.login = async function(){
@@ -1504,7 +2522,9 @@ window.login = async function(){
 
 
   const msg =
-    document.getElementById("loginMsg");
+    document.getElementById(
+      "loginMsg"
+    );
 
 
   if(!u || !p){
@@ -1516,12 +2536,6 @@ window.login = async function(){
 
   }
 
-
-  /*
-  Validação fixa local.
-  O e-mail é normalizado com
-  trim() + toLowerCase().
-  */
 
   if(
     u !==
@@ -1541,12 +2555,6 @@ window.login = async function(){
 
   }
 
-
-  /*
-  Login aprovado.
-  Não existe mais nenhuma chamada
-  ao Firebase Authentication.
-  */
 
   try{
 
@@ -1577,6 +2585,9 @@ window.login = async function(){
 
     render();
 
+
+    verificarVencimentos();
+
   }catch(error){
 
     console.error(
@@ -1599,18 +2610,12 @@ window.login = async function(){
 
 
 /*
----------------------------------------------------------
+=========================================================
 SAIR
----------------------------------------------------------
+=========================================================
 */
 
 window.showLogin = function(){
-
-  /*
-  Remove somente a sessão administrativa local.
-  O Firestore permanece funcionando para
-  a página pública NFC.
-  */
 
   sessionStorage.removeItem(
     ADMIN_SESSION_KEY
@@ -1653,18 +2658,12 @@ window.showLogin = function(){
 
 
 /*
----------------------------------------------------------
-SALVAR ASSINANTE
----------------------------------------------------------
+=========================================================
+SALVAR PROVEDOR
+=========================================================
 */
 
 window.salvar = async function(){
-
-  /*
-  Garante que somente a sessão
-  administrativa local possa tentar
-  alterar dados.
-  */
 
   if(!adminAutenticado()){
 
@@ -1689,7 +2688,7 @@ window.salvar = async function(){
   if(!nome){
 
     alert(
-      "Nome do assinante é obrigatório."
+      "Nome do Provedor é obrigatório."
     );
 
     return;
@@ -1697,7 +2696,84 @@ window.salvar = async function(){
   }
 
 
+  let dataAtivacao =
+    document
+      .getElementById(
+        "dataAtivacao"
+      )
+      .value;
+
+
+  let dataVencimento =
+    document
+      .getElementById(
+        "dataVencimento"
+      )
+      .value;
+
+
+  /*
+  Cadastro novo sem data:
+  usa a data atual.
+  */
+
+  if(!dataAtivacao){
+
+    dataAtivacao =
+      formatarDataInput(
+        new Date()
+      );
+
+  }
+
+
+  /*
+  Cadastro novo sem vencimento:
+  calcula automaticamente 30 dias.
+  */
+
+  if(
+    !dataVencimento
+  ){
+
+    dataVencimento =
+      calcularVencimento(
+        dataAtivacao
+      );
+
+  }
+
+
+  const vencido =
+    estaVencido(
+      dataVencimento
+    );
+
+
+  const documento =
+    document
+      .getElementById(
+        "documento"
+      )
+      .value
+      .trim();
+
+
+  const telefone =
+    document
+      .getElementById(
+        "telefone"
+      )
+      .value
+      .trim();
+
+
   const dados = {
+
+    /*
+    Mantido como "nome" para não
+    quebrar documentos existentes.
+    */
 
     nome,
 
@@ -1731,8 +2807,23 @@ window.salvar = async function(){
         .value
         .trim(),
 
+    documento,
+
+    telefone,
+
+    dataAtivacao,
+
+    dataVencimento,
+
+    /*
+    Mantém compatibilidade com o
+    campo ativo existente.
+    */
+
     ativo:
-      true
+      vencido
+        ? false
+        : true
 
   };
 
@@ -1747,18 +2838,34 @@ window.salvar = async function(){
         );
 
 
-      dados.ativo =
-        clienteExistente
-          ? clienteExistente.ativo
-          : true;
+      /*
+      Se a edição estiver acontecendo
+      sem alterar datas, preserva o
+      status manual existente.
+
+      Porém, se já estiver vencido,
+      força desativação.
+      */
+
+      if(
+        clienteExistente &&
+        !vencido
+      ){
+
+        dados.ativo =
+          clienteExistente.ativo;
+
+      }
 
 
       await setDoc(
+
         doc(
           db,
           CLIENTES_COLLECTION,
           editId
         ),
+
         dados
       );
 
@@ -1766,15 +2873,19 @@ window.salvar = async function(){
       document
         .getElementById("saveMsg")
         .textContent =
-          "Assinante atualizado com sucesso.";
+          vencido
+            ? "Provedor atualizado e marcado como inadimplente."
+            : "Provedor atualizado com sucesso.";
 
     }else{
 
       await addDoc(
+
         collection(
           db,
           CLIENTES_COLLECTION
         ),
+
         dados
       );
 
@@ -1782,39 +2893,47 @@ window.salvar = async function(){
       document
         .getElementById("saveMsg")
         .textContent =
-          "Assinante cadastrado com sucesso.";
+          vencido
+            ? "Provedor cadastrado como inadimplente."
+            : "Provedor cadastrado com sucesso.";
 
     }
 
 
-    setTimeout(() => {
+    setTimeout(
+      () => {
 
-      const el =
-        document.getElementById(
-          "saveMsg"
-        );
+        const el =
+          document.getElementById(
+            "saveMsg"
+          );
 
-      if(el){
 
-        el.textContent = "";
+        if(el){
 
-      }
+          el.textContent =
+            "";
 
-    },3000);
+        }
+
+      },
+      3000
+    );
 
 
     cancelar();
 
+
   }catch(error){
 
     console.error(
-      "Erro ao salvar assinante:",
+      "Erro ao salvar provedor:",
       error
     );
 
 
     alert(
-      "Não foi possível salvar o assinante.\n\n" +
+      "Não foi possível salvar o provedor.\n\n" +
       "Verifique as regras de segurança do Firestore."
     );
 
@@ -1824,9 +2943,9 @@ window.salvar = async function(){
 
 
 /*
----------------------------------------------------------
+=========================================================
 EDITAR
----------------------------------------------------------
+=========================================================
 */
 
 window.editar = function(id){
@@ -1837,7 +2956,9 @@ window.editar = function(id){
     );
 
 
-  if(!c)return;
+  if(!c){
+    return;
+  }
 
 
   editId = id;
@@ -1846,13 +2967,37 @@ window.editar = function(id){
   document
     .getElementById("formTitle")
     .textContent =
-      "✏️ Editar assinante";
+      "✏️ Editar provedor";
 
 
   document
     .getElementById("nome")
     .value =
       c.nome || "";
+
+
+  document
+    .getElementById("documento")
+    .value =
+      c.documento || "";
+
+
+  document
+    .getElementById("telefone")
+    .value =
+      c.telefone || "";
+
+
+  document
+    .getElementById("dataAtivacao")
+    .value =
+      c.dataAtivacao || "";
+
+
+  document
+    .getElementById("dataVencimento")
+    .value =
+      c.dataVencimento || "";
 
 
   document
@@ -1885,6 +3030,14 @@ window.editar = function(id){
       c.speed || "";
 
 
+  atualizarPreviewLogo(
+    c.logo || ""
+  );
+
+
+  atualizarInfoVencimento();
+
+
   document
     .getElementById("cancelBtn")
     .classList
@@ -1900,52 +3053,106 @@ window.editar = function(id){
 
 
 /*
----------------------------------------------------------
-CANCELAR
----------------------------------------------------------
+=========================================================
+DAR BAIXA / PAGAMENTO
+=========================================================
 */
 
-window.cancelar = function(){
+window.darBaixa = async function(id){
 
-  editId = null;
+  if(!adminAutenticado()){
 
+    alert(
+      "Faça login como administrador."
+    );
 
-  document
-    .getElementById("formTitle")
-    .textContent =
-      "➕ Novo assinante";
+    showLogin();
 
+    return;
 
-  [
-    "nome",
-    "logo",
-    "fatura",
-    "zap",
-    "insta",
-    "speed"
-  ].forEach(
-    x => {
-
-      document
-        .getElementById(x)
-        .value = "";
-
-    }
-  );
+  }
 
 
-  document
-    .getElementById("cancelBtn")
-    .classList
-    .add("hidden");
+  const c =
+    clientes.find(
+      x => x.id === id
+    );
+
+
+  if(!c){
+    return;
+  }
+
+
+  if(
+    !confirm(
+      "Confirmar baixa/pagamento deste provedor?\n\n" +
+      "O acesso será reativado por mais 30 dias."
+    )
+  ){
+
+    return;
+
+  }
+
+
+  const hoje =
+    formatarDataInput(
+      new Date()
+    );
+
+
+  const novoVencimento =
+    calcularVencimento(
+      hoje
+    );
+
+
+  try{
+
+    await updateDoc(
+
+      doc(
+        db,
+        CLIENTES_COLLECTION,
+        id
+      ),
+
+      {
+
+        ativo:true,
+
+        dataAtivacao:hoje,
+
+        dataVencimento:
+          novoVencimento
+
+      }
+
+    );
+
+
+  }catch(error){
+
+    console.error(
+      "Erro ao registrar baixa:",
+      error
+    );
+
+
+    alert(
+      "Não foi possível registrar a baixa."
+    );
+
+  }
 
 };
 
 
 /*
----------------------------------------------------------
-ALTERAR STATUS
----------------------------------------------------------
+=========================================================
+ALTERAR STATUS MANUAL
+=========================================================
 */
 
 window.alterarStatus = async function(id){
@@ -1969,7 +3176,33 @@ window.alterarStatus = async function(id){
     );
 
 
-  if(!c)return;
+  if(!c){
+    return;
+  }
+
+
+  /*
+  Se estiver vencido, não permitimos
+  simplesmente ativar sem registrar
+  pagamento/baixa.
+
+  Isso evita que o botão ATIVAR
+  burle a regra de vencimento.
+  */
+
+  if(
+    !c.ativo &&
+    c.vencido
+  ){
+
+    alert(
+      "Este provedor está inadimplente e com vencimento expirado.\n\n" +
+      "Use DAR BAIXA / PAGAMENTO para reativar e gerar novo vencimento de 30 dias."
+    );
+
+    return;
+
+  }
 
 
   try{
@@ -2007,9 +3240,9 @@ window.alterarStatus = async function(id){
 
 
 /*
----------------------------------------------------------
+=========================================================
 EXCLUIR
----------------------------------------------------------
+=========================================================
 */
 
 window.excluir = async function(id){
@@ -2029,7 +3262,7 @@ window.excluir = async function(id){
 
   if(
     !confirm(
-      "Excluir definitivamente este cliente?\n\n" +
+      "Excluir definitivamente este provedor?\n\n" +
       "Para inadimplência use DESATIVAR."
     )
   ){
@@ -2060,7 +3293,7 @@ window.excluir = async function(id){
 
 
     alert(
-      "Não foi possível excluir o cliente."
+      "Não foi possível excluir o provedor."
     );
 
   }
@@ -2069,9 +3302,9 @@ window.excluir = async function(id){
 
 
 /*
----------------------------------------------------------
+=========================================================
 COPIAR URL
----------------------------------------------------------
+=========================================================
 */
 
 window.copiar = function(url){
@@ -2094,18 +3327,22 @@ window.copiar = function(url){
 
     navigator.clipboard
       .writeText(url)
-      .then(() => {
+      .then(
+        () => {
 
-        alert(
-          "URL NFC copiada!"
-        );
+          alert(
+            "URL NFC copiada!"
+          );
 
-      })
-      .catch(() => {
+        }
+      )
+      .catch(
+        () => {
 
-        copiarFallback(url);
+          copiarFallback(url);
 
-      });
+        }
+      );
 
     return;
 
@@ -2117,12 +3354,6 @@ window.copiar = function(url){
 };
 
 
-/*
----------------------------------------------------------
-FALLBACK COPIAR
----------------------------------------------------------
-*/
-
 function copiarFallback(url){
 
   const area =
@@ -2131,15 +3362,19 @@ function copiarFallback(url){
     );
 
 
-  area.value = url;
+  area.value =
+    url;
+
 
   area.setAttribute(
     "readonly",
     ""
   );
 
+
   area.style.position =
     "fixed";
+
 
   area.style.left =
     "-9999px";
@@ -2152,13 +3387,15 @@ function copiarFallback(url){
 
   area.select();
 
+
   area.setSelectionRange(
     0,
     area.value.length
   );
 
 
-  let sucesso = false;
+  let sucesso =
+    false;
 
 
   try{
@@ -2170,7 +3407,8 @@ function copiarFallback(url){
 
   }catch(e){
 
-    sucesso = false;
+    sucesso =
+      false;
 
   }
 
@@ -2199,9 +3437,9 @@ function copiarFallback(url){
 
 
 /*
----------------------------------------------------------
+=========================================================
 ABRIR NFC
----------------------------------------------------------
+=========================================================
 */
 
 window.abrirNFC = function(
@@ -2258,7 +3496,7 @@ window.abrirNFC = function(
       .getElementById("inactiveBox")
       .innerHTML =
         "<h2>⚠️ Acesso não encontrado</h2>" +
-        "<p>O endereço NFC informado não corresponde a nenhum assinante cadastrado ou foi removido.</p>";
+        "<p>O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido.</p>";
 
 
     document.title =
@@ -2296,7 +3534,9 @@ window.abrirNFC = function(
 
   if(c.logo){
 
-    logo.src = c.logo;
+    logo.src =
+      c.logo;
+
 
     logo.style.display =
       "block";
@@ -2307,10 +3547,27 @@ window.abrirNFC = function(
       "src"
     );
 
+
     logo.style.display =
       "none";
 
   }
+
+
+  /*
+  Compatibilidade:
+
+  ativo precisa continuar verdadeiro
+  E o vencimento também precisa estar
+  dentro do prazo.
+
+  Assim um cadastro antigo sem
+  dataVencimento continua funcionando.
+  */
+
+  const acessoAtivo =
+    c.ativo &&
+    !c.vencido;
 
 
   document
@@ -2318,7 +3575,7 @@ window.abrirNFC = function(
     .classList
     .toggle(
       "hidden",
-      !c.ativo
+      !acessoAtivo
     );
 
 
@@ -2327,11 +3584,11 @@ window.abrirNFC = function(
     .classList
     .toggle(
       "hidden",
-      c.ativo
+      acessoAtivo
     );
 
 
-  if(c.ativo){
+  if(acessoAtivo){
 
     setLink(
       "faturaBtn",
@@ -2339,17 +3596,20 @@ window.abrirNFC = function(
       "fatura"
     );
 
+
     setLink(
       "zapBtn",
       c.zap,
       "whatsapp"
     );
 
+
     setLink(
       "speedBtn",
       c.speed,
       "speed"
     );
+
 
     setLink(
       "instaBtn",
@@ -2365,11 +3625,13 @@ window.abrirNFC = function(
       "fatura"
     );
 
+
     setLink(
       "zapBtn",
       "",
       "whatsapp"
     );
+
 
     setLink(
       "speedBtn",
@@ -2377,11 +3639,41 @@ window.abrirNFC = function(
       "speed"
     );
 
+
     setLink(
       "instaBtn",
       "",
       "instagram"
     );
+
+
+    /*
+    Mensagem específica para inadimplência.
+    */
+
+    if(c.vencido){
+
+      document
+        .getElementById(
+          "inactiveBox"
+        )
+        .innerHTML =
+          "<h2>🔴 Acesso temporariamente indisponível</h2>" +
+          "<p>O período de utilização deste provedor terminou.</p>" +
+          "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
+
+    }else{
+
+      document
+        .getElementById(
+          "inactiveBox"
+        )
+        .innerHTML =
+          "<h2>🔴 Acesso temporariamente indisponível</h2>" +
+          "<p>Seu acesso está temporariamente suspenso.</p>" +
+          "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
+
+    }
 
   }
 
@@ -2394,9 +3686,9 @@ window.abrirNFC = function(
 
 
 /*
----------------------------------------------------------
+=========================================================
 NORMALIZAR LINKS
----------------------------------------------------------
+=========================================================
 */
 
 function normalizarLink(
@@ -2404,14 +3696,18 @@ function normalizarLink(
   tipo
 ){
 
-  if(!url)return "";
+  if(!url){
+    return "";
+  }
 
 
   let valor =
     String(url).trim();
 
 
-  if(!valor)return "";
+  if(!valor){
+    return "";
+  }
 
 
   if(tipo === "whatsapp"){
@@ -2441,7 +3737,9 @@ function normalizarLink(
       );
 
 
-    if(numero.length >= 10){
+    if(
+      numero.length >= 10
+    ){
 
       return (
         "https://wa.me/" +
@@ -2538,9 +3836,9 @@ function normalizarLink(
 
 
 /*
----------------------------------------------------------
+=========================================================
 SET LINK
----------------------------------------------------------
+=========================================================
 */
 
 function setLink(
@@ -2550,10 +3848,14 @@ function setLink(
 ){
 
   const el =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
 
-  if(!el)return;
+  if(!el){
+    return;
+  }
 
 
   const link =
@@ -2566,6 +3868,7 @@ function setLink(
   el.removeAttribute(
     "href"
   );
+
 
   el.removeAttribute(
     "onclick"
@@ -2580,17 +3883,21 @@ function setLink(
 
   if(!link){
 
-    el.href = "#";
+    el.href =
+      "#";
 
     return;
 
   }
 
 
-  el.href = link;
+  el.href =
+    link;
+
 
   el.target =
     "_blank";
+
 
   el.rel =
     "noopener noreferrer";
@@ -2599,9 +3906,9 @@ function setLink(
 
 
 /*
----------------------------------------------------------
+=========================================================
 VOLTAR
----------------------------------------------------------
+=========================================================
 */
 
 window.voltar = function(){
@@ -2621,9 +3928,9 @@ window.voltar = function(){
 
 
 /*
----------------------------------------------------------
+=========================================================
 ESCAPE HTML
----------------------------------------------------------
+=========================================================
 */
 
 function escapeHtml(s){
@@ -2643,9 +3950,9 @@ function escapeHtml(s){
 
 
 /*
----------------------------------------------------------
+=========================================================
 ESCAPE JS
----------------------------------------------------------
+=========================================================
 */
 
 function escapeJs(s){
@@ -2672,9 +3979,9 @@ function escapeJs(s){
 
 
 /*
----------------------------------------------------------
+=========================================================
 RENDER
----------------------------------------------------------
+=========================================================
 */
 
 window.render = function(){
@@ -2698,7 +4005,9 @@ window.render = function(){
     );
 
 
-  if(!lista)return;
+  if(!lista){
+    return;
+  }
 
 
   const filtrados =
@@ -2714,7 +4023,9 @@ window.render = function(){
     .getElementById("ativos")
     .textContent =
       clientes.filter(
-        c => c.ativo
+        c =>
+          c.ativo &&
+          !c.vencido
       ).length;
 
 
@@ -2722,7 +4033,9 @@ window.render = function(){
     .getElementById("desativados")
     .textContent =
       clientes.filter(
-        c => !c.ativo
+        c =>
+          !c.ativo ||
+          c.vencido
       ).length;
 
 
@@ -2738,7 +4051,62 @@ window.render = function(){
           );
 
 
+        const vencimentoTexto =
+          c.dataVencimento
+            ? formatarDataBR(
+                c.dataVencimento
+              )
+            : "Não informado";
+
+
+        const ativacaoTexto =
+          c.dataAtivacao
+            ? formatarDataBR(
+                c.dataAtivacao
+              )
+            : "Não informado";
+
+
+        const statusTexto =
+          c.vencido
+            ? "● INADIMPLENTE"
+            : c.ativo
+              ? "● ATIVO"
+              : "● DESATIVADO";
+
+
+        const statusClasse =
+          c.vencido
+            ? "expired"
+            : c.ativo
+              ? "active"
+              : "inactive";
+
+
+        const botaoStatus =
+          c.vencido
+            ? `
+              <button
+                class="btn orange"
+                type="button"
+                onclick="darBaixa('${escapeJs(c.id)}')"
+              >
+                💳 DAR BAIXA / PAGAMENTO
+              </button>
+            `
+            : `
+              <button
+                class="btn ${c.ativo ? "red" : "green"}"
+                type="button"
+                onclick="alterarStatus('${escapeJs(c.id)}')"
+              >
+                ${c.ativo ? "🔴 DESATIVAR" : "🟢 ATIVAR"}
+              </button>
+            `;
+
+
         return `
+
           <div class="client">
 
             <div class="row">
@@ -2748,17 +4116,45 @@ window.render = function(){
               </strong>
 
               <span
-                class="status ${c.ativo ? "active" : "inactive"}"
+                class="status ${statusClasse}"
               >
-                ${c.ativo ? "● ATIVO" : "● DESATIVADO"}
+                ${statusTexto}
               </span>
 
             </div>
 
+
             <p class="muted">
+
+              ${c.documento
+                ? "Documento: " +
+                  escapeHtml(c.documento) +
+                  "<br>"
+                : ""}
+
+              ${c.telefone
+                ? "Contato: " +
+                  escapeHtml(c.telefone) +
+                  "<br>"
+                : ""}
+
+              Data de ativação:
+              ${escapeHtml(ativacaoTexto)}
+              <br>
+
+              Data de vencimento:
+              ${escapeHtml(vencimentoTexto)}
+
+            </p>
+
+
+            <p class="muted">
+
               URL NFC:
               ${escapeHtml(url)}
+
             </p>
+
 
             <div class="row">
 
@@ -2770,13 +4166,7 @@ window.render = function(){
                 ✏️ EDITAR
               </button>
 
-              <button
-                class="btn ${c.ativo ? "red" : "green"}"
-                type="button"
-                onclick="alterarStatus('${escapeJs(c.id)}')"
-              >
-                ${c.ativo ? "🔴 DESATIVAR" : "🟢 ATIVAR"}
-              </button>
+              ${botaoStatus}
 
               <button
                 class="btn gray"
@@ -2797,19 +4187,20 @@ window.render = function(){
             </div>
 
           </div>
+
         `;
 
       })
       .join("") ||
-    "<p>Nenhum assinante encontrado.</p>";
+    "<p>Nenhum provedor encontrado.</p>";
 
 };
 
 
 /*
----------------------------------------------------------
+=========================================================
 PROCESSAR NFC
----------------------------------------------------------
+=========================================================
 */
 
 function processarNFC(){
@@ -2824,7 +4215,8 @@ function processarNFC(){
       .startsWith("#nfc=")
   ){
 
-    let id = "";
+    let id =
+      "";
 
 
     try{
@@ -2841,7 +4233,9 @@ function processarNFC(){
         error
       );
 
-      id = "";
+
+      id =
+        "";
 
     }
 
@@ -2851,12 +4245,6 @@ function processarNFC(){
         x => x.id === id
       ) || null;
 
-
-    /*
-    Se o Firestore ainda estiver carregando,
-    não transforma imediatamente em
-    "não encontrado".
-    */
 
     if(
       !cliente &&
@@ -2915,9 +4303,9 @@ function processarNFC(){
 
 
 /*
----------------------------------------------------------
+=========================================================
 INICIALIZAÇÃO
----------------------------------------------------------
+=========================================================
 */
 
 window.addEventListener(
@@ -2925,17 +4313,26 @@ window.addEventListener(
   () => {
 
     /*
-    O listener do Firestore é iniciado
-    independentemente do login para que
-    a página NFC pública continue funcionando.
+    Mantido:
+    Firestore continua sendo iniciado
+    independentemente do login para
+    a página NFC pública funcionar.
     */
 
     iniciarListenerClientes();
 
 
     /*
-    Se estiver acessando o painel e já
-    existir sessão nesta aba, abre o dashboard.
+    Logo inicial.
+    */
+
+    atualizarPreviewLogo("");
+
+
+    /*
+    Se estiver acessando painel e
+    houver sessão nesta aba, abre
+    diretamente o dashboard.
     */
 
     if(
@@ -2956,6 +4353,9 @@ window.addEventListener(
 
 
       render();
+
+
+      verificarVencimentos();
 
     }else if(
       !processarNFC()
@@ -2979,9 +4379,9 @@ window.addEventListener(
 
 
 /*
----------------------------------------------------------
+=========================================================
 ALTERAÇÃO DA URL NFC
----------------------------------------------------------
+=========================================================
 */
 
 window.addEventListener(
@@ -3001,7 +4401,56 @@ window.addEventListener(
   }
 );
 
+
+/*
+=========================================================
+VERIFICAÇÃO PERIÓDICA
+=========================================================
+
+Se o painel estiver aberto durante
+a virada do vencimento, o sistema
+também verifica periodicamente.
+*/
+
+setInterval(
+  () => {
+
+    /*
+    Recalcula o estado local.
+    */
+
+    clientes =
+      clientes.map(
+        normalizarCliente
+      );
+
+
+    render();
+
+
+    verificarVencimentos();
+
+
+    /*
+    Atualiza também a página NFC,
+    caso ela esteja aberta.
+    */
+
+    if(
+      location.hash
+        .toLowerCase()
+        .startsWith("#nfc=")
+    ){
+
+      processarNFC();
+
+    }
+
+  },
+  60000
+);
+
 </script>
 
 </body>
-          </html>
+  </html>
