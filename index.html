@@ -5,6 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NFC Gestão Pro — Visualização</title>
 
+<!-- =====================================================
+     BARREIRA DE PRIMEIRA PINTURA — NFC
+     Executada antes do body para impedir flash do painel
+     administrativo quando a URL já é uma rota NFC.
+     ===================================================== -->
+<script>
+(function(){
+
+  try{
+
+    var hash =
+      window.location.hash || "";
+
+    if(
+      hash
+        .toLowerCase()
+        .indexOf("#nfc=") === 0
+    ){
+
+      document.documentElement.classList.add(
+        "nfc-route"
+      );
+
+    }
+
+  }catch(error){
+
+    /*
+    Falha silenciosa proposital.
+    O restante da aplicação continua normalmente.
+    */
+
+  }
+
+})();
+</script>
+
 <style>
 :root{
   --bg:#f1f5f9;
@@ -20,6 +57,77 @@
 
 *{
   box-sizing:border-box;
+}
+
+html{
+  background:#f1f5f9;
+}
+
+/*
+=========================================================
+BARREIRA VISUAL DA ROTA NFC
+=========================================================
+
+Essas regras entram antes de qualquer execução do módulo
+Firebase.
+
+Assim, ao pressionar F5 em uma URL #nfc=:
+- o painel administrativo não aparece;
+- a página NFC ocupa a tela;
+- o conteúdo público permanece invisível até estar pronto;
+- nenhum layout antigo é reaproveitado visualmente.
+*/
+
+html.nfc-route{
+  background:#020617;
+}
+
+html.nfc-route body{
+  background:#020617;
+}
+
+html.nfc-route #adminPage{
+  display:none!important;
+}
+
+html.nfc-route #clientPage{
+  display:block!important;
+  visibility:hidden;
+  opacity:0;
+}
+
+/*
+Somente depois que Firestore + cliente + preparação visual
+estiverem concluídos a aplicação libera a pintura pública.
+*/
+
+html.nfc-route.nfc-ready #clientPage{
+  visibility:visible;
+  opacity:1;
+}
+
+html.nfc-route.nfc-ready #adminPage{
+  display:none!important;
+}
+
+/*
+Enquanto os dados ainda estão chegando, mantemos somente
+um fundo estável e neutro. Não há logo antiga, nome antigo
+ou botões parcialmente montados.
+*/
+
+html.nfc-route:not(.nfc-ready) #clientLogo{
+  visibility:hidden!important;
+  opacity:0!important;
+}
+
+html.nfc-route:not(.nfc-ready) #clientName{
+  visibility:hidden!important;
+}
+
+html.nfc-route:not(.nfc-ready) #clientActive,
+html.nfc-route:not(.nfc-ready) #inactiveBox{
+  visibility:hidden!important;
 }
 
 body{
@@ -243,15 +351,6 @@ input:focus{
    PÁGINA NFC PÚBLICA
    ===================================================== */
 
-/*
-   Variáveis visuais exclusivas da página pública.
-
-   O padrão abaixo é exatamente a identidade
-   corporativa anterior. O JavaScript poderá
-   substituir somente essas variáveis quando
-   conseguir extrair uma cor válida da logo.
-*/
-
 #clientPage{
   --nfc-bg-1:#020617;
   --nfc-bg-2:#0f172a;
@@ -303,7 +402,8 @@ input:focus{
   color:#fff;
 
   transition:
-    background .65s ease;
+    background .65s ease,
+    opacity .2s ease;
 }
 
 #clientPage::before,
@@ -380,7 +480,8 @@ input:focus{
 
   transition:
     box-shadow .65s ease,
-    background .65s ease;
+    background .65s ease,
+    opacity .2s ease;
 }
 
 #clientName{
@@ -461,7 +562,7 @@ input:focus{
     box-shadow .22s ease,
     border-color .22s ease,
     background .22s ease;
-  
+
   animation:
     serviceIn .65s both cubic-bezier(.22,1,.36,1);
 }
@@ -821,10 +922,6 @@ input:focus{
 
 <body>
 
-<!-- =====================================================
-     PAINEL ADMINISTRATIVO
-     ===================================================== -->
-
 <div id="adminPage">
 
   <div class="top">
@@ -1164,10 +1261,6 @@ input:focus{
 </div>
 
 
-<!-- =====================================================
-     PÁGINA NFC PÚBLICA
-     ===================================================== -->
-
 <div id="clientPage">
 
   <div class="client-wrap">
@@ -1195,11 +1288,7 @@ input:focus{
         rel="noopener noreferrer"
       >
 
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
 
           <path
             d="M6 2.75h8.8L19 6.95v14.3H6a2.25 2.25 0 0 1-2.25-2.25V5A2.25 2.25 0 0 1 6 2.75Z"
@@ -1231,9 +1320,7 @@ input:focus{
 
         </svg>
 
-        <span>
-          Pagar minha fatura
-        </span>
+        <span>Pagar minha fatura</span>
 
       </a>
 
@@ -1244,11 +1331,7 @@ input:focus{
         rel="noopener noreferrer"
       >
 
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
 
           <path
             d="M20.05 11.6a8.15 8.15 0 0 1-12.1 7.08L4 20l1.4-3.7A8.15 8.15 0 1 1 20.05 11.6Z"
@@ -1264,9 +1347,7 @@ input:focus{
 
         </svg>
 
-        <span>
-          Falar com suporte
-        </span>
+        <span>Falar com suporte</span>
 
       </a>
 
@@ -1277,11 +1358,7 @@ input:focus{
         rel="noopener noreferrer"
       >
 
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
 
           <path
             d="M4.9 18.5a9 9 0 1 1 14.2 0"
@@ -1320,9 +1397,7 @@ input:focus{
 
         </svg>
 
-        <span>
-          Testar velocidade
-        </span>
+        <span>Testar velocidade</span>
 
       </a>
 
@@ -1333,11 +1408,7 @@ input:focus{
         rel="noopener noreferrer"
       >
 
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
 
           <defs>
 
@@ -1350,30 +1421,11 @@ input:focus{
               gradientUnits="userSpaceOnUse"
             >
 
-              <stop
-                offset="0"
-                stop-color="#FFDC80"
-              />
-
-              <stop
-                offset=".25"
-                stop-color="#FCB045"
-              />
-
-              <stop
-                offset=".5"
-                stop-color="#F77737"
-              />
-
-              <stop
-                offset=".72"
-                stop-color="#E1306C"
-              />
-
-              <stop
-                offset="1"
-                stop-color="#833AB4"
-              />
+              <stop offset="0" stop-color="#FFDC80"/>
+              <stop offset=".25" stop-color="#FCB045"/>
+              <stop offset=".5" stop-color="#F77737"/>
+              <stop offset=".72" stop-color="#E1306C"/>
+              <stop offset="1" stop-color="#833AB4"/>
 
             </linearGradient>
 
@@ -1406,9 +1458,7 @@ input:focus{
 
         </svg>
 
-        <span>
-          Instagram
-        </span>
+        <span>Instagram</span>
 
       </a>
 
@@ -1438,10 +1488,6 @@ input:focus{
 </div>
 
 
-<!-- =====================================================
-     FIREBASE
-     ===================================================== -->
-
 <script type="module">
 
 import {
@@ -1469,7 +1515,7 @@ CONFIGURAÇÃO FIREBASE
 */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDMZ1faLyK_N77UE3B2VtdrtmdpHbh9FS8",
+  apiKey: "AIzaSyDMZ1faLyK_N77UE3B2Vtdrtmdpbh9FS8",
   authDomain: "nfc-gestao.firebaseapp.com",
   projectId: "nfc-gestao",
   storageBucket: "nfc-gestao.firebasestorage.app",
@@ -1478,10 +1524,8 @@ const firebaseConfig = {
   measurementId: "G-QDVQX0TJ6X"
 };
 
-
 const app =
   initializeApp(firebaseConfig);
-
 
 const db =
   getFirestore(app);
@@ -1499,10 +1543,8 @@ const LOGIN_USUARIO =
 const LOGIN_SENHA =
   "Enzo777.@";
 
-
 const ADMIN_SESSION_KEY =
   "nfc_admin_authenticated";
-
 
 const CLIENTES_COLLECTION =
   "clientes";
@@ -1519,6 +1561,133 @@ let clientes = [];
 let editId = null;
 
 let unsubscribeClientes = null;
+
+let ultimoTemaLogo = "";
+
+const rotaNFC =
+  location.hash
+    .toLowerCase()
+    .startsWith("#nfc=");
+
+
+/*
+=========================================================
+CONTROLE VISUAL DE PRONTIDÃO NFC
+=========================================================
+*/
+
+function marcarNFCPronto(){
+
+  if(!rotaNFC){
+    return;
+  }
+
+  requestAnimationFrame(
+    () => {
+
+      requestAnimationFrame(
+        () => {
+
+          document.documentElement
+            .classList
+            .add("nfc-ready");
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+function mostrarErroNFC(
+  titulo,
+  mensagem
+){
+
+  const admin =
+    document.getElementById(
+      "adminPage"
+    );
+
+  const pagina =
+    document.getElementById(
+      "clientPage"
+    );
+
+  const nome =
+    document.getElementById(
+      "clientName"
+    );
+
+  const logo =
+    document.getElementById(
+      "clientLogo"
+    );
+
+  const active =
+    document.getElementById(
+      "clientActive"
+    );
+
+  const inactive =
+    document.getElementById(
+      "inactiveBox"
+    );
+
+  if(admin){
+    admin.style.display = "none";
+  }
+
+  if(pagina){
+    pagina.style.display = "block";
+  }
+
+  if(logo){
+    logo.style.display = "none";
+    logo.removeAttribute("src");
+  }
+
+  if(nome){
+    nome.textContent =
+      titulo || "Acesso indisponível";
+  }
+
+  if(active){
+    active.classList.add("hidden");
+  }
+
+  if(inactive){
+
+    inactive.classList.remove(
+      "hidden"
+    );
+
+    inactive.innerHTML =
+      "<h2>⚠️ " +
+      escapeHtml(
+        titulo || "Acesso indisponível"
+      ) +
+      "</h2>" +
+      "<p>" +
+      escapeHtml(
+        mensagem ||
+        "Não foi possível carregar este acesso NFC."
+      ) +
+      "</p>";
+
+  }
+
+  restaurarTemaNFC();
+
+  document.title =
+    titulo ||
+    "Acesso indisponível";
+
+  marcarNFCPronto();
+
+}
 
 
 /*
@@ -1549,11 +1718,7 @@ function parseDataLocal(valor){
   const dia =
     Number(partes[2]);
 
-  if(
-    !ano ||
-    !mes ||
-    !dia
-  ){
+  if(!ano || !mes || !dia){
     return null;
   }
 
@@ -1564,9 +1729,7 @@ function parseDataLocal(valor){
       dia
     );
 
-  return isNaN(
-    data.getTime()
-  )
+  return isNaN(data.getTime())
     ? null
     : data;
 
@@ -1951,11 +2114,7 @@ function iniciarListenerClientes(){
 
         verificarVencimentos();
 
-        if(
-          location.hash
-            .toLowerCase()
-            .startsWith("#nfc=")
-        ){
+        if(rotaNFC){
 
           processarNFC();
 
@@ -1979,6 +2138,15 @@ function iniciarListenerClientes(){
 
           msg.textContent =
             "⚠️ Erro de conexão com o banco de dados.";
+
+        }
+
+        if(rotaNFC){
+
+          mostrarErroNFC(
+            "Acesso temporariamente indisponível",
+            "Não foi possível carregar os dados deste acesso NFC. Tente novamente."
+          );
 
         }
 
@@ -2016,13 +2184,9 @@ function atualizarPreviewLogo(
 
   if(!valor){
 
-    img.classList.add(
-      "hidden"
-    );
+    img.classList.add("hidden");
 
-    vazio.classList.remove(
-      "hidden"
-    );
+    vazio.classList.remove("hidden");
 
     texto.textContent =
       "Nenhuma logo selecionada.";
@@ -2034,13 +2198,9 @@ function atualizarPreviewLogo(
   img.src =
     valor;
 
-  img.classList.remove(
-    "hidden"
-  );
+  img.classList.remove("hidden");
 
-  vazio.classList.add(
-    "hidden"
-  );
+  vazio.classList.add("hidden");
 
   texto.textContent =
     "Logo carregada.";
@@ -2099,10 +2259,8 @@ function imagemParaBase64(
                 imagem.naturalHeight;
 
               if(
-                largura >
-                  MAX_DIMENSAO ||
-                altura >
-                  MAX_DIMENSAO
+                largura > MAX_DIMENSAO ||
+                altura > MAX_DIMENSAO
               ){
 
                 const escala =
@@ -2183,8 +2341,7 @@ function imagemParaBase64(
                 base64.length;
 
               if(
-                tamanho >
-                900000
+                tamanho > 900000
               ){
 
                 reject(
@@ -2223,9 +2380,7 @@ UPLOAD DA LOGO
 */
 
 document
-  .getElementById(
-    "logoArquivo"
-  )
+  .getElementById("logoArquivo")
   .addEventListener(
     "change",
     async event => {
@@ -2239,9 +2394,7 @@ document
       }
 
       if(
-        !arquivo.type.startsWith(
-          "image/"
-        )
+        !arquivo.type.startsWith("image/")
       ){
 
         alert(
@@ -2306,12 +2459,6 @@ document
   );
 
 
-/*
-=========================================================
-REMOVER LOGO
-=========================================================
-*/
-
 window.removerLogo = function(){
 
   document
@@ -2334,18 +2481,14 @@ DATA DE ATIVAÇÃO
 */
 
 document
-  .getElementById(
-    "dataAtivacao"
-  )
+  .getElementById("dataAtivacao")
   .addEventListener(
     "change",
     () => {
 
       const ativacao =
         document
-          .getElementById(
-            "dataAtivacao"
-          )
+          .getElementById("dataAtivacao")
           .value;
 
       if(!ativacao){
@@ -2358,9 +2501,7 @@ document
         );
 
       document
-        .getElementById(
-          "dataVencimento"
-        )
+        .getElementById("dataVencimento")
         .value =
           vencimento;
 
@@ -2370,26 +2511,17 @@ document
   );
 
 
-/*
-=========================================================
-INFORMAÇÃO DE VENCIMENTO
-=========================================================
-*/
-
 function atualizarInfoVencimento(){
 
   const valor =
     document
-      .getElementById(
-        "dataVencimento"
-      )
+      .getElementById("dataVencimento")
       .value;
 
   const info =
-    document
-      .getElementById(
-        "vencimentoInfo"
-      );
+    document.getElementById(
+      "vencimentoInfo"
+    );
 
   if(!valor){
 
@@ -2486,10 +2618,8 @@ window.login = async function(){
       LOGIN_USUARIO
         .trim()
         .toLowerCase() ||
-
     p !==
-      LOGIN_SENHA
-        .trim()
+      LOGIN_SENHA.trim()
   ){
 
     msg.textContent =
@@ -2623,16 +2753,12 @@ window.salvar = async function(){
 
   let dataAtivacao =
     document
-      .getElementById(
-        "dataAtivacao"
-      )
+      .getElementById("dataAtivacao")
       .value;
 
   let dataVencimento =
     document
-      .getElementById(
-        "dataVencimento"
-      )
+      .getElementById("dataVencimento")
       .value;
 
   if(!dataAtivacao){
@@ -2644,9 +2770,7 @@ window.salvar = async function(){
 
   }
 
-  if(
-    !dataVencimento
-  ){
+  if(!dataVencimento){
 
     dataVencimento =
       calcularVencimento(
@@ -2662,17 +2786,13 @@ window.salvar = async function(){
 
   const documento =
     document
-      .getElementById(
-        "documento"
-      )
+      .getElementById("documento")
       .value
       .trim();
 
   const telefone =
     document
-      .getElementById(
-        "telefone"
-      )
+      .getElementById("telefone")
       .value
       .trim();
 
@@ -2792,10 +2912,7 @@ window.salvar = async function(){
           );
 
         if(el){
-
-          el.textContent =
-            "";
-
+          el.textContent = "";
         }
 
       },
@@ -2916,6 +3033,61 @@ window.editar = function(id){
 
 /*
 =========================================================
+CANCELAR
+=========================================================
+*/
+
+window.cancelar = function(){
+
+  editId = null;
+
+  document
+    .getElementById("formTitle")
+    .textContent =
+      "➕ Novo provedor";
+
+  [
+    "nome",
+    "documento",
+    "telefone",
+    "dataAtivacao",
+    "dataVencimento",
+    "logo",
+    "fatura",
+    "zap",
+    "insta",
+    "speed"
+  ].forEach(
+    id => {
+
+      const el =
+        document.getElementById(id);
+
+      if(el){
+        el.value = "";
+      }
+
+    }
+  );
+
+  document
+    .getElementById("logoArquivo")
+    .value = "";
+
+  atualizarPreviewLogo("");
+
+  atualizarInfoVencimento();
+
+  document
+    .getElementById("cancelBtn")
+    .classList
+    .add("hidden");
+
+};
+
+
+/*
+=========================================================
 DAR BAIXA / PAGAMENTO
 =========================================================
 */
@@ -2975,14 +3147,9 @@ window.darBaixa = async function(id){
       ),
 
       {
-
         ativo:true,
-
         dataAtivacao:hoje,
-
-        dataVencimento:
-          novoVencimento
-
+        dataVencimento:novoVencimento
       }
 
     );
@@ -3057,8 +3224,7 @@ window.alterarStatus = async function(id){
       ),
 
       {
-        ativo:
-          !c.ativo
+        ativo:!c.ativo
       }
 
     );
@@ -3165,18 +3331,12 @@ window.copiar = function(url){
       .writeText(url)
       .then(
         () => {
-
-          alert(
-            "URL NFC copiada!"
-          );
-
+          alert("URL NFC copiada!");
         }
       )
       .catch(
         () => {
-
           copiarFallback(url);
-
         }
       );
 
@@ -3221,8 +3381,7 @@ function copiarFallback(url){
     area.value.length
   );
 
-  let sucesso =
-    false;
+  let sucesso = false;
 
   try{
 
@@ -3233,8 +3392,7 @@ function copiarFallback(url){
 
   }catch(e){
 
-    sucesso =
-      false;
+    sucesso = false;
 
   }
 
@@ -3264,14 +3422,6 @@ function copiarFallback(url){
 =========================================================
 TEMA DINÂMICO NFC
 =========================================================
-*/
-
-/*
-Tema corporativo original.
-
-Esta função nunca toca no Firestore,
-não grava nada e não altera o estado
-do provedor.
 */
 
 function restaurarTemaNFC(){
@@ -3328,17 +3478,6 @@ function restaurarTemaNFC(){
 }
 
 
-/*
-Converte RGB para HSL.
-
-Retorna:
-{
-  h: 0-360,
-  s: 0-100,
-  l: 0-100
-}
-*/
-
 function rgbParaHsl(
   r,
   g,
@@ -3350,18 +3489,10 @@ function rgbParaHsl(
   b /= 255;
 
   const max =
-    Math.max(
-      r,
-      g,
-      b
-    );
+    Math.max(r,g,b);
 
   const min =
-    Math.min(
-      r,
-      g,
-      b
-    );
+    Math.min(r,g,b);
 
   let h = 0;
   let s = 0;
@@ -3384,36 +3515,30 @@ function rgbParaHsl(
     switch(max){
 
       case r:
-
         h =
           (
-            (g - b) /
+            (g-b) /
             diferenca +
             (g < b ? 6 : 0)
           ) / 6;
-
         break;
 
       case g:
-
         h =
           (
-            (b - r) /
+            (b-r) /
             diferenca +
             2
           ) / 6;
-
         break;
 
       case b:
-
         h =
           (
-            (r - g) /
+            (r-g) /
             diferenca +
             4
           ) / 6;
-
         break;
 
     }
@@ -3421,21 +3546,13 @@ function rgbParaHsl(
   }
 
   return {
-
     h:h * 360,
-
     s:s * 100,
-
     l:l * 100
-
   };
 
 }
 
-
-/*
-Converte HSL para HEX.
-*/
 
 function hslParaHex(
   h,
@@ -3457,7 +3574,7 @@ function hslParaHex(
     s *
     Math.min(
       l,
-      1 - l
+      1-l
     );
 
   const f =
@@ -3467,9 +3584,9 @@ function hslParaHex(
       Math.max(
         -1,
         Math.min(
-          k(n) - 3,
+          k(n)-3,
           Math.min(
-            9 - k(n),
+            9-k(n),
             1
           )
         )
@@ -3505,10 +3622,6 @@ function hslParaHex(
 }
 
 
-/*
-Transforma HEX em RGB.
-*/
-
 function hexParaRgb(
   hex
 ){
@@ -3517,12 +3630,8 @@ function hexParaRgb(
     String(hex || "")
       .replace("#","");
 
-  if(
-    valor.length !== 6
-  ){
-
+  if(valor.length !== 6){
     return null;
-
   }
 
   const numero =
@@ -3531,34 +3640,18 @@ function hexParaRgb(
       16
     );
 
-  if(
-    Number.isNaN(numero)
-  ){
-
+  if(Number.isNaN(numero)){
     return null;
-
   }
 
   return {
-
-    r:
-      (numero >> 16) & 255,
-
-    g:
-      (numero >> 8) & 255,
-
-    b:
-      numero & 255
-
+    r:(numero >> 16) & 255,
+    g:(numero >> 8) & 255,
+    b:numero & 255
   };
 
 }
 
-
-/*
-Gera uma cor escura baseada
-na cor predominante da logo.
-*/
 
 function gerarTemaNFC(
   rgb
@@ -3573,19 +3666,12 @@ function gerarTemaNFC(
     return;
   }
 
-  let hsl =
+  const hsl =
     rgbParaHsl(
       rgb.r,
       rgb.g,
       rgb.b
     );
-
-
-  /*
-  Se a logo for muito pouco saturada,
-  adicionamos uma saturação mínima
-  apenas para produzir um tema elegante.
-  */
 
   const saturacaoBase =
     Math.max(
@@ -3595,15 +3681,6 @@ function gerarTemaNFC(
         78
       )
     );
-
-
-  /*
-  Fundo extremamente escuro.
-
-  O matiz permanece vindo da logo,
-  mas a luminosidade é reduzida
-  para preservar contraste.
-  */
 
   const bg1 =
     hslParaHex(
@@ -3615,7 +3692,6 @@ function gerarTemaNFC(
       4
     );
 
-
   const bg2 =
     hslParaHex(
       hsl.h,
@@ -3626,7 +3702,6 @@ function gerarTemaNFC(
       8
     );
 
-
   const bg3 =
     hslParaHex(
       hsl.h,
@@ -3636,11 +3711,6 @@ function gerarTemaNFC(
       ),
       11
     );
-
-
-  /*
-  Glow principal.
-  */
 
   const glow1 =
     hslParaHex(
@@ -3654,12 +3724,6 @@ function gerarTemaNFC(
       ),
       48
     );
-
-
-  /*
-  Segundo glow deslocado no círculo
-  cromático para harmonização.
-  */
 
   const glow2 =
     hslParaHex(
@@ -3676,7 +3740,6 @@ function gerarTemaNFC(
       42
     );
 
-
   const glow3 =
     hslParaHex(
       (
@@ -3692,7 +3755,6 @@ function gerarTemaNFC(
       45
     );
 
-
   const accent =
     hslParaHex(
       hsl.h,
@@ -3706,12 +3768,10 @@ function gerarTemaNFC(
       66
     );
 
-
   const accentRgb =
     hexParaRgb(
       accent
     );
-
 
   if(!accentRgb){
 
@@ -3721,7 +3781,6 @@ function gerarTemaNFC(
 
   }
 
-
   const accentSoft =
     "rgba(" +
     accentRgb.r +
@@ -3730,7 +3789,6 @@ function gerarTemaNFC(
     "," +
     accentRgb.b +
     ",.20)";
-
 
   pagina.style.setProperty(
     "--nfc-bg-1",
@@ -3775,16 +3833,6 @@ function gerarTemaNFC(
 }
 
 
-/*
-Analisa a logo através de canvas.
-
-Importante:
-- Base64 funciona normalmente.
-- Imagens externas precisam permitir CORS.
-- Em caso de canvas bloqueado, o sistema
-  simplesmente mantém o tema corporativo.
-*/
-
 function extrairCorPredominante(
   imagem
 ){
@@ -3801,28 +3849,22 @@ function extrairCorPredominante(
         ){
 
           resolve(null);
-
           return;
 
         }
-
 
         const canvas =
           document.createElement(
             "canvas"
           );
 
-
-        const TAMANHO =
-          96;
-
+        const TAMANHO = 96;
 
         canvas.width =
           TAMANHO;
 
         canvas.height =
           TAMANHO;
-
 
         const contexto =
           canvas.getContext(
@@ -3832,15 +3874,12 @@ function extrairCorPredominante(
             }
           );
 
-
         if(!contexto){
 
           resolve(null);
-
           return;
 
         }
-
 
         contexto.clearRect(
           0,
@@ -3848,7 +3887,6 @@ function extrairCorPredominante(
           TAMANHO,
           TAMANHO
         );
-
 
         contexto.drawImage(
           imagem,
@@ -3858,7 +3896,6 @@ function extrairCorPredominante(
           TAMANHO
         );
 
-
         const dados =
           contexto.getImageData(
             0,
@@ -3867,16 +3904,8 @@ function extrairCorPredominante(
             TAMANHO
           ).data;
 
-
-        /*
-        Quantização de 16 níveis
-        por canal reduz ruído e torna
-        a cor predominante mais estável.
-        */
-
         const mapa =
           new Map();
-
 
         for(
           let i = 0;
@@ -3884,129 +3913,62 @@ function extrairCorPredominante(
           i += 4
         ){
 
-          const r =
-            dados[i];
-
-          const g =
-            dados[i + 1];
-
-          const b =
-            dados[i + 2];
-
-          const a =
-            dados[i + 3];
-
-
-          /*
-          Ignora pixels transparentes.
-          */
+          const r = dados[i];
+          const g = dados[i+1];
+          const b = dados[i+2];
+          const a = dados[i+3];
 
           if(a < 100){
             continue;
           }
 
-
-          /*
-          Ignora praticamente branco,
-          pois logos sobre fundo branco
-          não devem transformar o tema
-          inteiro em branco.
-          */
-
           const maior =
-            Math.max(
-              r,
-              g,
-              b
-            );
-
+            Math.max(r,g,b);
 
           const menor =
-            Math.min(
-              r,
-              g,
-              b
-            );
-
+            Math.min(r,g,b);
 
           if(
             maior > 242 &&
             menor > 225
           ){
-
             continue;
-
           }
 
-
-          /*
-          Ignora preto absoluto/quase preto.
-          */
-
-          if(
-            maior < 18
-          ){
-
+          if(maior < 18){
             continue;
-
           }
-
 
           const qr =
-            Math.round(
-              r / 16
-            ) * 16;
-
+            Math.round(r / 16) * 16;
 
           const qg =
-            Math.round(
-              g / 16
-            ) * 16;
-
+            Math.round(g / 16) * 16;
 
           const qb =
-            Math.round(
-              b / 16
-            ) * 16;
-
+            Math.round(b / 16) * 16;
 
           const chave =
-            qr +
-            "," +
-            qg +
-            "," +
+            qr + "," +
+            qg + "," +
             qb;
-
-
-          const atual =
-            mapa.get(
-              chave
-            ) || 0;
-
 
           mapa.set(
             chave,
-            atual + 1
+            (mapa.get(chave) || 0) + 1
           );
 
         }
 
-
         if(!mapa.size){
 
           resolve(null);
-
           return;
 
         }
 
-
-        let melhor =
-          null;
-
-        let maiorPeso =
-          0;
-
+        let melhor = null;
+        let maiorPeso = 0;
 
         mapa.forEach(
           (peso,chave) => {
@@ -4016,16 +3978,9 @@ function extrairCorPredominante(
                 .split(",")
                 .map(Number);
 
-
-            const r =
-              partes[0];
-
-            const g =
-              partes[1];
-
-            const b =
-              partes[2];
-
+            const r = partes[0];
+            const g = partes[1];
+            const b = partes[2];
 
             const hsl =
               rgbParaHsl(
@@ -4033,12 +3988,6 @@ function extrairCorPredominante(
                 g,
                 b
               );
-
-
-            /*
-            Cores muito acinzentadas têm
-            menos valor visual como tema.
-            */
 
             const saturacaoBonus =
               1 +
@@ -4049,13 +3998,6 @@ function extrairCorPredominante(
                 ) / 100
               );
 
-
-            /*
-            Cores médias/fortes recebem
-            pequeno bônus para evitar que
-            áreas neutras dominem a seleção.
-            */
-
             const luminosidadeBonus =
               (
                 hsl.l >= 15 &&
@@ -4064,12 +4006,10 @@ function extrairCorPredominante(
                 ? 1.15
                 : .85;
 
-
             const pesoFinal =
               peso *
               saturacaoBonus *
               luminosidadeBonus;
-
 
             if(
               pesoFinal >
@@ -4090,17 +4030,11 @@ function extrairCorPredominante(
           }
         );
 
-
         resolve(
           melhor
         );
 
       }catch(error){
-
-        /*
-        Falha silenciosa proposital:
-        o tema corporativo permanece.
-        */
 
         console.warn(
           "Não foi possível extrair a cor da logo:",
@@ -4118,112 +4052,18 @@ function extrairCorPredominante(
 
 
 /*
-Controla a última logo processada
-para evitar processamento repetido
-desnecessário.
-*/
+=========================================================
+PREPARAÇÃO DA LOGO PÚBLICA
+=========================================================
 
-let ultimoTemaLogo = "";
+A diferença importante aqui é que a função agora retorna
+uma Promise.
 
-
-/*
-Aplica o tema depois que a logo
-estiver realmente carregada.
-*/
-
-async function aplicarTemaDaLogo(
-  src
-){
-
-  const pagina =
-    document.getElementById(
-      "clientPage"
-    );
-
-
-  const logo =
-    document.getElementById(
-      "clientLogo"
-    );
-
-
-  if(
-    !pagina ||
-    !logo ||
-    !src
-  ){
-
-    restaurarTemaNFC();
-
-    ultimoTemaLogo =
-      "";
-
-    return;
-
-  }
-
-
-  /*
-  Evita recalcular a mesma imagem
-  a cada ciclo do sistema.
-  */
-
-  if(
-    ultimoTemaLogo === src
-  ){
-
-    return;
-
-  }
-
-
-  ultimoTemaLogo =
-    src;
-
-
-  const cor =
-    await extrairCorPredominante(
-      logo
-    );
-
-
-  /*
-  A logo pode ter mudado enquanto
-  o processamento acontecia.
-  */
-
-  if(
-    logo.currentSrc !== src &&
-    logo.src !== src
-  ){
-
-    return;
-
-  }
-
-
-  if(!cor){
-
-    restaurarTemaNFC();
-
-    return;
-
-  }
-
-
-  gerarTemaNFC(
-    cor
-  );
-
-}
-
-
-/*
-Fallback absoluto da imagem pública.
-
-Se a logo quebrar ou falhar,
-voltamos imediatamente ao tema
-corporativo original.
+A página só é liberada depois que:
+1. a logo carregou;
+2. a cor foi analisada;
+3. o tema foi aplicado;
+4. ou o fallback foi concluído.
 */
 
 function configurarLogoPublica(
@@ -4235,86 +4075,136 @@ function configurarLogoPublica(
       "clientLogo"
     );
 
-
   if(!logo){
-    return;
+
+    return Promise.resolve();
+
   }
 
-
-  ultimoTemaLogo =
-    "";
-
+  ultimoTemaLogo = "";
 
   restaurarTemaNFC();
 
+  logo.style.visibility =
+    "hidden";
 
-  logo.onload =
-    async () => {
+  logo.style.opacity =
+    "0";
 
-      /*
-      Atraso mínimo para garantir que
-      naturalWidth/naturalHeight estejam
-      disponíveis em todos os navegadores.
-      */
+  return new Promise(
+    resolve => {
 
-      requestAnimationFrame(
+      let concluido = false;
+
+      const finalizar =
         () => {
 
-          aplicarTemaDaLogo(
-            src
-          );
+          if(concluido){
+            return;
+          }
+
+          concluido = true;
+
+          resolve();
+
+        };
+
+      logo.onload =
+        async () => {
+
+          try{
+
+            const cor =
+              await extrairCorPredominante(
+                logo
+              );
+
+            if(cor){
+
+              gerarTemaNFC(
+                cor
+              );
+
+            }else{
+
+              restaurarTemaNFC();
+
+            }
+
+          }catch(error){
+
+            console.warn(
+              "Falha ao preparar tema da logo:",
+              error
+            );
+
+            restaurarTemaNFC();
+
+          }
+
+          /*
+          A imagem e o tema já estão preparados.
+          A visibilidade efetiva continua protegida
+          pela classe nfc-ready.
+          */
+
+          logo.style.visibility =
+            "visible";
+
+          logo.style.opacity =
+            "1";
+
+          ultimoTemaLogo =
+            src;
+
+          finalizar();
+
+        };
+
+      logo.onerror =
+        () => {
+
+          ultimoTemaLogo =
+            "";
+
+          restaurarTemaNFC();
+
+          logo.style.display =
+            "none";
+
+          logo.style.visibility =
+            "hidden";
+
+          finalizar();
+
+        };
+
+      try{
+
+        if(
+          !String(src)
+            .startsWith("data:")
+        ){
+
+          logo.crossOrigin =
+            "anonymous";
 
         }
-      );
 
-    };
+      }catch(error){
 
+        console.warn(
+          "Não foi possível configurar CORS da logo:",
+          error
+        );
 
-  logo.onerror =
-    () => {
+      }
 
-      ultimoTemaLogo =
-        "";
-
-      restaurarTemaNFC();
-
-    };
-
-
-  /*
-  Para URLs externas, o navegador
-  tenta permitir leitura pelo canvas.
-  Se o servidor não permitir CORS,
-  extrairCorPredominante captura a falha
-  e mantém o tema corporativo.
-  */
-
-  try{
-
-    if(
-      !String(src)
-        .startsWith(
-          "data:"
-        )
-    ){
-
-      logo.crossOrigin =
-        "anonymous";
+      logo.src =
+        src;
 
     }
-
-  }catch(error){
-
-    console.warn(
-      "Não foi possível configurar CORS da logo:",
-      error
-    );
-
-  }
-
-
-  logo.src =
-    src;
+  );
 
 }
 
@@ -4325,7 +4215,7 @@ ABRIR NFC
 =========================================================
 */
 
-window.abrirNFC = function(
+window.abrirNFC = async function(
   id,
   objCliente = null
 ){
@@ -4336,161 +4226,93 @@ window.abrirNFC = function(
       x => x.id === id
     );
 
-
   if(!c){
 
-    document
-      .getElementById("adminPage")
-      .style
-      .display = "none";
-
-
-    document
-      .getElementById("clientPage")
-      .style
-      .display = "block";
-
-
-    restaurarTemaNFC();
-
-
-    ultimoTemaLogo =
-      "";
-
-
-    document
-      .getElementById("clientName")
-      .textContent =
-        "Acesso não encontrado";
-
-
-    document
-      .getElementById("clientLogo")
-      .style
-      .display = "none";
-
-
-    document
-      .getElementById("clientActive")
-      .classList
-      .add("hidden");
-
-
-    document
-      .getElementById("inactiveBox")
-      .classList
-      .remove("hidden");
-
-
-    document
-      .getElementById("inactiveBox")
-      .innerHTML =
-        "<h2>⚠️ Acesso não encontrado</h2>" +
-        "<p>O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido.</p>";
-
-
-    document.title =
-      "Acesso não encontrado";
-
+    mostrarErroNFC(
+      "Acesso não encontrado",
+      "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
+    );
 
     return;
 
   }
 
+  const admin =
+    document.getElementById(
+      "adminPage"
+    );
 
-  document
-    .getElementById("adminPage")
-    .style
-    .display = "none";
+  const pagina =
+    document.getElementById(
+      "clientPage"
+    );
 
-
-  document
-    .getElementById("clientPage")
-    .style
-    .display = "block";
-
-
-  document
-    .getElementById("clientName")
-    .textContent =
-      c.nome;
-
+  const nome =
+    document.getElementById(
+      "clientName"
+    );
 
   const logo =
     document.getElementById(
       "clientLogo"
     );
 
-
-  if(c.logo){
-
-    logo.style.display =
-      "block";
-
-
-    /*
-    Nova camada visual:
-    configura o carregamento e a análise
-    da logo sem tocar no banco.
-    */
-
-    configurarLogoPublica(
-      c.logo
+  const active =
+    document.getElementById(
+      "clientActive"
     );
 
-  }else{
-
-    logo.removeAttribute(
-      "src"
+  const inactive =
+    document.getElementById(
+      "inactiveBox"
     );
 
-
-    logo.style.display =
-      "none";
-
-
-    ultimoTemaLogo =
-      "";
-
-
-    restaurarTemaNFC();
-
+  if(admin){
+    admin.style.display = "none";
   }
 
+  if(pagina){
+    pagina.style.display = "block";
+  }
 
   /*
-  Compatibilidade:
-
-  ativo precisa continuar verdadeiro
-  E o vencimento também precisa estar
-  dentro do prazo.
-
-  Assim um cadastro antigo sem
-  dataVencimento continua funcionando.
+  Antes de qualquer novo cliente:
+  limpa visualmente a logo anterior e impede
+  reaproveitamento visual durante a troca.
   */
+
+  logo.style.visibility =
+    "hidden";
+
+  logo.style.opacity =
+    "0";
+
+  logo.style.display =
+    "none";
+
+  logo.removeAttribute("src");
+
+  ultimoTemaLogo =
+    "";
+
+  restaurarTemaNFC();
+
+  nome.textContent =
+    c.nome;
 
   const acessoAtivo =
     c.ativo &&
     !c.vencido;
 
+  active.classList.toggle(
+    "hidden",
+    !acessoAtivo
+  );
 
-  document
-    .getElementById("clientActive")
-    .classList
-    .toggle(
-      "hidden",
-      !acessoAtivo
-    );
-
-
-  document
-    .getElementById("inactiveBox")
-    .classList
-    .toggle(
-      "hidden",
-      acessoAtivo
-    );
-
+  inactive.classList.toggle(
+    "hidden",
+    acessoAtivo
+  );
 
   if(acessoAtivo){
 
@@ -4500,20 +4322,17 @@ window.abrirNFC = function(
       "fatura"
     );
 
-
     setLink(
       "zapBtn",
       c.zap,
       "whatsapp"
     );
 
-
     setLink(
       "speedBtn",
       c.speed,
       "speed"
     );
-
 
     setLink(
       "instaBtn",
@@ -4529,13 +4348,11 @@ window.abrirNFC = function(
       "fatura"
     );
 
-
     setLink(
       "zapBtn",
       "",
       "whatsapp"
     );
-
 
     setLink(
       "speedBtn",
@@ -4543,44 +4360,71 @@ window.abrirNFC = function(
       "speed"
     );
 
-
     setLink(
       "instaBtn",
       "",
       "instagram"
     );
 
-
     if(c.vencido){
 
-      document
-        .getElementById(
-          "inactiveBox"
-        )
-        .innerHTML =
-          "<h2>🔴 Acesso temporariamente indisponível</h2>" +
-          "<p>O período de utilização deste provedor terminou.</p>" +
-          "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
+      inactive.innerHTML =
+        "<h2>🔴 Acesso temporariamente indisponível</h2>" +
+        "<p>O período de utilização deste provedor terminou.</p>" +
+        "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
 
     }else{
 
-      document
-        .getElementById(
-          "inactiveBox"
-        )
-        .innerHTML =
-          "<h2>🔴 Acesso temporariamente indisponível</h2>" +
-          "<p>Seu acesso está temporariamente suspenso.</p>" +
-          "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
+      inactive.innerHTML =
+        "<h2>🔴 Acesso temporariamente indisponível</h2>" +
+        "<p>Seu acesso está temporariamente suspenso.</p>" +
+        "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
 
     }
 
   }
 
-
   document.title =
     c.nome +
     " — Acesso";
+
+  /*
+  Se existir logo, ela precisa terminar de carregar
+  antes de liberar a página.
+
+  Se não existir logo, o tema corporativo já está pronto
+  e podemos liberar imediatamente.
+  */
+
+  if(c.logo){
+
+    logo.style.display =
+      "block";
+
+    await configurarLogoPublica(
+      c.logo
+    );
+
+  }else{
+
+    restaurarTemaNFC();
+
+    logo.removeAttribute(
+      "src"
+    );
+
+    logo.style.display =
+      "none";
+
+    logo.style.visibility =
+      "hidden";
+
+    logo.style.opacity =
+      "0";
+
+  }
+
+  marcarNFCPronto();
 
 };
 
@@ -4612,17 +4456,13 @@ function normalizarLink(
     if(
       /^https?:\/\//i.test(valor)
     ){
-
       return valor;
-
     }
 
     if(
       /^whatsapp:/i.test(valor)
     ){
-
       return valor;
-
     }
 
     const numero =
@@ -4631,9 +4471,7 @@ function normalizarLink(
         ""
       );
 
-    if(
-      numero.length >= 10
-    ){
+    if(numero.length >= 10){
 
       return (
         "https://wa.me/" +
@@ -4651,9 +4489,7 @@ function normalizarLink(
     if(
       /^https?:\/\//i.test(valor)
     ){
-
       return valor;
-
     }
 
     if(
@@ -4688,9 +4524,7 @@ function normalizarLink(
   if(
     /^[a-z][a-z0-9+.-]*:\/\//i.test(valor)
   ){
-
     return valor;
-
   }
 
   if(
@@ -4737,11 +4571,9 @@ function setLink(
       id
     );
 
-
   if(!el){
     return;
   }
-
 
   const link =
     normalizarLink(
@@ -4749,22 +4581,18 @@ function setLink(
       tipo
     );
 
-
   el.removeAttribute(
     "href"
   );
-
 
   el.removeAttribute(
     "onclick"
   );
 
-
   el.style.display =
     link
       ? "flex"
       : "none";
-
 
   if(!link){
 
@@ -4775,14 +4603,11 @@ function setLink(
 
   }
 
-
   el.href =
     link;
 
-
   el.target =
     "_blank";
-
 
   el.rel =
     "noopener noreferrer";
@@ -4802,7 +4627,6 @@ window.voltar = function(){
     .getElementById("clientPage")
     .style
     .display = "none";
-
 
   document
     .getElementById("adminPage")
@@ -4878,8 +4702,7 @@ window.render = function(){
 
   const q =
     pesquisa
-      ? pesquisa.value
-          .toLowerCase()
+      ? pesquisa.value.toLowerCase()
       : "";
 
   const lista =
@@ -5083,8 +4906,7 @@ function processarNFC(){
       .startsWith("#nfc=")
   ){
 
-    let id =
-      "";
+    let id = "";
 
     try{
 
@@ -5100,8 +4922,7 @@ function processarNFC(){
         error
       );
 
-      id =
-        "";
+      id = "";
 
     }
 
@@ -5110,35 +4931,67 @@ function processarNFC(){
         x => x.id === id
       ) || null;
 
+    /*
+    Firestore ainda não entregou os documentos.
+    Não mostramos conteúdo parcial.
+    */
+
     if(
       !cliente &&
       clientes.length === 0
     ){
 
-      document
-        .getElementById("adminPage")
-        .style
-        .display = "none";
+      const admin =
+        document.getElementById(
+          "adminPage"
+        );
 
-      document
-        .getElementById("clientPage")
-        .style
-        .display = "block";
+      const pagina =
+        document.getElementById(
+          "clientPage"
+        );
 
-      document
-        .getElementById("clientName")
-        .textContent =
+      const nome =
+        document.getElementById(
+          "clientName"
+        );
+
+      const active =
+        document.getElementById(
+          "clientActive"
+        );
+
+      const inactive =
+        document.getElementById(
+          "inactiveBox"
+        );
+
+      if(admin){
+        admin.style.display = "none";
+      }
+
+      if(pagina){
+        pagina.style.display = "block";
+      }
+
+      if(nome){
+        nome.textContent =
           "Carregando...";
+      }
 
-      document
-        .getElementById("clientActive")
-        .classList
-        .add("hidden");
+      if(active){
+        active.classList.add("hidden");
+      }
 
-      document
-        .getElementById("inactiveBox")
-        .classList
-        .add("hidden");
+      if(inactive){
+        inactive.classList.add("hidden");
+      }
+
+      /*
+      Importante:
+      não marcar nfc-ready aqui.
+      A página continuará bloqueada até o snapshot.
+      */
 
       return true;
 
@@ -5169,27 +5022,26 @@ window.addEventListener(
   () => {
 
     /*
-    Firestore continua sendo iniciado
+    O Firestore continua sendo iniciado
     independentemente do login.
     */
 
     iniciarListenerClientes();
 
-    /*
-    Tema padrão antes de qualquer
-    logo ser processada.
-    */
-
     restaurarTemaNFC();
-
-    /*
-    Logo inicial.
-    */
 
     atualizarPreviewLogo("");
 
+    /*
+    Corrigido:
+    processarNFC() é executado apenas uma vez.
+    */
+
+    const estaNaRotaNFC =
+      processarNFC();
+
     if(
-      !processarNFC() &&
+      !estaNaRotaNFC &&
       adminAutenticado()
     ){
 
@@ -5208,7 +5060,7 @@ window.addEventListener(
       verificarVencimentos();
 
     }else if(
-      !processarNFC()
+      !estaNaRotaNFC
     ){
 
       document
@@ -5237,13 +5089,45 @@ window.addEventListener(
   "hashchange",
   () => {
 
-    if(
+    const novaRotaNFC =
       location.hash
         .toLowerCase()
-        .startsWith("#nfc=")
-    ){
+        .startsWith("#nfc=");
+
+    if(novaRotaNFC){
+
+      document.documentElement
+        .classList
+        .add("nfc-route");
+
+      document.documentElement
+        .classList
+        .remove("nfc-ready");
+
+      ultimoTemaLogo = "";
+
+      restaurarTemaNFC();
 
       processarNFC();
+
+    }else{
+
+      document.documentElement
+        .classList
+        .remove(
+          "nfc-route",
+          "nfc-ready"
+        );
+
+      document
+        .getElementById("clientPage")
+        .style
+        .display = "none";
+
+      document
+        .getElementById("adminPage")
+        .style
+        .display = "block";
 
     }
 
@@ -5274,6 +5158,12 @@ setInterval(
         .toLowerCase()
         .startsWith("#nfc=")
     ){
+
+      /*
+      Só reprocessa a rota.
+      A proteção visual impede qualquer
+      flash de conteúdo durante a atualização.
+      */
 
       processarNFC();
 
