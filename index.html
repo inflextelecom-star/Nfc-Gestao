@@ -533,13 +533,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-
-import {
   getFirestore,
   collection,
   doc,
@@ -580,10 +573,6 @@ const app =
   initializeApp(firebaseConfig);
 
 
-const auth =
-  getAuth(app);
-
-
 const db =
   getFirestore(app);
 
@@ -599,6 +588,16 @@ const LOGIN_USUARIO =
 
 const LOGIN_SENHA =
   "Enzo777.@";
+
+
+/*
+---------------------------------------------------------
+SESSÃO ADMINISTRATIVA LOCAL
+---------------------------------------------------------
+*/
+
+const ADMIN_SESSION_KEY =
+  "nfc_admin_authenticated";
 
 
 /*
@@ -622,6 +621,23 @@ let clientes = [];
 let editId = null;
 
 let unsubscribeClientes = null;
+
+
+/*
+---------------------------------------------------------
+VERIFICA SESSÃO ADMINISTRATIVA
+---------------------------------------------------------
+*/
+
+function adminAutenticado(){
+
+  return (
+    sessionStorage.getItem(
+      ADMIN_SESSION_KEY
+    ) === "true"
+  );
+
+}
 
 
 /*
@@ -820,7 +836,9 @@ window.login = async function(){
 
 
   /*
-  Primeiro mantém a validação fixa solicitada.
+  Validação fixa local.
+  O e-mail é normalizado com
+  trim() + toLowerCase().
   */
 
   if(
@@ -842,78 +860,56 @@ window.login = async function(){
   }
 
 
-  msg.textContent =
-    "Autenticando...";
-
+  /*
+  Login aprovado.
+  Não existe mais nenhuma chamada
+  ao Firebase Authentication.
+  */
 
   try{
 
-    await signInWithEmailAndPassword(
-      auth,
-      u,
-      p
+    sessionStorage.setItem(
+      ADMIN_SESSION_KEY,
+      "true"
     );
 
 
-    msg.textContent = "";
+    msg.textContent =
+      "";
+
+
+    document
+      .getElementById("loginCard")
+      .classList
+      .add("hidden");
+
+
+    document
+      .getElementById("dashboard")
+      .classList
+      .remove("hidden");
+
+
+    iniciarListenerClientes();
+
+
+    render();
 
   }catch(error){
 
     console.error(
-      "Erro no login Firebase:",
+      "Erro ao iniciar sessão administrativa:",
       error
     );
 
 
-    let texto =
-      "Não foi possível entrar.";
-
-
-    if(
-      error.code ===
-      "auth/invalid-credential"
-    ){
-
-      texto =
-        "Usuário ou senha incorretos.";
-
-    }else if(
-      error.code ===
-      "auth/user-not-found"
-    ){
-
-      texto =
-        "Usuário administrativo não cadastrado no Firebase Authentication.";
-
-    }else if(
-      error.code ===
-      "auth/wrong-password"
-    ){
-
-      texto =
-        "Usuário ou senha incorretos.";
-
-    }else if(
-      error.code ===
-      "auth/too-many-requests"
-    ){
-
-      texto =
-        "Muitas tentativas. Aguarde alguns minutos.";
-
-    }else if(
-      error.code ===
-      "auth/network-request-failed"
-    ){
-
-      texto =
-        "Falha de conexão. Verifique sua internet.";
-
-    }
+    sessionStorage.removeItem(
+      ADMIN_SESSION_KEY
+    );
 
 
     msg.textContent =
-      texto;
+      "Não foi possível iniciar a sessão.";
 
   }
 
@@ -926,20 +922,17 @@ SAIR
 ---------------------------------------------------------
 */
 
-window.showLogin = async function(){
+window.showLogin = function(){
 
-  try{
+  /*
+  Remove somente a sessão administrativa local.
+  O Firestore permanece funcionando para
+  a página pública NFC.
+  */
 
-    await signOut(auth);
-
-  }catch(error){
-
-    console.error(
-      "Erro ao sair:",
-      error
-    );
-
-  }
+  sessionStorage.removeItem(
+    ADMIN_SESSION_KEY
+  );
 
 
   editId = null;
@@ -986,11 +979,12 @@ SALVAR ASSINANTE
 window.salvar = async function(){
 
   /*
-  Garante que somente usuário autenticado
-  possa tentar alterar dados.
+  Garante que somente a sessão
+  administrativa local possa tentar
+  alterar dados.
   */
 
-  if(!auth.currentUser){
+  if(!adminAutenticado()){
 
     alert(
       "Sua sessão administrativa expirou. Faça login novamente."
@@ -1274,7 +1268,7 @@ ALTERAR STATUS
 
 window.alterarStatus = async function(id){
 
-  if(!auth.currentUser){
+  if(!adminAutenticado()){
 
     alert(
       "Faça login como administrador."
@@ -1338,7 +1332,7 @@ EXCLUIR
 
 window.excluir = async function(id){
 
-  if(!auth.currentUser){
+  if(!adminAutenticado()){
 
     alert(
       "Faça login como administrador."
@@ -2240,83 +2234,6 @@ function processarNFC(){
 
 /*
 ---------------------------------------------------------
-AUTENTICAÇÃO FIREBASE
----------------------------------------------------------
-*/
-
-onAuthStateChanged(
-  auth,
-  user => {
-
-    /*
-    NFC público:
-    não exige login.
-    */
-
-    if(processarNFC()){
-
-      return;
-
-    }
-
-
-    if(user){
-
-      /*
-      Usuário autenticado.
-      */
-
-      document
-        .getElementById("loginCard")
-        .classList
-        .add("hidden");
-
-
-      document
-        .getElementById("dashboard")
-        .classList
-        .remove("hidden");
-
-
-      iniciarListenerClientes();
-
-
-      render();
-
-
-    }else{
-
-      /*
-      Usuário não autenticado.
-      */
-
-      document
-        .getElementById("loginCard")
-        .classList
-        .remove("hidden");
-
-
-      document
-        .getElementById("dashboard")
-        .classList
-        .add("hidden");
-
-
-      /*
-      Ainda precisamos do listener
-      para a página pública NFC.
-      */
-
-      iniciarListenerClientes();
-
-    }
-
-  }
-);
-
-
-/*
----------------------------------------------------------
 INICIALIZAÇÃO
 ---------------------------------------------------------
 */
@@ -2325,7 +2242,55 @@ window.addEventListener(
   "load",
   () => {
 
-    processarNFC();
+    /*
+    O listener do Firestore é iniciado
+    independentemente do login para que
+    a página NFC pública continue funcionando.
+    */
+
+    iniciarListenerClientes();
+
+
+    /*
+    Se estiver acessando o painel e já
+    existir sessão nesta aba, abre o dashboard.
+    */
+
+    if(
+      !processarNFC() &&
+      adminAutenticado()
+    ){
+
+      document
+        .getElementById("loginCard")
+        .classList
+        .add("hidden");
+
+
+      document
+        .getElementById("dashboard")
+        .classList
+        .remove("hidden");
+
+
+      render();
+
+    }else if(
+      !processarNFC()
+    ){
+
+      document
+        .getElementById("loginCard")
+        .classList
+        .remove("hidden");
+
+
+      document
+        .getElementById("dashboard")
+        .classList
+        .add("hidden");
+
+    }
 
   }
 );
