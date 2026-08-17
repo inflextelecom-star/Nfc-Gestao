@@ -209,7 +209,7 @@ input{
       <div class="grid">
         <input
           id="loginUser"
-          type="email"
+          type="text"
           placeholder="Usuário (E-mail)"
         >
 
@@ -628,7 +628,8 @@ function login(){
 
   const p =
     document.getElementById("loginPass")
-      .value;
+      .value
+      .trim();
 
   const msg =
     document.getElementById("loginMsg");
@@ -645,8 +646,8 @@ function login(){
 
 
   if(
-    u.toLowerCase() === LOGIN_USUARIO.toLowerCase() &&
-    p === LOGIN_SENHA
+    u.toLowerCase().trim() === LOGIN_USUARIO.toLowerCase().trim() &&
+    p.trim() === LOGIN_SENHA.trim()
   ){
 
     localStorage.setItem(
