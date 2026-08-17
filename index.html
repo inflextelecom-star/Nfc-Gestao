@@ -2771,6 +2771,38 @@ function normalizarDocumento(
 
 }
 
+/*
+=========================================================
+MÁSCARA AUTOMÁTICA DE CPF / CNPJ
+=========================================================
+*/
+function aplicarMascaraDocumento(valor) {
+  const limpo = normalizarDocumento(valor);
+  
+  if (limpo.length <= 11) {
+    return limpo
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  } else {
+    return limpo
+      .substring(0, 14)
+      .replace(/^(\d{2})(\d)/, '$1.$2')
+      .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/\.(\d{3})(\d)/, '.$1/$2')
+      .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+  }
+}
+
+document.getElementById("documento")?.addEventListener("input", (e) => {
+  e.target.value = aplicarMascaraDocumento(e.target.value);
+});
+
+document.getElementById("provedorDocumentoEntrada")?.addEventListener("input", (e) => {
+  e.target.value = aplicarMascaraDocumento(e.target.value);
+});
+
+
 /**
  * Valida um CPF ou CNPJ.
  * @param {string} documento O CPF ou CNPJ a ser validado.
@@ -2891,6 +2923,46 @@ function documentoConfere(
 
 }
 
+/*
+=========================================================
+PROTEÇÃO CONTRA DUPLO CLIQUE EM BOTÕES
+=========================================================
+*/
+document.querySelectorAll("button, .btn").forEach(botao => {
+  botao.addEventListener("click", function() {
+    if (this.innerText.includes("SALVAR") || this.innerText.includes("CADASTRAR")) {
+      this.style.opacity = "0.7";
+      this.style.pointerEvents = "none";
+      setTimeout(() => {
+        this.style.opacity = "1";
+        this.style.pointerEvents = "auto";
+      }, 3000);
+    }
+  });
+});
+
+/*
+=========================================================
+FEEDBACK VISUAL DE SUCESSO
+=========================================================
+*/
+function mostrarMensagemSucesso(mensagem) {
+  const div = document.createElement("div");
+  div.innerText = mensagem;
+  div.style.position = "fixed";
+  div.style.bottom = "20px";
+  div.style.right = "20px";
+  div.style.backgroundColor = "#28a745"; // Verde sucesso
+  div.style.color = "white";
+  div.style.padding = "15px 25px";
+  div.style.borderRadius = "8px";
+  div.style.zIndex = "9999";
+  div.style.fontWeight = "bold";
+  document.body.appendChild(div);
+
+  // Some depois de 3 segundos
+  setTimeout(() => div.remove(), 3000);
+}
 
 /*
 =========================================================
@@ -3015,6 +3087,12 @@ CONTROLE DE PRÉ-ACESSO
 function mostrarPreAcessoProvedor(
   cliente
 ){
+
+const docInput = document.getElementById("provedorDocumentoEntrada")?.value;
+  if (docInput && !validarDocumento(docInput)) {
+    alert("CPF ou CNPJ inválido! Verifique os números digitados.");
+    return;
+  }
 
   provedorDocumentoValidado =
     false;
