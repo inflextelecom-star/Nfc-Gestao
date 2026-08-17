@@ -17,28 +17,31 @@
   --text:#0f172a;
 }
 
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 body{
   margin:0;
-  font-family:Segoe UI,system-ui,sans-serif;
+  font-family:Segoe UI,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
   background:var(--bg);
-  color:var(--text)
+  color:var(--text);
 }
 
-button,input{
-  font:inherit
+button,
+input{
+  font:inherit;
 }
 
 button{
   border:0;
-  cursor:pointer
+  cursor:pointer;
 }
 
 .top{
   background:var(--nav);
   color:#fff;
-  padding:16px
+  padding:16px;
 }
 
 .top-inner{
@@ -46,13 +49,13 @@ button{
   margin:auto;
   display:flex;
   justify-content:space-between;
-  align-items:center
+  align-items:center;
 }
 
 .wrap{
   max-width:1100px;
   margin:auto;
-  padding:18px
+  padding:18px;
 }
 
 .card{
@@ -60,20 +63,20 @@ button{
   border-radius:18px;
   padding:20px;
   margin-bottom:18px;
-  box-shadow:0 8px 25px #0000000b
+  box-shadow:0 8px 25px #0000000b;
 }
 
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:12px
+  gap:12px;
 }
 
 input{
   width:100%;
   padding:14px;
   border:1px solid #cbd5e1;
-  border-radius:11px
+  border-radius:11px;
 }
 
 .btn{
@@ -81,108 +84,651 @@ input{
   border-radius:10px;
   background:var(--blue);
   color:#fff;
-  font-weight:700
+  font-weight:700;
 }
 
-.btn.gray{background:var(--gray)}
-.btn.green{background:var(--green)}
-.btn.red{background:var(--red)}
+.btn.gray{
+  background:var(--gray);
+}
+
+.btn.green{
+  background:var(--green);
+}
+
+.btn.red{
+  background:var(--red);
+}
 
 .row{
   display:flex;
   gap:9px;
   align-items:center;
-  flex-wrap:wrap
+  flex-wrap:wrap;
 }
 
 .client{
   border:1px solid #e2e8f0;
   border-radius:14px;
   padding:16px;
-  margin-top:12px
+  margin-top:12px;
 }
 
-.status{font-weight:800}
-.active{color:var(--green)}
-.inactive{color:var(--red)}
+.status{
+  font-weight:800;
+}
+
+.active{
+  color:var(--green);
+}
+
+.inactive{
+  color:var(--red);
+}
 
 .muted{
   color:#64748b;
   font-size:13px;
-  word-break:break-all
+  word-break:break-all;
 }
 
 .hidden{
-  display:none!important
+  display:none!important;
 }
 
-/* Cliente */
+
+/* =====================================================
+   PÁGINA NFC PÚBLICA
+   ===================================================== */
+
 #clientPage{
   display:none;
-  background:#0f172a;
+  position:relative;
+  min-height:100vh;
+  overflow:hidden;
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      rgba(56,189,248,.20),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(99,102,241,.18),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(14,165,233,.14),
+      transparent 35%
+    ),
+    linear-gradient(
+      145deg,
+      #020617 0%,
+      #0f172a 45%,
+      #111827 100%
+    );
   color:#fff;
-  min-height:100vh
 }
+
+
+/*
+ Camada decorativa de fundo.
+ Não interfere em nenhum elemento funcional.
+*/
+
+#clientPage::before,
+#clientPage::after{
+  content:"";
+  position:absolute;
+  width:280px;
+  height:280px;
+  border-radius:50%;
+  pointer-events:none;
+  filter:blur(70px);
+  opacity:.35;
+}
+
+#clientPage::before{
+  top:-120px;
+  left:-100px;
+  background:#0ea5e9;
+}
+
+#clientPage::after{
+  right:-100px;
+  bottom:-120px;
+  background:#6366f1;
+}
+
+
+/* Container público */
 
 .client-wrap{
-  max-width:480px;
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:500px;
+  min-height:100vh;
   margin:auto;
-  padding:42px 20px;
-  text-align:center
+  padding:54px 20px 42px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
+
+
+/* =====================================================
+   LOGO DO ASSINANTE
+   ===================================================== */
 
 .client-logo{
-  width:132px;
-  height:132px;
+  width:136px;
+  height:136px;
   border-radius:50%;
   object-fit:cover;
-  border:4px solid #38bdf8;
-  margin:0 auto 18px;
   display:block;
-  background:#1e293b
+  margin:0 auto 22px;
+  padding:4px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.95),
+      rgba(125,211,252,.65)
+    );
+  border:1px solid rgba(255,255,255,.45);
+  box-shadow:
+    0 0 0 7px rgba(255,255,255,.045),
+    0 0 0 1px rgba(56,189,248,.18),
+    0 20px 50px rgba(0,0,0,.38),
+    0 0 40px rgba(56,189,248,.18);
+  animation:nfcLogoIn .65s cubic-bezier(.22,1,.36,1);
 }
 
-.service{
-  display:flex;
+
+/* =====================================================
+   NOME DO ASSINANTE
+   ===================================================== */
+
+#clientName{
+  width:100%;
+  margin:0;
+  color:#fff;
+  font-size:clamp(26px,7vw,38px);
+  line-height:1.12;
+  font-weight:800;
+  letter-spacing:-.7px;
+  text-shadow:0 3px 20px rgba(0,0,0,.35);
+  overflow-wrap:anywhere;
+  animation:nfcTextIn .7s .06s both cubic-bezier(.22,1,.36,1);
+}
+
+
+/* =====================================================
+   STATUS
+   ===================================================== */
+
+#clientActive{
+  width:100%;
+  margin-top:14px;
+}
+
+#clientActive > p{
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:12px;
-  min-height:60px;
-  margin:13px 0;
-  background:#1e293b;
-  color:#fff;
-  border:1px solid #334155;
-  border-radius:16px;
-  text-decoration:none;
-  font-size:17px;
-  font-weight:700
+  gap:7px;
+  margin:0 0 12px;
+  padding:7px 13px;
+  border-radius:999px;
+  color:#bbf7d0;
+  background:rgba(22,163,74,.12);
+  border:1px solid rgba(74,222,128,.24);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.2px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 8px 25px rgba(0,0,0,.10);
 }
+
+
+/* =====================================================
+   BOTÕES DE SERVIÇO — GLASSMORPHISM
+   ===================================================== */
+
+.service{
+  position:relative;
+  width:100%;
+  min-height:68px;
+  margin:13px 0;
+  padding:13px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:15px;
+  border-radius:19px;
+  text-decoration:none;
+  color:#fff;
+  font-size:16px;
+  font-weight:750;
+  letter-spacing:.1px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.115),
+      rgba(255,255,255,.055)
+    );
+
+  border:1px solid rgba(255,255,255,.14);
+
+  box-shadow:
+    0 12px 32px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 0 -1px 0 rgba(255,255,255,.025);
+
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+
+  overflow:hidden;
+
+  transform:translateZ(0);
+
+  transition:
+    transform .18s ease,
+    box-shadow .22s ease,
+    border-color .22s ease,
+    background .22s ease;
+
+  animation:
+    serviceIn .65s both cubic-bezier(.22,1,.36,1);
+}
+
+
+/*
+ Reflexo superior dos botões.
+*/
+
+.service::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:12%;
+  right:12%;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.42),
+    transparent
+  );
+  opacity:.8;
+}
+
+
+/*
+ Brilho de interação.
+*/
+
+.service::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      rgba(255,255,255,.08) 45%,
+      transparent 70%
+    );
+  transform:translateX(-120%);
+  transition:transform .55s ease;
+  pointer-events:none;
+}
+
+
+/* Delays suaves */
+
+.service:nth-of-type(1){
+  animation-delay:.08s;
+}
+
+.service:nth-of-type(2){
+  animation-delay:.14s;
+}
+
+.service:nth-of-type(3){
+  animation-delay:.20s;
+}
+
+.service:nth-of-type(4){
+  animation-delay:.26s;
+}
+
+
+/* Hover para dispositivos com mouse */
+
+@media (hover:hover){
+  .service:hover{
+    transform:translateY(-2px) scale(1.012);
+    border-color:rgba(255,255,255,.25);
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255,255,255,.15),
+        rgba(255,255,255,.075)
+      );
+    box-shadow:
+      0 18px 40px rgba(0,0,0,.28),
+      inset 0 1px 0 rgba(255,255,255,.14);
+  }
+
+  .service:hover::after{
+    transform:translateX(120%);
+  }
+}
+
+
+/* Feedback de toque */
+
+.service:active{
+  transform:scale(.965);
+  box-shadow:
+    0 7px 18px rgba(0,0,0,.22),
+    inset 0 1px 8px rgba(0,0,0,.10);
+  transition-duration:.08s;
+}
+
+
+/* Acessibilidade */
+
+.service:focus-visible{
+  outline:3px solid rgba(125,211,252,.75);
+  outline-offset:3px;
+}
+
+
+/* =====================================================
+   ÍCONES
+   ===================================================== */
 
 .service svg{
-  width:27px;
-  height:27px;
-  flex:0 0 27px
+  position:relative;
+  z-index:1;
+  width:29px;
+  height:29px;
+  min-width:29px;
+  flex:0 0 29px;
+  overflow:visible;
 }
+
+
+/*
+ Área de texto.
+*/
+
+.service span{
+  position:relative;
+  z-index:1;
+  flex:1;
+  text-align:left;
+}
+
+
+/* =====================================================
+   CORES ESPECÍFICAS DOS SERVIÇOS
+   ===================================================== */
+
+
+/* WhatsApp */
+
+#zapBtn{
+  border-color:rgba(37,211,102,.24);
+}
+
+#zapBtn svg{
+  color:#25D366;
+  filter:
+    drop-shadow(
+      0 0 7px rgba(37,211,102,.28)
+    );
+}
+
+
+/* Instagram */
+
+#instaBtn{
+  border-color:rgba(225,48,108,.22);
+}
+
+#instaBtn svg{
+  filter:
+    drop-shadow(
+      0 0 8px rgba(225,48,108,.25)
+    );
+}
+
+
+/* Teste de velocidade */
+
+#speedBtn{
+  border-color:rgba(56,189,248,.25);
+}
+
+#speedBtn svg{
+  color:#38bdf8;
+  filter:
+    drop-shadow(
+      0 0 8px rgba(34,211,238,.30)
+    );
+}
+
+
+/* Fatura */
+
+#faturaBtn{
+  border-color:rgba(148,163,184,.24);
+}
+
+#faturaBtn svg{
+  color:#e2e8f0;
+  filter:
+    drop-shadow(
+      0 0 7px rgba(125,211,252,.18)
+    );
+}
+
+
+/* =====================================================
+   AVISO DE INATIVIDADE
+   ===================================================== */
 
 .notice{
-  background:#1e293b;
-  border:1px solid #334155;
-  border-radius:18px;
-  padding:26px;
-  margin-top:35px
+  width:100%;
+  margin-top:31px;
+  padding:27px 22px;
+  border-radius:22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(127,29,29,.24),
+      rgba(30,41,59,.72)
+    );
+
+  border:1px solid rgba(248,113,113,.20);
+
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.25),
+    inset 0 1px 0 rgba(255,255,255,.07);
+
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+
+  animation:
+    nfcTextIn .65s .12s both cubic-bezier(.22,1,.36,1);
 }
 
+.notice h2{
+  margin:0 0 12px;
+  color:#fecaca;
+  font-size:20px;
+  line-height:1.3;
+}
+
+.notice p{
+  margin:8px 0;
+  color:#cbd5e1;
+  font-size:14px;
+  line-height:1.6;
+}
+
+
+/* =====================================================
+   ANIMAÇÕES
+   ===================================================== */
+
+@keyframes nfcLogoIn{
+  from{
+    opacity:0;
+    transform:
+      translateY(14px)
+      scale(.88);
+  }
+
+  to{
+    opacity:1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes nfcTextIn{
+  from{
+    opacity:0;
+    transform:translateY(12px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@keyframes serviceIn{
+  from{
+    opacity:0;
+    transform:
+      translateY(15px)
+      scale(.985);
+  }
+
+  to{
+    opacity:1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
 @media(max-width:700px){
+
   .grid{
-    grid-template-columns:1fr
+    grid-template-columns:1fr;
   }
 
   .wrap{
-    padding:12px
+    padding:12px;
   }
 
   .card{
-    padding:16px
+    padding:16px;
+  }
+
+  .client-wrap{
+    max-width:500px;
+    padding:
+      42px
+      17px
+      34px;
+  }
+
+  .client-logo{
+    width:128px;
+    height:128px;
+    margin-bottom:20px;
+  }
+
+  #clientName{
+    font-size:29px;
+  }
+
+  .service{
+    min-height:66px;
+    padding:
+      12px
+      17px;
+    border-radius:18px;
+    font-size:16px;
+  }
+}
+
+
+/* =====================================================
+   TELAS MUITO PEQUENAS
+   ===================================================== */
+
+@media(max-width:360px){
+
+  .client-wrap{
+    padding-left:14px;
+    padding-right:14px;
+  }
+
+  .client-logo{
+    width:116px;
+    height:116px;
+  }
+
+  #clientName{
+    font-size:26px;
+  }
+
+  .service{
+    min-height:62px;
+    padding-left:15px;
+    padding-right:15px;
+    gap:12px;
+  }
+
+  .service svg{
+    width:27px;
+    height:27px;
+    min-width:27px;
+  }
+}
+
+
+/* =====================================================
+   REDUÇÃO DE MOVIMENTO
+   ===================================================== */
+
+@media(prefers-reduced-motion:reduce){
+
+  *,
+  *::before,
+  *::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
   }
 }
 </style>
@@ -349,7 +895,10 @@ input{
 </div>
 
 
-<!-- PÁGINA NFC PÚBLICA -->
+<!-- =====================================================
+     PÁGINA NFC PÚBLICA
+     ===================================================== -->
+
 <div id="clientPage">
 
   <div class="client-wrap">
@@ -367,10 +916,15 @@ input{
 
     <div id="clientActive" class="hidden">
 
-      <p>🟢 Serviço disponível</p>
+      <p>
+        🟢 Serviço disponível
+      </p>
 
 
-      <!-- FATURA -->
+      <!-- =================================================
+           FATURA
+           ================================================= -->
+
       <a
         id="faturaBtn"
         class="service"
@@ -381,22 +935,48 @@ input{
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          stroke-width="2"
+          aria-hidden="true"
         >
-          <path d="M6 2h9l3 3v17H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/>
-          <path d="M14 2v4h4"/>
-          <path d="M8 11h8"/>
-          <path d="M8 15h8"/>
-          <path d="M8 19h5"/>
+          <path
+            d="M6 2.75h8.8L19 6.95v14.3H6a2.25 2.25 0 0 1-2.25-2.25V5A2.25 2.25 0 0 1 6 2.75Z"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M14.5 2.9v4.2H18.7"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M8 11h8M8 14.5h8M8 18h4.5"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+          />
+
+          <path
+            d="M16.5 15.8h.01"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
         </svg>
 
-        <span>Pagar minha fatura</span>
+        <span>
+          Pagar minha fatura
+        </span>
 
       </a>
 
 
-      <!-- WHATSAPP -->
+      <!-- =================================================
+           WHATSAPP
+           ================================================= -->
+
       <a
         id="zapBtn"
         class="service"
@@ -407,19 +987,32 @@ input{
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          stroke-width="2"
+          aria-hidden="true"
         >
-          <path d="M20 11.5a8.1 8.1 0 0 1-8.2 8.1 8.4 8.4 0 0 1-4.1-1.1L4 20l1.5-3.5a8 8 0 1 1 14.5-5z"/>
-          <path d="M8.5 8.5c.3-.6.6-.6.9-.6h.5c.2 0 .4.1.5.4l.7 1.6c.1.2.1.4-.1.6l-.6.7c-.1.1-.1.3 0 .5.4.7 1 1.3 1.7 1.7.2.1.4.1.5 0l.7-.7c.2-.2.4-.2.6-.1l1.5.7c.2.1.3.3.3.5v.5c0 .3 0 .6-.6.9-.5.3-1.3.4-2.2.1-1.1-.4-2.2-1.1-3.1-2s-1.6-2-2-3.1c-.3-.9-.2-1.7.1-2.2z"/>
+          <path
+            d="M20.05 11.6a8.15 8.15 0 0 1-12.1 7.08L4 20l1.4-3.7A8.15 8.15 0 1 1 20.05 11.6Z"
+            stroke="#25D366"
+            stroke-width="1.7"
+            stroke-linejoin="round"
+          />
+
+          <path
+            d="M8.25 8.55c.25-.55.52-.58.86-.58h.5c.2 0 .38.1.47.32l.68 1.62c.09.2.05.43-.1.58l-.62.67c-.12.13-.14.3-.04.46.43.7 1.03 1.3 1.73 1.73.16.1.33.08.46-.04l.67-.62c.15-.15.38-.19.58-.1l1.62.68c.22.09.32.27.32.47v.5c0 .34-.03.61-.58.86-.53.25-1.27.28-2.15-.05-1.02-.39-2.02-1.08-2.88-1.94-.86-.86-1.55-1.86-1.94-2.88-.33-.88-.3-1.62-.05-2.15Z"
+            fill="#25D366"
+          />
         </svg>
 
-        <span>Falar com suporte</span>
+        <span>
+          Falar com suporte
+        </span>
 
       </a>
 
 
-      <!-- TESTE DE VELOCIDADE -->
+      <!-- =================================================
+           TESTE DE VELOCIDADE
+           ================================================= -->
+
       <a
         id="speedBtn"
         class="service"
@@ -430,24 +1023,57 @@ input{
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          stroke-width="2"
+          aria-hidden="true"
         >
-          <path d="M4.9 19a9 9 0 1 1 14.2 0"/>
-          <path d="M12 12l4-4"/>
-          <path d="M12 12h.01"/>
-          <path d="M6.5 17.5h.01"/>
-          <path d="M4.8 13h.01"/>
-          <path d="M17.5 17.5h.01"/>
-          <path d="M19.2 13h.01"/>
+
+          <path
+            d="M4.9 18.5a9 9 0 1 1 14.2 0"
+            stroke="#38BDF8"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
+
+          <path
+            d="M12 12l4.2-4.2"
+            stroke="#22D3EE"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+
+          <circle
+            cx="12"
+            cy="12"
+            r="1.35"
+            fill="#22D3EE"
+          />
+
+          <path
+            d="M6.5 16.9h.01M4.8 12.7h.01M17.5 16.9h.01M19.2 12.7h.01"
+            stroke="#38BDF8"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+
+          <path
+            d="M8.1 7.3l.01.01M15.9 7.3l.01.01"
+            stroke="#67E8F9"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+
         </svg>
 
-        <span>Testar velocidade</span>
+        <span>
+          Testar velocidade
+        </span>
 
       </a>
 
 
-      <!-- INSTAGRAM -->
+      <!-- =================================================
+           INSTAGRAM
+           ================================================= -->
+
       <a
         id="instaBtn"
         class="service"
@@ -458,30 +1084,86 @@ input{
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          stroke-width="2"
+          aria-hidden="true"
         >
+
+          <defs>
+
+            <linearGradient
+              id="instagramGradient"
+              x1="4"
+              y1="20"
+              x2="20"
+              y2="4"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop
+                offset="0"
+                stop-color="#FFDC80"
+              />
+
+              <stop
+                offset=".25"
+                stop-color="#FCB045"
+              />
+
+              <stop
+                offset=".5"
+                stop-color="#F77737"
+              />
+
+              <stop
+                offset=".72"
+                stop-color="#E1306C"
+              />
+
+              <stop
+                offset="1"
+                stop-color="#833AB4"
+              />
+            </linearGradient>
+
+          </defs>
+
           <rect
             x="3"
             y="3"
             width="18"
             height="18"
             rx="5"
+            stroke="url(#instagramGradient)"
+            stroke-width="1.8"
           />
+
           <circle
             cx="12"
             cy="12"
-            r="4"
+            r="4.15"
+            stroke="url(#instagramGradient)"
+            stroke-width="1.8"
           />
-          <path d="M17.5 6.5h.01"/>
+
+          <circle
+            cx="17.25"
+            cy="6.75"
+            r="1"
+            fill="#F77737"
+          />
+
         </svg>
 
-        <span>Instagram</span>
+        <span>
+          Instagram
+        </span>
 
       </a>
 
     </div>
 
+
+    <!-- =================================================
+         ACESSO INATIVO
+         ================================================= -->
 
     <div
       id="inactiveBox"
@@ -2322,4 +3004,4 @@ window.addEventListener(
 </script>
 
 </body>
-  </html>
+          </html>
