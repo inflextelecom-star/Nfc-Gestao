@@ -243,34 +243,67 @@ input:focus{
    PÁGINA NFC PÚBLICA
    ===================================================== */
 
+/*
+   Variáveis visuais exclusivas da página pública.
+
+   O padrão abaixo é exatamente a identidade
+   corporativa anterior. O JavaScript poderá
+   substituir somente essas variáveis quando
+   conseguir extrair uma cor válida da logo.
+*/
+
 #clientPage{
+  --nfc-bg-1:#020617;
+  --nfc-bg-2:#0f172a;
+  --nfc-bg-3:#111827;
+
+  --nfc-glow-1:#0ea5e9;
+  --nfc-glow-2:#6366f1;
+  --nfc-glow-3:#0ea5e9;
+
+  --nfc-accent:#38bdf8;
+  --nfc-accent-soft:rgba(56,189,248,.18);
+
   display:none;
   position:relative;
   min-height:100vh;
   overflow:hidden;
+
   background:
     radial-gradient(
       circle at 15% 15%,
-      rgba(56,189,248,.20),
+      var(--nfc-accent-soft),
       transparent 30%
     ),
     radial-gradient(
       circle at 85% 20%,
-      rgba(99,102,241,.18),
+      color-mix(
+        in srgb,
+        var(--nfc-glow-2) 18%,
+        transparent
+      ),
       transparent 30%
     ),
     radial-gradient(
       circle at 50% 100%,
-      rgba(14,165,233,.14),
+      color-mix(
+        in srgb,
+        var(--nfc-glow-3) 14%,
+        transparent
+      ),
       transparent 35%
     ),
     linear-gradient(
       145deg,
-      #020617 0%,
-      #0f172a 45%,
-      #111827 100%
+      var(--nfc-bg-1) 0%,
+      var(--nfc-bg-2) 45%,
+      var(--nfc-bg-3) 100%
     );
+
   color:#fff;
+
+  transition:
+    background .65s ease;
 }
 
 #clientPage::before,
@@ -283,18 +316,21 @@ input:focus{
   pointer-events:none;
   filter:blur(70px);
   opacity:.35;
+
+  transition:
+    background .65s ease;
 }
 
 #clientPage::before{
   top:-120px;
   left:-100px;
-  background:#0ea5e9;
+  background:var(--nfc-glow-1);
 }
 
 #clientPage::after{
   right:-100px;
   bottom:-120px;
-  background:#6366f1;
+  background:var(--nfc-glow-2);
 }
 
 .client-wrap{
@@ -312,26 +348,39 @@ input:focus{
 }
 
 .client-logo{
-  width:136px;
-  height:136px;
+  width:160px;
+  height:160px;
   border-radius:50%;
   object-fit:cover;
   display:block;
   margin:0 auto 22px;
-  padding:4px;
+  padding:5px;
+
   background:
     linear-gradient(
       145deg,
-      rgba(255,255,255,.95),
-      rgba(125,211,252,.65)
+      rgba(255,255,255,.98),
+      color-mix(
+        in srgb,
+        var(--nfc-accent) 65%,
+        white
+      )
     );
-  border:1px solid rgba(255,255,255,.45);
+
+  border:1px solid rgba(255,255,255,.48);
+
   box-shadow:
-    0 0 0 7px rgba(255,255,255,.045),
-    0 0 0 1px rgba(56,189,248,.18),
-    0 20px 50px rgba(0,0,0,.38),
-    0 0 40px rgba(56,189,248,.18);
-  animation:nfcLogoIn .65s cubic-bezier(.22,1,.36,1);
+    0 0 0 8px rgba(255,255,255,.045),
+    0 0 0 1px var(--nfc-accent-soft),
+    0 22px 55px rgba(0,0,0,.42),
+    0 0 48px var(--nfc-accent-soft);
+
+  animation:
+    nfcLogoIn .65s cubic-bezier(.22,1,.36,1);
+
+  transition:
+    box-shadow .65s ease,
+    background .65s ease;
 }
 
 #clientName{
@@ -387,26 +436,32 @@ input:focus{
   font-size:16px;
   font-weight:750;
   letter-spacing:.1px;
+
   background:
     linear-gradient(
       135deg,
       rgba(255,255,255,.115),
       rgba(255,255,255,.055)
     );
+
   border:1px solid rgba(255,255,255,.14);
+
   box-shadow:
     0 12px 32px rgba(0,0,0,.22),
     inset 0 1px 0 rgba(255,255,255,.10),
     inset 0 -1px 0 rgba(255,255,255,.025);
+
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
   overflow:hidden;
   transform:translateZ(0);
+
   transition:
     transform .18s ease,
     box-shadow .22s ease,
     border-color .22s ease,
     background .22s ease;
+  
   animation:
     serviceIn .65s both cubic-bezier(.22,1,.36,1);
 }
@@ -418,12 +473,13 @@ input:focus{
   left:12%;
   right:12%;
   height:1px;
-  background:linear-gradient(
-    90deg,
-    transparent,
-    rgba(255,255,255,.42),
-    transparent
-  );
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.42),
+      transparent
+    );
   opacity:.8;
 }
 
@@ -460,35 +516,49 @@ input:focus{
 }
 
 @media (hover:hover){
+
   .service:hover{
     transform:translateY(-2px) scale(1.012);
     border-color:rgba(255,255,255,.25);
+
     background:
       linear-gradient(
         135deg,
         rgba(255,255,255,.15),
         rgba(255,255,255,.075)
       );
+
     box-shadow:
       0 18px 40px rgba(0,0,0,.28),
-      inset 0 1px 0 rgba(255,255,255,.14);
+      inset 0 1px 0 rgba(255,255,255,.14),
+      0 0 24px var(--nfc-accent-soft);
   }
 
   .service:hover::after{
     transform:translateX(120%);
   }
+
 }
 
 .service:active{
   transform:scale(.965);
+
   box-shadow:
     0 7px 18px rgba(0,0,0,.22),
     inset 0 1px 8px rgba(0,0,0,.10);
+
   transition-duration:.08s;
 }
 
 .service:focus-visible{
-  outline:3px solid rgba(125,211,252,.75);
+  outline:
+    3px solid
+    color-mix(
+      in srgb,
+      var(--nfc-accent) 75%,
+      white
+    );
+
   outline-offset:3px;
 }
 
@@ -533,14 +603,24 @@ input:focus{
 }
 
 #speedBtn{
-  border-color:rgba(56,189,248,.25);
+  border-color:
+    color-mix(
+      in srgb,
+      var(--nfc-accent) 25%,
+      transparent
+    );
 }
 
 #speedBtn svg{
   color:#38bdf8;
   filter:
     drop-shadow(
-      0 0 8px rgba(34,211,238,.30)
+      0 0 8px
+      color-mix(
+        in srgb,
+        var(--nfc-accent) 30%,
+        transparent
+      )
     );
 }
 
@@ -561,18 +641,23 @@ input:focus{
   margin-top:31px;
   padding:27px 22px;
   border-radius:22px;
+
   background:
     linear-gradient(
       135deg,
       rgba(127,29,29,.24),
       rgba(30,41,59,.72)
     );
+
   border:1px solid rgba(248,113,113,.20);
+
   box-shadow:
     0 18px 45px rgba(0,0,0,.25),
     inset 0 1px 0 rgba(255,255,255,.07);
+
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
+
   animation:
     nfcTextIn .65s .12s both cubic-bezier(.22,1,.36,1);
 }
@@ -592,6 +677,7 @@ input:focus{
 }
 
 @keyframes nfcLogoIn{
+
   from{
     opacity:0;
     transform:
@@ -605,9 +691,11 @@ input:focus{
       translateY(0)
       scale(1);
   }
+
 }
 
 @keyframes nfcTextIn{
+
   from{
     opacity:0;
     transform:translateY(12px);
@@ -617,9 +705,11 @@ input:focus{
     opacity:1;
     transform:translateY(0);
   }
+
 }
 
 @keyframes serviceIn{
+
   from{
     opacity:0;
     transform:
@@ -633,6 +723,7 @@ input:focus{
       translateY(0)
       scale(1);
   }
+
 }
 
 @media(max-width:700px){
@@ -662,8 +753,8 @@ input:focus{
   }
 
   .client-logo{
-    width:128px;
-    height:128px;
+    width:148px;
+    height:148px;
     margin-bottom:20px;
   }
 
@@ -679,6 +770,7 @@ input:focus{
     border-radius:18px;
     font-size:16px;
   }
+
 }
 
 @media(max-width:360px){
@@ -689,8 +781,8 @@ input:focus{
   }
 
   .client-logo{
-    width:116px;
-    height:116px;
+    width:132px;
+    height:132px;
   }
 
   #clientName{
@@ -709,6 +801,7 @@ input:focus{
     height:27px;
     min-width:27px;
   }
+
 }
 
 @media(prefers-reduced-motion:reduce){
@@ -721,6 +814,7 @@ input:focus{
     transition-duration:.01ms!important;
     scroll-behavior:auto!important;
   }
+
 }
 </style>
 </head>
@@ -786,7 +880,6 @@ input:focus{
 
     </div>
 
-
     <div id="dashboard" class="hidden">
 
       <div class="card">
@@ -810,7 +903,6 @@ input:focus{
 
           </div>
 
-
           <div class="field-group">
 
             <label class="field-label" for="documento">
@@ -824,7 +916,6 @@ input:focus{
             >
 
           </div>
-
 
           <div class="field-group">
 
@@ -840,7 +931,6 @@ input:focus{
 
           </div>
 
-
           <div class="field-group">
 
             <label class="field-label" for="dataAtivacao">
@@ -853,7 +943,6 @@ input:focus{
             >
 
           </div>
-
 
           <div class="field-group">
 
@@ -874,7 +963,6 @@ input:focus{
             </div>
 
           </div>
-
 
           <div class="field-group full">
 
@@ -951,7 +1039,6 @@ input:focus{
 
         </div>
 
-
         <div class="form-section">
 
           <h3>
@@ -973,7 +1060,6 @@ input:focus{
 
             </div>
 
-
             <div class="field-group">
 
               <label class="field-label" for="zap">
@@ -987,7 +1073,6 @@ input:focus{
 
             </div>
 
-
             <div class="field-group">
 
               <label class="field-label" for="insta">
@@ -1000,7 +1085,6 @@ input:focus{
               >
 
             </div>
-
 
             <div class="field-group">
 
@@ -1018,7 +1102,6 @@ input:focus{
           </div>
 
         </div>
-
 
         <div class="row" style="margin-top:18px">
 
@@ -1045,7 +1128,6 @@ input:focus{
         ></p>
 
       </div>
-
 
       <div class="card">
 
@@ -1100,13 +1182,11 @@ input:focus{
       Carregando...
     </h1>
 
-
     <div id="clientActive" class="hidden">
 
       <p>
         🟢 Serviço disponível
       </p>
-
 
       <a
         id="faturaBtn"
@@ -1157,7 +1237,6 @@ input:focus{
 
       </a>
 
-
       <a
         id="zapBtn"
         class="service"
@@ -1190,7 +1269,6 @@ input:focus{
         </span>
 
       </a>
-
 
       <a
         id="speedBtn"
@@ -1247,7 +1325,6 @@ input:focus{
         </span>
 
       </a>
-
 
       <a
         id="instaBtn"
@@ -1337,7 +1414,6 @@ input:focus{
 
     </div>
 
-
     <div
       id="inactiveBox"
       class="notice hidden"
@@ -1406,6 +1482,7 @@ const firebaseConfig = {
 const app =
   initializeApp(firebaseConfig);
 
+
 const db =
   getFirestore(app);
 
@@ -1448,11 +1525,6 @@ let unsubscribeClientes = null;
 =========================================================
 UTILITÁRIOS DE DATA
 =========================================================
-*/
-
-/*
-Converte uma data YYYY-MM-DD para
-uma data local sem problemas de timezone.
 */
 
 function parseDataLocal(valor){
@@ -1501,10 +1573,6 @@ function parseDataLocal(valor){
 }
 
 
-/*
-Formata Date para YYYY-MM-DD.
-*/
-
 function formatarDataInput(data){
 
   if(!data){
@@ -1535,10 +1603,6 @@ function formatarDataInput(data){
 }
 
 
-/*
-Adiciona dias preservando calendário local.
-*/
-
 function adicionarDias(
   data,
   dias
@@ -1555,10 +1619,6 @@ function adicionarDias(
 
 }
 
-
-/*
-Calcula automaticamente vencimento.
-*/
 
 function calcularVencimento(
   dataAtivacao
@@ -1582,14 +1642,6 @@ function calcularVencimento(
 
 }
 
-
-/*
-Verifica se uma data de vencimento
-já passou.
-
-O vencimento expira no início
-do dia seguinte à data informada.
-*/
 
 function estaVencido(
   dataVencimento
@@ -1625,11 +1677,6 @@ function estaVencido(
 
 }
 
-
-/*
-Retorna quantidade de dias
-até o vencimento.
-*/
 
 function diasAteVencimento(
   dataVencimento
@@ -1672,10 +1719,6 @@ function diasAteVencimento(
 
 }
 
-
-/*
-Formatação visual brasileira.
-*/
 
 function formatarDataBR(
   valor
@@ -1726,24 +1769,20 @@ function normalizarCliente(c){
     return null;
   }
 
-
   const dataAtivacao =
     String(
       c.dataAtivacao || ""
     );
-
 
   const dataVencimento =
     String(
       c.dataVencimento || ""
     );
 
-
   const vencido =
     estaVencido(
       dataVencimento
     );
-
 
   return {
 
@@ -1796,18 +1835,9 @@ ATUALIZAÇÃO AUTOMÁTICA DE INADIMPLÊNCIA
 
 async function verificarVencimentos(){
 
-  /*
-  Só escreve no Firestore quando existe
-  sessão administrativa válida.
-
-  A página pública ainda consegue
-  considerar o vencimento visualmente.
-  */
-
   if(!adminAutenticado()){
     return;
   }
-
 
   const vencidos =
     clientes.filter(
@@ -1818,11 +1848,9 @@ async function verificarVencimentos(){
         c.ativo === true
     );
 
-
   if(!vencidos.length){
     return;
   }
-
 
   for(
     const cliente
@@ -1876,20 +1904,17 @@ function iniciarListenerClientes(){
 
   }
 
-
   const referencia =
     collection(
       db,
       CLIENTES_COLLECTION
     );
 
-
   const consulta =
     query(
       referencia,
       orderBy("nome")
     );
-
 
   unsubscribeClientes =
     onSnapshot(
@@ -1922,12 +1947,9 @@ function iniciarListenerClientes(){
                 c.nome
             );
 
-
         render();
 
-
         verificarVencimentos();
-
 
         if(
           location.hash
@@ -1948,12 +1970,10 @@ function iniciarListenerClientes(){
           error
         );
 
-
         const msg =
           document.getElementById(
             "saveMsg"
           );
-
 
         if(msg){
 
@@ -1994,7 +2014,6 @@ function atualizarPreviewLogo(
       "logoPreviewText"
     );
 
-
   if(!valor){
 
     img.classList.add(
@@ -2011,7 +2030,6 @@ function atualizarPreviewLogo(
     return;
 
   }
-
 
   img.src =
     valor;
@@ -2046,7 +2064,6 @@ function imagemParaBase64(
       const leitor =
         new FileReader();
 
-
       leitor.onerror =
         () =>
           reject(
@@ -2055,13 +2072,11 @@ function imagemParaBase64(
             )
           );
 
-
       leitor.onload =
         () => {
 
           const imagem =
             new Image();
-
 
           imagem.onerror =
             () =>
@@ -2071,20 +2086,17 @@ function imagemParaBase64(
                 )
               );
 
-
           imagem.onload =
             () => {
 
               const MAX_DIMENSAO =
                 900;
 
-
               let largura =
                 imagem.naturalWidth;
 
               let altura =
                 imagem.naturalHeight;
-
 
               if(
                 largura >
@@ -2099,12 +2111,10 @@ function imagemParaBase64(
                     MAX_DIMENSAO / altura
                   );
 
-
                 largura =
                   Math.round(
                     largura * escala
                   );
-
 
                 altura =
                   Math.round(
@@ -2113,12 +2123,10 @@ function imagemParaBase64(
 
               }
 
-
               const canvas =
                 document.createElement(
                   "canvas"
                 );
-
 
               canvas.width =
                 largura;
@@ -2126,12 +2134,10 @@ function imagemParaBase64(
               canvas.height =
                 altura;
 
-
               const contexto =
                 canvas.getContext(
                   "2d"
                 );
-
 
               if(!contexto){
 
@@ -2145,7 +2151,6 @@ function imagemParaBase64(
 
               }
 
-
               contexto.drawImage(
                 imagem,
                 0,
@@ -2154,24 +2159,11 @@ function imagemParaBase64(
                 altura
               );
 
-
-              /*
-              WebP normalmente gera uma
-              Base64 bem menor que a imagem
-              original.
-              */
-
               let base64 =
                 canvas.toDataURL(
                   "image/webp",
                   .82
                 );
-
-
-              /*
-              Fallback para navegadores
-              que não suportem WebP.
-              */
 
               if(
                 !base64.startsWith(
@@ -2187,15 +2179,8 @@ function imagemParaBase64(
 
               }
 
-
-              /*
-              Proteção contra documentos
-              exageradamente grandes.
-              */
-
               const tamanho =
                 base64.length;
-
 
               if(
                 tamanho >
@@ -2212,17 +2197,14 @@ function imagemParaBase64(
 
               }
 
-
               resolve(base64);
 
             };
-
 
           imagem.src =
             leitor.result;
 
         };
-
 
       leitor.readAsDataURL(
         arquivo
@@ -2252,11 +2234,9 @@ document
         event.target.files &&
         event.target.files[0];
 
-
       if(!arquivo){
         return;
       }
-
 
       if(
         !arquivo.type.startsWith(
@@ -2275,7 +2255,6 @@ document
 
       }
 
-
       try{
 
         const base64 =
@@ -2283,17 +2262,14 @@ document
             arquivo
           );
 
-
         document
           .getElementById("logo")
           .value =
             base64;
 
-
         atualizarPreviewLogo(
           base64
         );
-
 
       }catch(error){
 
@@ -2302,12 +2278,10 @@ document
           error
         );
 
-
         alert(
           error.message ||
           "Não foi possível carregar a logo."
         );
-
 
         event.target.value =
           "";
@@ -2317,11 +2291,6 @@ document
     }
   );
 
-
-/*
-Atualiza preview quando o usuário
-digita/cola uma URL manualmente.
-*/
 
 document
   .getElementById("logo")
@@ -2349,11 +2318,9 @@ window.removerLogo = function(){
     .getElementById("logo")
     .value = "";
 
-
   document
     .getElementById("logoArquivo")
     .value = "";
-
 
   atualizarPreviewLogo("");
 
@@ -2381,26 +2348,14 @@ document
           )
           .value;
 
-
       if(!ativacao){
         return;
       }
-
-
-      /*
-      Em cadastro novo, o vencimento
-      é sempre recalculado.
-
-      Em edição, só recalcula quando
-      o usuário alterar explicitamente
-      a data de ativação.
-      */
 
       const vencimento =
         calcularVencimento(
           ativacao
         );
-
 
       document
         .getElementById(
@@ -2408,7 +2363,6 @@ document
         )
         .value =
           vencimento;
-
 
       atualizarInfoVencimento();
 
@@ -2431,13 +2385,11 @@ function atualizarInfoVencimento(){
       )
       .value;
 
-
   const info =
     document
       .getElementById(
         "vencimentoInfo"
       );
-
 
   if(!valor){
 
@@ -2451,12 +2403,10 @@ function atualizarInfoVencimento(){
 
   }
 
-
   const dias =
     diasAteVencimento(
       valor
     );
-
 
   if(
     dias !== null &&
@@ -2473,7 +2423,6 @@ function atualizarInfoVencimento(){
 
   }
 
-
   if(dias === 0){
 
     info.textContent =
@@ -2485,7 +2434,6 @@ function atualizarInfoVencimento(){
     return;
 
   }
-
 
   info.textContent =
     "🟢 Vencimento em " +
@@ -2513,19 +2461,16 @@ window.login = async function(){
       .trim()
       .toLowerCase();
 
-
   const p =
     document
       .getElementById("loginPass")
       .value
       .trim();
 
-
   const msg =
     document.getElementById(
       "loginMsg"
     );
-
 
   if(!u || !p){
 
@@ -2535,7 +2480,6 @@ window.login = async function(){
     return;
 
   }
-
 
   if(
     u !==
@@ -2555,7 +2499,6 @@ window.login = async function(){
 
   }
 
-
   try{
 
     sessionStorage.setItem(
@@ -2563,28 +2506,22 @@ window.login = async function(){
       "true"
     );
 
-
     msg.textContent =
       "";
-
 
     document
       .getElementById("loginCard")
       .classList
       .add("hidden");
 
-
     document
       .getElementById("dashboard")
       .classList
       .remove("hidden");
 
-
     iniciarListenerClientes();
 
-
     render();
-
 
     verificarVencimentos();
 
@@ -2595,11 +2532,9 @@ window.login = async function(){
       error
     );
 
-
     sessionStorage.removeItem(
       ADMIN_SESSION_KEY
     );
-
 
     msg.textContent =
       "Não foi possível iniciar a sessão.";
@@ -2621,36 +2556,29 @@ window.showLogin = function(){
     ADMIN_SESSION_KEY
   );
 
-
   editId = null;
-
 
   document
     .getElementById("dashboard")
     .classList
     .add("hidden");
 
-
   document
     .getElementById("loginCard")
     .classList
     .remove("hidden");
 
-
   document
     .getElementById("loginUser")
     .value = "";
-
 
   document
     .getElementById("loginPass")
     .value = "";
 
-
   document
     .getElementById("loginMsg")
     .textContent = "";
-
 
   cancelar();
 
@@ -2677,13 +2605,11 @@ window.salvar = async function(){
 
   }
 
-
   const nome =
     document
       .getElementById("nome")
       .value
       .trim();
-
 
   if(!nome){
 
@@ -2695,7 +2621,6 @@ window.salvar = async function(){
 
   }
 
-
   let dataAtivacao =
     document
       .getElementById(
@@ -2703,19 +2628,12 @@ window.salvar = async function(){
       )
       .value;
 
-
   let dataVencimento =
     document
       .getElementById(
         "dataVencimento"
       )
       .value;
-
-
-  /*
-  Cadastro novo sem data:
-  usa a data atual.
-  */
 
   if(!dataAtivacao){
 
@@ -2725,12 +2643,6 @@ window.salvar = async function(){
       );
 
   }
-
-
-  /*
-  Cadastro novo sem vencimento:
-  calcula automaticamente 30 dias.
-  */
 
   if(
     !dataVencimento
@@ -2743,12 +2655,10 @@ window.salvar = async function(){
 
   }
 
-
   const vencido =
     estaVencido(
       dataVencimento
     );
-
 
   const documento =
     document
@@ -2758,7 +2668,6 @@ window.salvar = async function(){
       .value
       .trim();
 
-
   const telefone =
     document
       .getElementById(
@@ -2767,13 +2676,7 @@ window.salvar = async function(){
       .value
       .trim();
 
-
   const dados = {
-
-    /*
-    Mantido como "nome" para não
-    quebrar documentos existentes.
-    */
 
     nome,
 
@@ -2815,18 +2718,12 @@ window.salvar = async function(){
 
     dataVencimento,
 
-    /*
-    Mantém compatibilidade com o
-    campo ativo existente.
-    */
-
     ativo:
       vencido
         ? false
         : true
 
   };
-
 
   try{
 
@@ -2836,16 +2733,6 @@ window.salvar = async function(){
         clientes.find(
           x => x.id === editId
         );
-
-
-      /*
-      Se a edição estiver acontecendo
-      sem alterar datas, preserva o
-      status manual existente.
-
-      Porém, se já estiver vencido,
-      força desativação.
-      */
 
       if(
         clienteExistente &&
@@ -2857,7 +2744,6 @@ window.salvar = async function(){
 
       }
 
-
       await setDoc(
 
         doc(
@@ -2868,7 +2754,6 @@ window.salvar = async function(){
 
         dados
       );
-
 
       document
         .getElementById("saveMsg")
@@ -2889,7 +2774,6 @@ window.salvar = async function(){
         dados
       );
 
-
       document
         .getElementById("saveMsg")
         .textContent =
@@ -2899,7 +2783,6 @@ window.salvar = async function(){
 
     }
 
-
     setTimeout(
       () => {
 
@@ -2907,7 +2790,6 @@ window.salvar = async function(){
           document.getElementById(
             "saveMsg"
           );
-
 
         if(el){
 
@@ -2920,9 +2802,7 @@ window.salvar = async function(){
       3000
     );
 
-
     cancelar();
-
 
   }catch(error){
 
@@ -2930,7 +2810,6 @@ window.salvar = async function(){
       "Erro ao salvar provedor:",
       error
     );
-
 
     alert(
       "Não foi possível salvar o provedor.\n\n" +
@@ -2955,94 +2834,77 @@ window.editar = function(id){
       x => x.id === id
     );
 
-
   if(!c){
     return;
   }
 
-
   editId = id;
-
 
   document
     .getElementById("formTitle")
     .textContent =
       "✏️ Editar provedor";
 
-
   document
     .getElementById("nome")
     .value =
       c.nome || "";
-
 
   document
     .getElementById("documento")
     .value =
       c.documento || "";
 
-
   document
     .getElementById("telefone")
     .value =
       c.telefone || "";
-
 
   document
     .getElementById("dataAtivacao")
     .value =
       c.dataAtivacao || "";
 
-
   document
     .getElementById("dataVencimento")
     .value =
       c.dataVencimento || "";
-
 
   document
     .getElementById("logo")
     .value =
       c.logo || "";
 
-
   document
     .getElementById("fatura")
     .value =
       c.fatura || "";
-
 
   document
     .getElementById("zap")
     .value =
       c.zap || "";
 
-
   document
     .getElementById("insta")
     .value =
       c.insta || "";
-
 
   document
     .getElementById("speed")
     .value =
       c.speed || "";
 
-
   atualizarPreviewLogo(
     c.logo || ""
   );
 
-
   atualizarInfoVencimento();
-
 
   document
     .getElementById("cancelBtn")
     .classList
     .remove("hidden");
-
 
   window.scrollTo({
     top:0,
@@ -3072,17 +2934,14 @@ window.darBaixa = async function(id){
 
   }
 
-
   const c =
     clientes.find(
       x => x.id === id
     );
 
-
   if(!c){
     return;
   }
-
 
   if(
     !confirm(
@@ -3095,18 +2954,15 @@ window.darBaixa = async function(id){
 
   }
 
-
   const hoje =
     formatarDataInput(
       new Date()
     );
 
-
   const novoVencimento =
     calcularVencimento(
       hoje
     );
-
 
   try{
 
@@ -3131,14 +2987,12 @@ window.darBaixa = async function(id){
 
     );
 
-
   }catch(error){
 
     console.error(
       "Erro ao registrar baixa:",
       error
     );
-
 
     alert(
       "Não foi possível registrar a baixa."
@@ -3169,26 +3023,14 @@ window.alterarStatus = async function(id){
 
   }
 
-
   const c =
     clientes.find(
       x => x.id === id
     );
 
-
   if(!c){
     return;
   }
-
-
-  /*
-  Se estiver vencido, não permitimos
-  simplesmente ativar sem registrar
-  pagamento/baixa.
-
-  Isso evita que o botão ATIVAR
-  burle a regra de vencimento.
-  */
 
   if(
     !c.ativo &&
@@ -3203,7 +3045,6 @@ window.alterarStatus = async function(id){
     return;
 
   }
-
 
   try{
 
@@ -3228,7 +3069,6 @@ window.alterarStatus = async function(id){
       "Erro ao alterar status:",
       error
     );
-
 
     alert(
       "Não foi possível alterar o status."
@@ -3259,7 +3099,6 @@ window.excluir = async function(id){
 
   }
 
-
   if(
     !confirm(
       "Excluir definitivamente este provedor?\n\n" +
@@ -3270,7 +3109,6 @@ window.excluir = async function(id){
     return;
 
   }
-
 
   try{
 
@@ -3290,7 +3128,6 @@ window.excluir = async function(id){
       "Erro ao excluir:",
       error
     );
-
 
     alert(
       "Não foi possível excluir o provedor."
@@ -3318,7 +3155,6 @@ window.copiar = function(url){
     return;
 
   }
-
 
   if(
     navigator.clipboard &&
@@ -3348,7 +3184,6 @@ window.copiar = function(url){
 
   }
 
-
   copiarFallback(url);
 
 };
@@ -3361,42 +3196,33 @@ function copiarFallback(url){
       "textarea"
     );
 
-
   area.value =
     url;
-
 
   area.setAttribute(
     "readonly",
     ""
   );
 
-
   area.style.position =
     "fixed";
 
-
   area.style.left =
     "-9999px";
-
 
   document.body.appendChild(
     area
   );
 
-
   area.select();
-
 
   area.setSelectionRange(
     0,
     area.value.length
   );
 
-
   let sucesso =
     false;
-
 
   try{
 
@@ -3412,11 +3238,9 @@ function copiarFallback(url){
 
   }
 
-
   document.body.removeChild(
     area
   );
-
 
   if(sucesso){
 
@@ -3432,6 +3256,1065 @@ function copiarFallback(url){
     );
 
   }
+
+}
+
+
+/*
+=========================================================
+TEMA DINÂMICO NFC
+=========================================================
+*/
+
+/*
+Tema corporativo original.
+
+Esta função nunca toca no Firestore,
+não grava nada e não altera o estado
+do provedor.
+*/
+
+function restaurarTemaNFC(){
+
+  const pagina =
+    document.getElementById(
+      "clientPage"
+    );
+
+  if(!pagina){
+    return;
+  }
+
+  pagina.style.setProperty(
+    "--nfc-bg-1",
+    "#020617"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-bg-2",
+    "#0f172a"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-bg-3",
+    "#111827"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-1",
+    "#0ea5e9"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-2",
+    "#6366f1"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-3",
+    "#0ea5e9"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-accent",
+    "#38bdf8"
+  );
+
+  pagina.style.setProperty(
+    "--nfc-accent-soft",
+    "rgba(56,189,248,.18)"
+  );
+
+}
+
+
+/*
+Converte RGB para HSL.
+
+Retorna:
+{
+  h: 0-360,
+  s: 0-100,
+  l: 0-100
+}
+*/
+
+function rgbParaHsl(
+  r,
+  g,
+  b
+){
+
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  const max =
+    Math.max(
+      r,
+      g,
+      b
+    );
+
+  const min =
+    Math.min(
+      r,
+      g,
+      b
+    );
+
+  let h = 0;
+  let s = 0;
+
+  const l =
+    (max + min) / 2;
+
+  const diferenca =
+    max - min;
+
+  if(diferenca !== 0){
+
+    s =
+      l > .5
+        ? diferenca /
+          (2 - max - min)
+        : diferenca /
+          (max + min);
+
+    switch(max){
+
+      case r:
+
+        h =
+          (
+            (g - b) /
+            diferenca +
+            (g < b ? 6 : 0)
+          ) / 6;
+
+        break;
+
+      case g:
+
+        h =
+          (
+            (b - r) /
+            diferenca +
+            2
+          ) / 6;
+
+        break;
+
+      case b:
+
+        h =
+          (
+            (r - g) /
+            diferenca +
+            4
+          ) / 6;
+
+        break;
+
+    }
+
+  }
+
+  return {
+
+    h:h * 360,
+
+    s:s * 100,
+
+    l:l * 100
+
+  };
+
+}
+
+
+/*
+Converte HSL para HEX.
+*/
+
+function hslParaHex(
+  h,
+  s,
+  l
+){
+
+  s /= 100;
+  l /= 100;
+
+  const k =
+    n =>
+      (
+        n +
+        h / 30
+      ) % 12;
+
+  const a =
+    s *
+    Math.min(
+      l,
+      1 - l
+    );
+
+  const f =
+    n =>
+      l -
+      a *
+      Math.max(
+        -1,
+        Math.min(
+          k(n) - 3,
+          Math.min(
+            9 - k(n),
+            1
+          )
+        )
+      );
+
+  const r =
+    Math.round(
+      255 * f(0)
+    );
+
+  const g =
+    Math.round(
+      255 * f(8)
+    );
+
+  const b =
+    Math.round(
+      255 * f(4)
+    );
+
+  return (
+    "#" +
+    [r,g,b]
+      .map(
+        valor =>
+          valor
+            .toString(16)
+            .padStart(2,"0")
+      )
+      .join("")
+  );
+
+}
+
+
+/*
+Transforma HEX em RGB.
+*/
+
+function hexParaRgb(
+  hex
+){
+
+  const valor =
+    String(hex || "")
+      .replace("#","");
+
+  if(
+    valor.length !== 6
+  ){
+
+    return null;
+
+  }
+
+  const numero =
+    parseInt(
+      valor,
+      16
+    );
+
+  if(
+    Number.isNaN(numero)
+  ){
+
+    return null;
+
+  }
+
+  return {
+
+    r:
+      (numero >> 16) & 255,
+
+    g:
+      (numero >> 8) & 255,
+
+    b:
+      numero & 255
+
+  };
+
+}
+
+
+/*
+Gera uma cor escura baseada
+na cor predominante da logo.
+*/
+
+function gerarTemaNFC(
+  rgb
+){
+
+  const pagina =
+    document.getElementById(
+      "clientPage"
+    );
+
+  if(!pagina || !rgb){
+    return;
+  }
+
+  let hsl =
+    rgbParaHsl(
+      rgb.r,
+      rgb.g,
+      rgb.b
+    );
+
+
+  /*
+  Se a logo for muito pouco saturada,
+  adicionamos uma saturação mínima
+  apenas para produzir um tema elegante.
+  */
+
+  const saturacaoBase =
+    Math.max(
+      42,
+      Math.min(
+        hsl.s,
+        78
+      )
+    );
+
+
+  /*
+  Fundo extremamente escuro.
+
+  O matiz permanece vindo da logo,
+  mas a luminosidade é reduzida
+  para preservar contraste.
+  */
+
+  const bg1 =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        55,
+        saturacaoBase
+      ),
+      4
+    );
+
+
+  const bg2 =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        58,
+        saturacaoBase
+      ),
+      8
+    );
+
+
+  const bg3 =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        55,
+        saturacaoBase
+      ),
+      11
+    );
+
+
+  /*
+  Glow principal.
+  */
+
+  const glow1 =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        88,
+        Math.max(
+          58,
+          hsl.s
+        )
+      ),
+      48
+    );
+
+
+  /*
+  Segundo glow deslocado no círculo
+  cromático para harmonização.
+  */
+
+  const glow2 =
+    hslParaHex(
+      (
+        hsl.h + 42
+      ) % 360,
+      Math.min(
+        82,
+        Math.max(
+          55,
+          hsl.s
+        )
+      ),
+      42
+    );
+
+
+  const glow3 =
+    hslParaHex(
+      (
+        hsl.h + 18
+      ) % 360,
+      Math.min(
+        85,
+        Math.max(
+          55,
+          hsl.s
+        )
+      ),
+      45
+    );
+
+
+  const accent =
+    hslParaHex(
+      hsl.h,
+      Math.min(
+        88,
+        Math.max(
+          60,
+          hsl.s
+        )
+      ),
+      66
+    );
+
+
+  const accentRgb =
+    hexParaRgb(
+      accent
+    );
+
+
+  if(!accentRgb){
+
+    restaurarTemaNFC();
+
+    return;
+
+  }
+
+
+  const accentSoft =
+    "rgba(" +
+    accentRgb.r +
+    "," +
+    accentRgb.g +
+    "," +
+    accentRgb.b +
+    ",.20)";
+
+
+  pagina.style.setProperty(
+    "--nfc-bg-1",
+    bg1
+  );
+
+  pagina.style.setProperty(
+    "--nfc-bg-2",
+    bg2
+  );
+
+  pagina.style.setProperty(
+    "--nfc-bg-3",
+    bg3
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-1",
+    glow1
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-2",
+    glow2
+  );
+
+  pagina.style.setProperty(
+    "--nfc-glow-3",
+    glow3
+  );
+
+  pagina.style.setProperty(
+    "--nfc-accent",
+    accent
+  );
+
+  pagina.style.setProperty(
+    "--nfc-accent-soft",
+    accentSoft
+  );
+
+}
+
+
+/*
+Analisa a logo através de canvas.
+
+Importante:
+- Base64 funciona normalmente.
+- Imagens externas precisam permitir CORS.
+- Em caso de canvas bloqueado, o sistema
+  simplesmente mantém o tema corporativo.
+*/
+
+function extrairCorPredominante(
+  imagem
+){
+
+  return new Promise(
+    resolve => {
+
+      try{
+
+        if(
+          !imagem ||
+          !imagem.naturalWidth ||
+          !imagem.naturalHeight
+        ){
+
+          resolve(null);
+
+          return;
+
+        }
+
+
+        const canvas =
+          document.createElement(
+            "canvas"
+          );
+
+
+        const TAMANHO =
+          96;
+
+
+        canvas.width =
+          TAMANHO;
+
+        canvas.height =
+          TAMANHO;
+
+
+        const contexto =
+          canvas.getContext(
+            "2d",
+            {
+              willReadFrequently:true
+            }
+          );
+
+
+        if(!contexto){
+
+          resolve(null);
+
+          return;
+
+        }
+
+
+        contexto.clearRect(
+          0,
+          0,
+          TAMANHO,
+          TAMANHO
+        );
+
+
+        contexto.drawImage(
+          imagem,
+          0,
+          0,
+          TAMANHO,
+          TAMANHO
+        );
+
+
+        const dados =
+          contexto.getImageData(
+            0,
+            0,
+            TAMANHO,
+            TAMANHO
+          ).data;
+
+
+        /*
+        Quantização de 16 níveis
+        por canal reduz ruído e torna
+        a cor predominante mais estável.
+        */
+
+        const mapa =
+          new Map();
+
+
+        for(
+          let i = 0;
+          i < dados.length;
+          i += 4
+        ){
+
+          const r =
+            dados[i];
+
+          const g =
+            dados[i + 1];
+
+          const b =
+            dados[i + 2];
+
+          const a =
+            dados[i + 3];
+
+
+          /*
+          Ignora pixels transparentes.
+          */
+
+          if(a < 100){
+            continue;
+          }
+
+
+          /*
+          Ignora praticamente branco,
+          pois logos sobre fundo branco
+          não devem transformar o tema
+          inteiro em branco.
+          */
+
+          const maior =
+            Math.max(
+              r,
+              g,
+              b
+            );
+
+
+          const menor =
+            Math.min(
+              r,
+              g,
+              b
+            );
+
+
+          if(
+            maior > 242 &&
+            menor > 225
+          ){
+
+            continue;
+
+          }
+
+
+          /*
+          Ignora preto absoluto/quase preto.
+          */
+
+          if(
+            maior < 18
+          ){
+
+            continue;
+
+          }
+
+
+          const qr =
+            Math.round(
+              r / 16
+            ) * 16;
+
+
+          const qg =
+            Math.round(
+              g / 16
+            ) * 16;
+
+
+          const qb =
+            Math.round(
+              b / 16
+            ) * 16;
+
+
+          const chave =
+            qr +
+            "," +
+            qg +
+            "," +
+            qb;
+
+
+          const atual =
+            mapa.get(
+              chave
+            ) || 0;
+
+
+          mapa.set(
+            chave,
+            atual + 1
+          );
+
+        }
+
+
+        if(!mapa.size){
+
+          resolve(null);
+
+          return;
+
+        }
+
+
+        let melhor =
+          null;
+
+        let maiorPeso =
+          0;
+
+
+        mapa.forEach(
+          (peso,chave) => {
+
+            const partes =
+              chave
+                .split(",")
+                .map(Number);
+
+
+            const r =
+              partes[0];
+
+            const g =
+              partes[1];
+
+            const b =
+              partes[2];
+
+
+            const hsl =
+              rgbParaHsl(
+                r,
+                g,
+                b
+              );
+
+
+            /*
+            Cores muito acinzentadas têm
+            menos valor visual como tema.
+            */
+
+            const saturacaoBonus =
+              1 +
+              (
+                Math.min(
+                  hsl.s,
+                  80
+                ) / 100
+              );
+
+
+            /*
+            Cores médias/fortes recebem
+            pequeno bônus para evitar que
+            áreas neutras dominem a seleção.
+            */
+
+            const luminosidadeBonus =
+              (
+                hsl.l >= 15 &&
+                hsl.l <= 82
+              )
+                ? 1.15
+                : .85;
+
+
+            const pesoFinal =
+              peso *
+              saturacaoBonus *
+              luminosidadeBonus;
+
+
+            if(
+              pesoFinal >
+              maiorPeso
+            ){
+
+              maiorPeso =
+                pesoFinal;
+
+              melhor = {
+                r,
+                g,
+                b
+              };
+
+            }
+
+          }
+        );
+
+
+        resolve(
+          melhor
+        );
+
+      }catch(error){
+
+        /*
+        Falha silenciosa proposital:
+        o tema corporativo permanece.
+        */
+
+        console.warn(
+          "Não foi possível extrair a cor da logo:",
+          error
+        );
+
+        resolve(null);
+
+      }
+
+    }
+  );
+
+}
+
+
+/*
+Controla a última logo processada
+para evitar processamento repetido
+desnecessário.
+*/
+
+let ultimoTemaLogo = "";
+
+
+/*
+Aplica o tema depois que a logo
+estiver realmente carregada.
+*/
+
+async function aplicarTemaDaLogo(
+  src
+){
+
+  const pagina =
+    document.getElementById(
+      "clientPage"
+    );
+
+
+  const logo =
+    document.getElementById(
+      "clientLogo"
+    );
+
+
+  if(
+    !pagina ||
+    !logo ||
+    !src
+  ){
+
+    restaurarTemaNFC();
+
+    ultimoTemaLogo =
+      "";
+
+    return;
+
+  }
+
+
+  /*
+  Evita recalcular a mesma imagem
+  a cada ciclo do sistema.
+  */
+
+  if(
+    ultimoTemaLogo === src
+  ){
+
+    return;
+
+  }
+
+
+  ultimoTemaLogo =
+    src;
+
+
+  const cor =
+    await extrairCorPredominante(
+      logo
+    );
+
+
+  /*
+  A logo pode ter mudado enquanto
+  o processamento acontecia.
+  */
+
+  if(
+    logo.currentSrc !== src &&
+    logo.src !== src
+  ){
+
+    return;
+
+  }
+
+
+  if(!cor){
+
+    restaurarTemaNFC();
+
+    return;
+
+  }
+
+
+  gerarTemaNFC(
+    cor
+  );
+
+}
+
+
+/*
+Fallback absoluto da imagem pública.
+
+Se a logo quebrar ou falhar,
+voltamos imediatamente ao tema
+corporativo original.
+*/
+
+function configurarLogoPublica(
+  src
+){
+
+  const logo =
+    document.getElementById(
+      "clientLogo"
+    );
+
+
+  if(!logo){
+    return;
+  }
+
+
+  ultimoTemaLogo =
+    "";
+
+
+  restaurarTemaNFC();
+
+
+  logo.onload =
+    async () => {
+
+      /*
+      Atraso mínimo para garantir que
+      naturalWidth/naturalHeight estejam
+      disponíveis em todos os navegadores.
+      */
+
+      requestAnimationFrame(
+        () => {
+
+          aplicarTemaDaLogo(
+            src
+          );
+
+        }
+      );
+
+    };
+
+
+  logo.onerror =
+    () => {
+
+      ultimoTemaLogo =
+        "";
+
+      restaurarTemaNFC();
+
+    };
+
+
+  /*
+  Para URLs externas, o navegador
+  tenta permitir leitura pelo canvas.
+  Se o servidor não permitir CORS,
+  extrairCorPredominante captura a falha
+  e mantém o tema corporativo.
+  */
+
+  try{
+
+    if(
+      !String(src)
+        .startsWith(
+          "data:"
+        )
+    ){
+
+      logo.crossOrigin =
+        "anonymous";
+
+    }
+
+  }catch(error){
+
+    console.warn(
+      "Não foi possível configurar CORS da logo:",
+      error
+    );
+
+  }
+
+
+  logo.src =
+    src;
 
 }
 
@@ -3466,6 +4349,13 @@ window.abrirNFC = function(
       .getElementById("clientPage")
       .style
       .display = "block";
+
+
+    restaurarTemaNFC();
+
+
+    ultimoTemaLogo =
+      "";
 
 
     document
@@ -3534,12 +4424,19 @@ window.abrirNFC = function(
 
   if(c.logo){
 
-    logo.src =
-      c.logo;
-
-
     logo.style.display =
       "block";
+
+
+    /*
+    Nova camada visual:
+    configura o carregamento e a análise
+    da logo sem tocar no banco.
+    */
+
+    configurarLogoPublica(
+      c.logo
+    );
 
   }else{
 
@@ -3550,6 +4447,13 @@ window.abrirNFC = function(
 
     logo.style.display =
       "none";
+
+
+    ultimoTemaLogo =
+      "";
+
+
+    restaurarTemaNFC();
 
   }
 
@@ -3647,10 +4551,6 @@ window.abrirNFC = function(
     );
 
 
-    /*
-    Mensagem específica para inadimplência.
-    */
-
     if(c.vencido){
 
       document
@@ -3700,15 +4600,12 @@ function normalizarLink(
     return "";
   }
 
-
   let valor =
     String(url).trim();
-
 
   if(!valor){
     return "";
   }
-
 
   if(tipo === "whatsapp"){
 
@@ -3720,7 +4617,6 @@ function normalizarLink(
 
     }
 
-
     if(
       /^whatsapp:/i.test(valor)
     ){
@@ -3729,13 +4625,11 @@ function normalizarLink(
 
     }
 
-
     const numero =
       valor.replace(
         /\D/g,
         ""
       );
-
 
     if(
       numero.length >= 10
@@ -3748,11 +4642,9 @@ function normalizarLink(
 
     }
 
-
     return valor;
 
   }
-
 
   if(tipo === "instagram"){
 
@@ -3764,7 +4656,6 @@ function normalizarLink(
 
     }
 
-
     if(
       /^instagram\.com\//i.test(valor)
     ){
@@ -3775,7 +4666,6 @@ function normalizarLink(
       );
 
     }
-
 
     if(
       !/[/\s]/.test(valor)
@@ -3791,11 +4681,9 @@ function normalizarLink(
 
     }
 
-
     return valor;
 
   }
-
 
   if(
     /^[a-z][a-z0-9+.-]*:\/\//i.test(valor)
@@ -3804,7 +4692,6 @@ function normalizarLink(
     return valor;
 
   }
-
 
   if(
     /^www\./i.test(valor)
@@ -3817,7 +4704,6 @@ function normalizarLink(
 
   }
 
-
   if(
     /^[^\s]+\.[^\s]+$/i.test(valor)
   ){
@@ -3828,7 +4714,6 @@ function normalizarLink(
     );
 
   }
-
 
   return valor;
 
@@ -3991,24 +4876,20 @@ window.render = function(){
       "pesquisa"
     );
 
-
   const q =
     pesquisa
       ? pesquisa.value
           .toLowerCase()
       : "";
 
-
   const lista =
     document.getElementById(
       "lista"
     );
 
-
   if(!lista){
     return;
   }
-
 
   const filtrados =
     clientes.filter(
@@ -4017,7 +4898,6 @@ window.render = function(){
           .toLowerCase()
           .includes(q)
     );
-
 
   document
     .getElementById("ativos")
@@ -4028,7 +4908,6 @@ window.render = function(){
           !c.vencido
       ).length;
 
-
   document
     .getElementById("desativados")
     .textContent =
@@ -4037,7 +4916,6 @@ window.render = function(){
           !c.ativo ||
           c.vencido
       ).length;
-
 
   lista.innerHTML =
     filtrados
@@ -4050,14 +4928,12 @@ window.render = function(){
             c.id
           );
 
-
         const vencimentoTexto =
           c.dataVencimento
             ? formatarDataBR(
                 c.dataVencimento
               )
             : "Não informado";
-
 
         const ativacaoTexto =
           c.dataAtivacao
@@ -4066,7 +4942,6 @@ window.render = function(){
               )
             : "Não informado";
 
-
         const statusTexto =
           c.vencido
             ? "● INADIMPLENTE"
@@ -4074,14 +4949,12 @@ window.render = function(){
               ? "● ATIVO"
               : "● DESATIVADO";
 
-
         const statusClasse =
           c.vencido
             ? "expired"
             : c.ativo
               ? "active"
               : "inactive";
-
 
         const botaoStatus =
           c.vencido
@@ -4104,7 +4977,6 @@ window.render = function(){
               </button>
             `;
 
-
         return `
 
           <div class="client">
@@ -4122,7 +4994,6 @@ window.render = function(){
               </span>
 
             </div>
-
 
             <p class="muted">
 
@@ -4147,14 +5018,12 @@ window.render = function(){
 
             </p>
 
-
             <p class="muted">
 
               URL NFC:
               ${escapeHtml(url)}
 
             </p>
-
 
             <div class="row">
 
@@ -4208,7 +5077,6 @@ function processarNFC(){
   const hash =
     location.hash || "";
 
-
   if(
     hash
       .toLowerCase()
@@ -4217,7 +5085,6 @@ function processarNFC(){
 
     let id =
       "";
-
 
     try{
 
@@ -4233,18 +5100,15 @@ function processarNFC(){
         error
       );
 
-
       id =
         "";
 
     }
 
-
     const cliente =
       clientes.find(
         x => x.id === id
       ) || null;
-
 
     if(
       !cliente &&
@@ -4256,46 +5120,38 @@ function processarNFC(){
         .style
         .display = "none";
 
-
       document
         .getElementById("clientPage")
         .style
         .display = "block";
-
 
       document
         .getElementById("clientName")
         .textContent =
           "Carregando...";
 
-
       document
         .getElementById("clientActive")
         .classList
         .add("hidden");
-
 
       document
         .getElementById("inactiveBox")
         .classList
         .add("hidden");
 
-
       return true;
 
     }
-
 
     abrirNFC(
       id,
       cliente
     );
 
-
     return true;
 
   }
-
 
   return false;
 
@@ -4313,27 +5169,24 @@ window.addEventListener(
   () => {
 
     /*
-    Mantido:
     Firestore continua sendo iniciado
-    independentemente do login para
-    a página NFC pública funcionar.
+    independentemente do login.
     */
 
     iniciarListenerClientes();
 
+    /*
+    Tema padrão antes de qualquer
+    logo ser processada.
+    */
+
+    restaurarTemaNFC();
 
     /*
     Logo inicial.
     */
 
     atualizarPreviewLogo("");
-
-
-    /*
-    Se estiver acessando painel e
-    houver sessão nesta aba, abre
-    diretamente o dashboard.
-    */
 
     if(
       !processarNFC() &&
@@ -4345,15 +5198,12 @@ window.addEventListener(
         .classList
         .add("hidden");
 
-
       document
         .getElementById("dashboard")
         .classList
         .remove("hidden");
 
-
       render();
-
 
       verificarVencimentos();
 
@@ -4365,7 +5215,6 @@ window.addEventListener(
         .getElementById("loginCard")
         .classList
         .remove("hidden");
-
 
       document
         .getElementById("dashboard")
@@ -4406,35 +5255,19 @@ window.addEventListener(
 =========================================================
 VERIFICAÇÃO PERIÓDICA
 =========================================================
-
-Se o painel estiver aberto durante
-a virada do vencimento, o sistema
-também verifica periodicamente.
 */
 
 setInterval(
   () => {
-
-    /*
-    Recalcula o estado local.
-    */
 
     clientes =
       clientes.map(
         normalizarCliente
       );
 
-
     render();
 
-
     verificarVencimentos();
-
-
-    /*
-    Atualiza também a página NFC,
-    caso ela esteja aberta.
-    */
 
     if(
       location.hash
