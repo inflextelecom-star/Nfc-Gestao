@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -7416,103 +7416,70 @@ PROCESSAR ROTA PROVEDOR
 
 function processarProvedor(){
 
-
   const hash =
     location.hash || "";
-
 
   if(
     !hash
       .toLowerCase()
       .startsWith(
-        "provedor="
+        "#provedor="
       )
   ){
 
-
     return false;
-
 
   }
 
-
   let id = "";
 
-
   try{
-
 
     id =
       decodeURIComponent(
         hash.substring(
-          "provedor=".length
+          "#provedor=".length
         )
       );
 
-
   }catch(error){
-
 
     console.error(
       "Hash do provedor inválido:",
       error
     );
 
-
     id =
       "";
 
-
   }
-
 
   const admin =
     document.getElementById(
       "adminPage"
     );
 
-
   const client =
     document.getElementById(
       "clientPage"
     );
-
 
   const painel =
     document.getElementById(
       "painelProvedor"
     );
 
-
   if(admin){
-
-
-    admin.style.display =
-      "none";
-
-
+    admin.style.display = "none";
   }
-
 
   if(client){
-
-
-    client.style.display =
-      "none";
-
-
+    client.style.display = "none";
   }
-
 
   if(painel){
-
-
-    painel.style.display =
-      "block";
-
-
+    painel.style.display = "block";
   }
-
 
   document.documentElement
     .classList
@@ -7520,32 +7487,25 @@ function processarProvedor(){
       "provedor-route"
     );
 
-
   document.documentElement
     .classList
-    .remove(
+    .add(
       "provedor-ready"
     );
-
 
   provedorDocumentoValidado =
     false;
 
-
   provedorClienteAtual =
     null;
 
-
   limparPainelProvedor();
-
 
   iniciarListenerProvedor(
     id
   );
 
-
   return true;
-
 
 }
 
