@@ -196,28 +196,42 @@ input{
   <div class="top">
     <div class="top-inner">
       <strong>⚡ NFC Gestão Pro</strong>
-      <button class="btn gray" onclick="showLogin()">SAIR</button>
+
+      <button
+        class="btn gray"
+        onclick="showLogin()"
+      >
+        SAIR
+      </button>
     </div>
   </div>
 
   <div class="wrap">
 
     <div class="card" id="loginCard">
+
       <h2>🔐 Acesso administrativo</h2>
-      <p>Somente o administrador pode alterar os assinantes.</p>
+
+      <p>
+        Somente o administrador pode alterar os assinantes.
+      </p>
 
       <div class="grid">
+
         <input
           id="loginUser"
           type="text"
           placeholder="Usuário (E-mail)"
+          autocomplete="username"
         >
 
         <input
           id="loginPass"
           type="password"
           placeholder="Senha"
+          autocomplete="current-password"
         >
+
       </div>
 
       <button
@@ -229,6 +243,7 @@ input{
       </button>
 
       <p id="loginMsg"></p>
+
     </div>
 
 
@@ -492,144 +507,303 @@ input{
 </div>
 
 
-<script>
+<!-- =====================================================
+     FIREBASE
+     ===================================================== -->
+
+<script type="module">
 
 /*
 =========================================================
 NFC GESTÃO PRO
-VERSÃO LOCALSTORAGE
-SEM FIREBASE
+FIREBASE FIRESTORE
+GITHUB PAGES
 =========================================================
 */
 
+
 /*
+---------------------------------------------------------
+IMPORTAÇÕES FIREBASE VIA CDN
+---------------------------------------------------------
+*/
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  doc,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/*
+---------------------------------------------------------
+CONFIGURAÇÃO OFICIAL
+---------------------------------------------------------
+*/
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDMZ1faLyK_N77UE3B2VtdrtmdpHbh9FS8",
+  authDomain: "nfc-gestao.firebaseapp.com",
+  projectId: "nfc-gestao",
+  storageBucket: "nfc-gestao.firebasestorage.app",
+  messagingSenderId: "276463620862",
+  appId: "1:276463620862:web:4bbfa8b5c59f36f4bd0baf",
+  measurementId: "G-QDVQX0TJ6X"
+};
+
+
+/*
+---------------------------------------------------------
+INICIALIZA FIREBASE
+---------------------------------------------------------
+*/
+
+const app =
+  initializeApp(firebaseConfig);
+
+
+const auth =
+  getAuth(app);
+
+
+const db =
+  getFirestore(app);
+
+
+/*
+---------------------------------------------------------
 LOGIN FIXO
+---------------------------------------------------------
 */
-const LOGIN_USUARIO = "Varejaoeverton@gmail.com";
-const LOGIN_SENHA = "Enzo777.@";
+
+const LOGIN_USUARIO =
+  "Varejaoeverton@gmail.com";
+
+const LOGIN_SENHA =
+  "Enzo777.@";
 
 
 /*
-CHAVE DO LOCALSTORAGE
+---------------------------------------------------------
+COLEÇÃO FIRESTORE
+---------------------------------------------------------
 */
-const STORAGE_CLIENTES = "nfc_gestao_clientes";
-const STORAGE_AUTH = "nfc_demo_auth";
+
+const CLIENTES_COLLECTION =
+  "clientes";
 
 
 /*
-CLIENTES
+---------------------------------------------------------
+ESTADO LOCAL DA INTERFACE
+---------------------------------------------------------
 */
 
 let clientes = [];
 
+let editId = null;
+
+let unsubscribeClientes = null;
+
 
 /*
-CARREGA CLIENTES DO LOCALSTORAGE
+---------------------------------------------------------
+NORMALIZA CLIENTE
+---------------------------------------------------------
 */
 
-function carregarClientes(){
+function normalizarCliente(c){
 
-  try{
+  if(!c){
+    return null;
+  }
 
-    const dadosSalvos =
-      localStorage.getItem(STORAGE_CLIENTES);
+  return {
 
-    if(dadosSalvos){
+    id:
+      String(c.id || ""),
 
-      const listaSalva =
-        JSON.parse(dadosSalvos);
+    nome:
+      String(c.nome || ""),
 
-      if(Array.isArray(listaSalva)){
+    logo:
+      String(c.logo || ""),
 
-        clientes = listaSalva
-          .filter(c => c && c.id && c.nome)
-          .map(c => ({
-            id:String(c.id),
-            nome:String(c.nome),
-            logo:String(c.logo || ""),
-            fatura:String(c.fatura || ""),
-            zap:String(c.zap || ""),
-            insta:String(c.insta || ""),
-            speed:String(c.speed || ""),
-            ativo:c.ativo !== false
-          }));
+    fatura:
+      String(c.fatura || ""),
+
+    zap:
+      String(c.zap || ""),
+
+    insta:
+      String(c.insta || ""),
+
+    speed:
+      String(c.speed || ""),
+
+    ativo:
+      c.ativo !== false
+
+  };
+
+}
+
+
+/*
+---------------------------------------------------------
+ASSINA FIRESTORE EM TEMPO REAL
+---------------------------------------------------------
+*/
+
+function iniciarListenerClientes(){
+
+  if(unsubscribeClientes){
+
+    unsubscribeClientes();
+
+    unsubscribeClientes = null;
+
+  }
+
+
+  const referencia =
+    collection(
+      db,
+      CLIENTES_COLLECTION
+    );
+
+
+  const consulta =
+    query(
+      referencia,
+      orderBy("nome")
+    );
+
+
+  unsubscribeClientes =
+    onSnapshot(
+      consulta,
+
+      snapshot => {
+
+        clientes =
+          snapshot.docs
+            .map(docSnap => {
+
+              const dados =
+                docSnap.data();
+
+              return normalizarCliente({
+
+                id:
+                  docSnap.id,
+
+                ...dados
+
+              });
+
+            })
+            .filter(
+              c =>
+                c &&
+                c.id &&
+                c.nome
+            );
+
+
+        render();
+
+
+        /*
+        Se a URL atual for NFC,
+        atualiza a página pública
+        imediatamente.
+        */
+
+        if(
+          location.hash
+            .toLowerCase()
+            .startsWith("#nfc=")
+        ){
+
+          processarNFC();
+
+        }
+
+      },
+
+      error => {
+
+        console.error(
+          "Erro no listener do Firestore:",
+          error
+        );
+
+        /*
+        Não apaga os dados que já estão
+        na memória caso ocorra uma falha
+        temporária de conexão.
+        */
+
+        const msg =
+          document.getElementById(
+            "saveMsg"
+          );
+
+        if(msg){
+
+          msg.textContent =
+            "⚠️ Erro de conexão com o banco de dados.";
+
+        }
 
       }
 
-    }
-
-  }catch(e){
-
-    console.warn(
-      "Não foi possível carregar os dados salvos.",
-      e
     );
-
-    clientes = [];
-
-  }
 
 }
 
 
 /*
-SALVA CLIENTES NO LOCALSTORAGE
-*/
-
-function salvarClientes(){
-
-  try{
-
-    localStorage.setItem(
-      STORAGE_CLIENTES,
-      JSON.stringify(clientes)
-    );
-
-  }catch(e){
-
-    console.warn(
-      "Não foi possível salvar os dados.",
-      e
-    );
-
-    alert(
-      "Não foi possível salvar os dados no navegador."
-    );
-
-  }
-
-}
-
-
-/*
-CARREGA BASE IMEDIATAMENTE
-*/
-
-carregarClientes();
-
-
-/*
-ID DE EDIÇÃO
-*/
-
-let editId = null;
-
-
-/*
+---------------------------------------------------------
 LOGIN
+---------------------------------------------------------
 */
 
-function login(){
+window.login = async function(){
 
   const u =
-    document.getElementById("loginUser")
+    document
+      .getElementById("loginUser")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  const p =
+    document
+      .getElementById("loginPass")
       .value
       .trim();
 
-  const p =
-    document.getElementById("loginPass")
-      .value
-      .trim();
 
   const msg =
     document.getElementById("loginMsg");
@@ -645,74 +819,189 @@ function login(){
   }
 
 
+  /*
+  Primeiro mantém a validação fixa solicitada.
+  */
+
   if(
-    u.toLowerCase().trim() === LOGIN_USUARIO.toLowerCase().trim() &&
-    p.trim() === LOGIN_SENHA.trim()
+    u !==
+      LOGIN_USUARIO
+        .trim()
+        .toLowerCase() ||
+
+    p !==
+      LOGIN_SENHA
+        .trim()
   ){
-
-    localStorage.setItem(
-      STORAGE_AUTH,
-      "1"
-    );
-
-    document
-      .getElementById("loginCard")
-      .classList
-      .add("hidden");
-
-    document
-      .getElementById("dashboard")
-      .classList
-      .remove("hidden");
-
-    msg.textContent = "";
-
-    render();
-
-  }else{
 
     msg.textContent =
       "Usuário ou senha incorretos.";
 
+    return;
+
   }
 
-}
+
+  msg.textContent =
+    "Autenticando...";
+
+
+  try{
+
+    await signInWithEmailAndPassword(
+      auth,
+      u,
+      p
+    );
+
+
+    msg.textContent = "";
+
+  }catch(error){
+
+    console.error(
+      "Erro no login Firebase:",
+      error
+    );
+
+
+    let texto =
+      "Não foi possível entrar.";
+
+
+    if(
+      error.code ===
+      "auth/invalid-credential"
+    ){
+
+      texto =
+        "Usuário ou senha incorretos.";
+
+    }else if(
+      error.code ===
+      "auth/user-not-found"
+    ){
+
+      texto =
+        "Usuário administrativo não cadastrado no Firebase Authentication.";
+
+    }else if(
+      error.code ===
+      "auth/wrong-password"
+    ){
+
+      texto =
+        "Usuário ou senha incorretos.";
+
+    }else if(
+      error.code ===
+      "auth/too-many-requests"
+    ){
+
+      texto =
+        "Muitas tentativas. Aguarde alguns minutos.";
+
+    }else if(
+      error.code ===
+      "auth/network-request-failed"
+    ){
+
+      texto =
+        "Falha de conexão. Verifique sua internet.";
+
+    }
+
+
+    msg.textContent =
+      texto;
+
+  }
+
+};
 
 
 /*
+---------------------------------------------------------
 SAIR
+---------------------------------------------------------
 */
 
-function showLogin(){
+window.showLogin = async function(){
 
-  localStorage.removeItem(STORAGE_AUTH);
+  try{
+
+    await signOut(auth);
+
+  }catch(error){
+
+    console.error(
+      "Erro ao sair:",
+      error
+    );
+
+  }
+
+
+  editId = null;
+
 
   document
     .getElementById("dashboard")
     .classList
     .add("hidden");
 
+
   document
     .getElementById("loginCard")
     .classList
     .remove("hidden");
 
+
   document
     .getElementById("loginUser")
     .value = "";
+
 
   document
     .getElementById("loginPass")
     .value = "";
 
-}
+
+  document
+    .getElementById("loginMsg")
+    .textContent = "";
+
+
+  cancelar();
+
+};
 
 
 /*
+---------------------------------------------------------
 SALVAR ASSINANTE
+---------------------------------------------------------
 */
 
-function salvar(){
+window.salvar = async function(){
+
+  /*
+  Garante que somente usuário autenticado
+  possa tentar alterar dados.
+  */
+
+  if(!auth.currentUser){
+
+    alert(
+      "Sua sessão administrativa expirou. Faça login novamente."
+    );
+
+    showLogin();
+
+    return;
+
+  }
+
 
   const nome =
     document
@@ -732,20 +1021,7 @@ function salvar(){
   }
 
 
-  const clienteExistente =
-    editId
-      ? clientes.find(
-          x => x.id === editId
-        )
-      : null;
-
-
   const dados = {
-
-    id:
-      editId ||
-      "cli-" +
-      Date.now(),
 
     nome,
 
@@ -780,65 +1056,104 @@ function salvar(){
         .trim(),
 
     ativo:
-      clienteExistente
-        ? clienteExistente.ativo
-        : true
+      true
 
   };
 
 
-  if(editId){
+  try{
 
-    const i =
-      clientes.findIndex(
-        x => x.id === editId
+    if(editId){
+
+      const clienteExistente =
+        clientes.find(
+          x => x.id === editId
+        );
+
+
+      dados.ativo =
+        clienteExistente
+          ? clienteExistente.ativo
+          : true;
+
+
+      await setDoc(
+        doc(
+          db,
+          CLIENTES_COLLECTION,
+          editId
+        ),
+        dados
       );
 
-    if(i !== -1){
 
-      clientes[i] = dados;
+      document
+        .getElementById("saveMsg")
+        .textContent =
+          "Assinante atualizado com sucesso.";
+
+    }else{
+
+      await addDoc(
+        collection(
+          db,
+          CLIENTES_COLLECTION
+        ),
+        dados
+      );
+
+
+      document
+        .getElementById("saveMsg")
+        .textContent =
+          "Assinante cadastrado com sucesso.";
 
     }
 
-  }else{
 
-    clientes.push(dados);
+    setTimeout(() => {
+
+      const el =
+        document.getElementById(
+          "saveMsg"
+        );
+
+      if(el){
+
+        el.textContent = "";
+
+      }
+
+    },3000);
+
+
+    cancelar();
+
+  }catch(error){
+
+    console.error(
+      "Erro ao salvar assinante:",
+      error
+    );
+
+
+    alert(
+      "Não foi possível salvar o assinante.\n\n" +
+      "Verifique as regras de segurança do Firestore."
+    );
 
   }
 
-
-  salvarClientes();
-
-
-  document
-    .getElementById("saveMsg")
-    .textContent =
-      editId
-        ? "Assinante atualizado com sucesso."
-        : "Assinante cadastrado com sucesso.";
-
-
-  setTimeout(() => {
-
-    document
-      .getElementById("saveMsg")
-      .textContent = "";
-
-  },3000);
-
-
-  cancelar();
-
-  render();
-
-}
+};
 
 
 /*
+---------------------------------------------------------
 EDITAR
+---------------------------------------------------------
 */
 
-function editar(id){
+window.editar = function(id){
 
   const c =
     clientes.find(
@@ -905,14 +1220,16 @@ function editar(id){
     behavior:"smooth"
   });
 
-}
+};
 
 
 /*
+---------------------------------------------------------
 CANCELAR
+---------------------------------------------------------
 */
 
-function cancelar(){
+window.cancelar = function(){
 
   editId = null;
 
@@ -931,10 +1248,13 @@ function cancelar(){
     "insta",
     "speed"
   ].forEach(
-    x =>
+    x => {
+
       document
         .getElementById(x)
-        .value = ""
+        .value = "";
+
+    }
   );
 
 
@@ -943,14 +1263,29 @@ function cancelar(){
     .classList
     .add("hidden");
 
-}
+};
 
 
 /*
+---------------------------------------------------------
 ALTERAR STATUS
+---------------------------------------------------------
 */
 
-function alterarStatus(id){
+window.alterarStatus = async function(id){
+
+  if(!auth.currentUser){
+
+    alert(
+      "Faça login como administrador."
+    );
+
+    showLogin();
+
+    return;
+
+  }
+
 
   const c =
     clientes.find(
@@ -961,59 +1296,115 @@ function alterarStatus(id){
   if(!c)return;
 
 
-  c.ativo = !c.ativo;
+  try{
+
+    await updateDoc(
+
+      doc(
+        db,
+        CLIENTES_COLLECTION,
+        id
+      ),
+
+      {
+        ativo:
+          !c.ativo
+      }
+
+    );
+
+  }catch(error){
+
+    console.error(
+      "Erro ao alterar status:",
+      error
+    );
 
 
-  salvarClientes();
+    alert(
+      "Não foi possível alterar o status."
+    );
 
-  render();
+  }
 
-}
+};
 
 
 /*
+---------------------------------------------------------
 EXCLUIR
+---------------------------------------------------------
 */
 
-function excluir(id){
+window.excluir = async function(id){
+
+  if(!auth.currentUser){
+
+    alert(
+      "Faça login como administrador."
+    );
+
+    showLogin();
+
+    return;
+
+  }
+
 
   if(
-    confirm(
+    !confirm(
       "Excluir definitivamente este cliente?\n\n" +
       "Para inadimplência use DESATIVAR."
     )
   ){
 
-    const i =
-      clientes.findIndex(
-        x => x.id === id
-      );
-
-
-    if(i !== -1){
-
-      clientes.splice(i,1);
-
-      salvarClientes();
-
-      render();
-
-    }
+    return;
 
   }
 
-}
+
+  try{
+
+    await deleteDoc(
+
+      doc(
+        db,
+        CLIENTES_COLLECTION,
+        id
+      )
+
+    );
+
+  }catch(error){
+
+    console.error(
+      "Erro ao excluir:",
+      error
+    );
+
+
+    alert(
+      "Não foi possível excluir o cliente."
+    );
+
+  }
+
+};
 
 
 /*
+---------------------------------------------------------
 COPIAR URL
+---------------------------------------------------------
 */
 
-function copiar(url){
+window.copiar = function(url){
 
   if(!url){
 
-    alert("URL NFC inválida.");
+    alert(
+      "URL NFC inválida."
+    );
 
     return;
 
@@ -1047,17 +1438,21 @@ function copiar(url){
 
   copiarFallback(url);
 
-}
+};
 
 
 /*
+---------------------------------------------------------
 FALLBACK COPIAR
+---------------------------------------------------------
 */
 
 function copiarFallback(url){
 
   const area =
-    document.createElement("textarea");
+    document.createElement(
+      "textarea"
+    );
 
 
   area.value = url;
@@ -1067,11 +1462,16 @@ function copiarFallback(url){
     ""
   );
 
-  area.style.position = "fixed";
-  area.style.left = "-9999px";
+  area.style.position =
+    "fixed";
+
+  area.style.left =
+    "-9999px";
 
 
-  document.body.appendChild(area);
+  document.body.appendChild(
+    area
+  );
 
 
   area.select();
@@ -1088,7 +1488,9 @@ function copiarFallback(url){
   try{
 
     sucesso =
-      document.execCommand("copy");
+      document.execCommand(
+        "copy"
+      );
 
   }catch(e){
 
@@ -1097,7 +1499,9 @@ function copiarFallback(url){
   }
 
 
-  document.body.removeChild(area);
+  document.body.removeChild(
+    area
+  );
 
 
   if(sucesso){
@@ -1119,10 +1523,12 @@ function copiarFallback(url){
 
 
 /*
+---------------------------------------------------------
 ABRIR NFC
+---------------------------------------------------------
 */
 
-function abrirNFC(
+window.abrirNFC = function(
   id,
   objCliente = null
 ){
@@ -1138,11 +1544,14 @@ function abrirNFC(
 
     document
       .getElementById("adminPage")
-      .style.display = "none";
+      .style
+      .display = "none";
+
 
     document
       .getElementById("clientPage")
-      .style.display = "block";
+      .style
+      .display = "block";
 
 
     document
@@ -1153,7 +1562,8 @@ function abrirNFC(
 
     document
       .getElementById("clientLogo")
-      .style.display = "none";
+      .style
+      .display = "none";
 
 
     document
@@ -1186,12 +1596,14 @@ function abrirNFC(
 
   document
     .getElementById("adminPage")
-    .style.display = "none";
+    .style
+    .display = "none";
 
 
   document
     .getElementById("clientPage")
-    .style.display = "block";
+    .style
+    .display = "block";
 
 
   document
@@ -1201,7 +1613,9 @@ function abrirNFC(
 
 
   const logo =
-    document.getElementById("clientLogo");
+    document.getElementById(
+      "clientLogo"
+    );
 
 
   if(c.logo){
@@ -1213,7 +1627,9 @@ function abrirNFC(
 
   }else{
 
-    logo.removeAttribute("src");
+    logo.removeAttribute(
+      "src"
+    );
 
     logo.style.display =
       "none";
@@ -1298,11 +1714,13 @@ function abrirNFC(
     c.nome +
     " — Acesso";
 
-}
+};
 
 
 /*
+---------------------------------------------------------
 NORMALIZAR LINKS
+---------------------------------------------------------
 */
 
 function normalizarLink(
@@ -1444,7 +1862,9 @@ function normalizarLink(
 
 
 /*
+---------------------------------------------------------
 SET LINK
+---------------------------------------------------------
 */
 
 function setLink(
@@ -1467,9 +1887,13 @@ function setLink(
     );
 
 
-  el.removeAttribute("href");
+  el.removeAttribute(
+    "href"
+  );
 
-  el.removeAttribute("onclick");
+  el.removeAttribute(
+    "onclick"
+  );
 
 
   el.style.display =
@@ -1499,25 +1923,31 @@ function setLink(
 
 
 /*
+---------------------------------------------------------
 VOLTAR
+---------------------------------------------------------
 */
 
-function voltar(){
+window.voltar = function(){
 
   document
     .getElementById("clientPage")
-    .style.display = "none";
+    .style
+    .display = "none";
 
 
   document
     .getElementById("adminPage")
-    .style.display = "block";
+    .style
+    .display = "block";
 
-}
+};
 
 
 /*
+---------------------------------------------------------
 ESCAPE HTML
+---------------------------------------------------------
 */
 
 function escapeHtml(s){
@@ -1537,25 +1967,41 @@ function escapeHtml(s){
 
 
 /*
+---------------------------------------------------------
 ESCAPE JS
+---------------------------------------------------------
 */
 
 function escapeJs(s){
 
   return String(s)
-    .replace(/\\/g,"\\\\")
-    .replace(/'/g,"\\'")
-    .replace(/\r/g,"\\r")
-    .replace(/\n/g,"\\n");
+    .replace(
+      /\\/g,
+      "\\\\"
+    )
+    .replace(
+      /'/g,
+      "\\'"
+    )
+    .replace(
+      /\r/g,
+      "\\r"
+    )
+    .replace(
+      /\n/g,
+      "\\n"
+    );
 
 }
 
 
 /*
+---------------------------------------------------------
 RENDER
+---------------------------------------------------------
 */
 
-function render(){
+window.render = function(){
 
   const pesquisa =
     document.getElementById(
@@ -1611,7 +2057,9 @@ function render(){
         const url =
           location.href.split("#")[0] +
           "#nfc=" +
-          encodeURIComponent(c.id);
+          encodeURIComponent(
+            c.id
+          );
 
 
         return `
@@ -1679,11 +2127,13 @@ function render(){
       .join("") ||
     "<p>Nenhum assinante encontrado.</p>";
 
-}
+};
 
 
 /*
+---------------------------------------------------------
 PROCESSAR NFC
+---------------------------------------------------------
 */
 
 function processarNFC(){
@@ -1698,17 +2148,83 @@ function processarNFC(){
       .startsWith("#nfc=")
   ){
 
-    const id =
-      decodeURIComponent(
-        hash.substring(5)
+    let id = "";
+
+
+    try{
+
+      id =
+        decodeURIComponent(
+          hash.substring(5)
+        );
+
+    }catch(error){
+
+      console.error(
+        "Hash NFC inválido:",
+        error
       );
+
+      id = "";
+
+    }
+
+
+    const cliente =
+      clientes.find(
+        x => x.id === id
+      ) || null;
+
+
+    /*
+    Se o Firestore ainda estiver carregando,
+    não transforma imediatamente em
+    "não encontrado".
+    */
+
+    if(
+      !cliente &&
+      clientes.length === 0
+    ){
+
+      document
+        .getElementById("adminPage")
+        .style
+        .display = "none";
+
+
+      document
+        .getElementById("clientPage")
+        .style
+        .display = "block";
+
+
+      document
+        .getElementById("clientName")
+        .textContent =
+          "Carregando...";
+
+
+      document
+        .getElementById("clientActive")
+        .classList
+        .add("hidden");
+
+
+      document
+        .getElementById("inactiveBox")
+        .classList
+        .add("hidden");
+
+
+      return true;
+
+    }
 
 
     abrirNFC(
       id,
-      clientes.find(
-        x => x.id === id
-      ) || null
+      cliente
     );
 
 
@@ -1723,69 +2239,102 @@ function processarNFC(){
 
 
 /*
-INICIALIZAÇÃO
+---------------------------------------------------------
+AUTENTICAÇÃO FIREBASE
+---------------------------------------------------------
 */
 
-window.onload = () => {
+onAuthStateChanged(
+  auth,
+  user => {
 
-  carregarClientes();
+    /*
+    NFC público:
+    não exige login.
+    */
+
+    if(processarNFC()){
+
+      return;
+
+    }
 
 
-  /*
-  NFC PÚBLICO NÃO EXIGE LOGIN
-  */
+    if(user){
 
-  if(processarNFC()){
+      /*
+      Usuário autenticado.
+      */
 
-    return;
+      document
+        .getElementById("loginCard")
+        .classList
+        .add("hidden");
+
+
+      document
+        .getElementById("dashboard")
+        .classList
+        .remove("hidden");
+
+
+      iniciarListenerClientes();
+
+
+      render();
+
+
+    }else{
+
+      /*
+      Usuário não autenticado.
+      */
+
+      document
+        .getElementById("loginCard")
+        .classList
+        .remove("hidden");
+
+
+      document
+        .getElementById("dashboard")
+        .classList
+        .add("hidden");
+
+
+      /*
+      Ainda precisamos do listener
+      para a página pública NFC.
+      */
+
+      iniciarListenerClientes();
+
+    }
 
   }
-
-
-  /*
-  LOGIN LOCAL
-  */
-
-  if(
-    localStorage.getItem(
-      STORAGE_AUTH
-    ) === "1"
-  ){
-
-    document
-      .getElementById("loginCard")
-      .classList
-      .add("hidden");
-
-
-    document
-      .getElementById("dashboard")
-      .classList
-      .remove("hidden");
-
-
-    render();
-
-  }else{
-
-    document
-      .getElementById("loginCard")
-      .classList
-      .remove("hidden");
-
-
-    document
-      .getElementById("dashboard")
-      .classList
-      .add("hidden");
-
-  }
-
-};
+);
 
 
 /*
+---------------------------------------------------------
+INICIALIZAÇÃO
+---------------------------------------------------------
+*/
+
+window.addEventListener(
+  "load",
+  () => {
+
+    processarNFC();
+
+  }
+);
+
+
+/*
+---------------------------------------------------------
 ALTERAÇÃO DA URL NFC
+---------------------------------------------------------
 */
 
 window.addEventListener(
