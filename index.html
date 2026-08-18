@@ -1871,6 +1871,27 @@ input:focus{
 
       </div>
 
+<!-- CARD DE AVISO DE MANUTENÇÃO (EMERGÊNCIA) -->
+        <div class="card" style="margin-top:20px; border-left: 5px solid #dc2626;">
+            <h3>📢 Aviso de Manutenção (Emergência)</h3>
+            <div class="grid">
+                <div class="field-group full">
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold;">
+                        <input type="checkbox" id="checkManutencao" style="width: auto;"> Ativar aviso de emergência na tela do cliente
+                    </label>
+                </div>
+                <div class="field-group full">
+                    <textarea id="txtManutencao" placeholder="Ex: Manutenção na fibra na região. Retorno previsto para 15h." rows="3" style="width:100%; padding:14px; border:1px solid #cbd5e1; border-radius:11px;"></textarea>
+                </div>
+                <div class="field-group full" style="margin-top: 10px;">
+        <label style="font-size: 12px; color: #475569; display: block; font-weight: 500; margin-bottom: 4px;">Enviar Imagem de Promoção:</label>
+        <input type="file" id="fileImgPromocao" accept="image/*" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; background: #fff;">
+    </div>
+            </div>
+            <button class="btn red" type="button" onclick="salvarManutencao()" style="margin-top:12px;">💾 ATUALIZAR AVISO</button>
+            <p id="provedorManutencaoMsg" style="margin-top: 8px; font-weight: bold;"></p>
+        </div>
+
     </div>
 
     <div
@@ -2121,10 +2142,26 @@ input:focus{
 
   </div>
 
+<!-- BOLINHA FLUTUANTE DE ALERTA DE MANUTENÇÃO -->
+    <div id="alertaFlutuante" onclick="document.getElementById('modalManutencao').style.display='flex'" 
+         style="display:none; position:fixed; bottom:20px; right:20px; background:#dc2626; color:white; padding:12px 18px; border-radius:50px; z-index:9999; cursor:pointer; box-shadow:0 4px 15px rgba(231, 76, 60, 0.5); font-weight:bold; align-items:center; gap:8px; animation: pulse 1.5s infinite;">
+        <span>⚠️</span> <span>Aviso de Rede</span>
+    </div>
+
+    <!-- MODAL DO AVISO -->
+    <div id="modalManutencao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; justify-content:center; align-items:center;">
+        <div style="background:white; width:90%; max-width:400px; padding:25px; border-radius:12px; border-top:6px solid #dc2626; text-align:center; color:#0f172a;">
+            <h3 style="color:#dc2626; margin-top:0;">🚨 Comunicado Importante</h3>
+            <p id="msgManutencaoCliente" style="font-size:16px; line-height:1.5; margin:15px 0;"></p>
+            <button class="btn" type="button" onclick="document.getElementById('modalManutencao').style.display='none'" style="width:100%;">ENTENDIDO</button>
+        </div>
+    </div>
+
 </div>
 <script type="module">
 
 import {
+
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
@@ -2145,6 +2182,69 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+window.salvarManutencao = async function() {
+    // Pega o ID direto da URL (#provedor=...) ou das variáveis da tela
+    let clienteId = null;
+    if (window.location.hash && window.location.hash.includes('provedor=')) {
+        clienteId = window.location.hash.split('provedor=')[1].split('&')[0];
+    }
+    if (!clienteId) {
+        const alvo = window.provedorClienteAtual || window.clienteAtual;
+        clienteId = alvo?.id;
+    }
+
+    if (!clienteId) {
+        alert("Erro: ID do provedor não encontrado.");
+        return;
+    }
+
+    const ativo = document.getElementById("checkManutencao").checked;
+    const msg = document.getElementById("txtManutencao").value.trim();
+    const fileInput = document.getElementById("fileImgPromocao");
+    const msgStatus = document.getElementById("provedorManutencaoMsg");
+
+    const executarSalvamento = async (imgBase64) => {
+        try {
+            const dadosAtualizacao = {
+                manutencao_ativa: ativo,
+                mensagem_manutencao: msg
+            };
+
+            // Se o usuário selecionou uma imagem, enviamos ela
+            if (imgBase64 !== null) {
+                dadosAtualizacao.imagem_promocao = imgBase64;
+            }
+
+            await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), dadosAtualizacao);
+
+            if (typeof carregarDadosCliente === 'function') {
+                carregarDadosCliente();
+            }
+
+            if (msgStatus) {
+                msgStatus.style.color = "#10b981";
+                msgStatus.textContent = "Aviso e imagem atualizados com sucesso!";
+                setTimeout(() => { msgStatus.textContent = ""; }, 3000);
+            }
+        } catch (e) {
+            console.error("Erro ao salvar manutenção:", e);
+            alert("Erro ao salvar aviso.");
+        }
+    };
+
+    // Verifica se tem imagem nova para enviar
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64Image = e.target.result;
+            await executarSalvamento(base64Image);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else {
+        // Sem imagem nova, salva apenas o texto e o estado
+        await executarSalvamento(null);
+    }
+};
 
 /*
 =========================================================
@@ -6021,12 +6121,9 @@ async function registrarAcessoNFC(
       id
     );
 
-  const registro = {
-    data:
-      serverTimestamp(),
-    timestamp:
-      Date.now()
-  };
+ const registro = {
+    timestamp: Date.now()
+};
 
   try{
 
@@ -6071,33 +6168,27 @@ ABRIR NFC
 =========================================================
 */
 
-window.abrirNFC =
-  async function(
-    id,
-    objCliente = null
-  ){
+window.abrirNFC = async function(id, objCliente = null) {
+    const cliente = objCliente || clientes.find(item => item.id === id);
 
-    const cliente =
-      objCliente ||
-      clientes.find(
-        item =>
-          item.id === id
-      );
-
-    if(!cliente){
-
-      mostrarErroNFC(
-        "Acesso não encontrado",
-        "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
-      );
-
-      return;
-
+    if (!cliente) {
+        mostrarErroNFC(
+            "Acesso não encontrado",
+            "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
+        );
+        return;
     }
 
-    registrarAcessoNFC(
-      cliente.id
-    );
+    registrarAcessoNFC(cliente.id);
+    
+const alertaFlutuante = document.getElementById('alertaFlutuante');
+    const textoModal = document.getElementById('msgManutencaoCliente');
+    if (cliente.manutencao_ativa && cliente.mensagem_manutencao) {
+        alertaFlutuante.style.display = 'flex';
+        textoModal.textContent = cliente.mensagem_manutencao;
+    } else {
+        alertaFlutuante.style.display = 'none';
+    }
 
     const admin =
       document.getElementById(
@@ -7141,12 +7232,20 @@ document
     }
   );
 
+function renderPainelProvedor(cliente) {
+    if(!cliente){
+        mostrarErroProvedor(
+            "Acesso indisponível",
+            "Não foi possível carregar os dados do provedor."
+        );
+        return;
+    }
+     
+    // Elas ficam AQUI embaixo, bem certinho:
+    document.getElementById("checkManutencao").checked = cliente.manutencao_ativa || false;
+    document.getElementById("txtManutencao").value = cliente.mensagem_manutencao || "";
 
-function renderPainelProvedor(
-  cliente
-){
-
-  if(!cliente){
+    if(!provedorDocumentoValidado){
 
     mostrarErroProvedor(
       "Acesso indisponível",
@@ -7594,225 +7693,73 @@ PROCESSAR NFC
 =========================================================
 */
 
-
-async function processarNFC(){
-
-
-  const hash =
-    location.hash || "";
-
-
-  if(
-    hash
-      .toLowerCase()
-      .startsWith(
-        "#nfc="
-      )
-  ){
-
-
+async function processarNFC() {
+    const hash = location.hash || "";
     let id = "";
 
-
-    try{
-
-
-      id =
-        decodeURIComponent(
-          hash.substring(5)
-        );
-
-
-    }catch(error){
-
-
-      console.error(
-        "Hash NFC inválido:",
-        error
-      );
-
-
-      id =
-        "";
-
-
-    }
-
-
-    let cliente =
-      clientes.find(
-        item =>
-          item.id === id
-      ) ||
-      null;
-
-
-    if(!cliente){
-
-
-      const admin =
-        document.getElementById(
-          "adminPage"
-        );
-
-
-      const pagina =
-        document.getElementById(
-          "clientPage"
-        );
-
-
-      const nome =
-        document.getElementById(
-          "clientName"
-        );
-
-
-      const active =
-        document.getElementById(
-          "clientActive"
-        );
-
-
-      const inactive =
-        document.getElementById(
-          "inactiveBox"
-        );
-
-
-      if(admin){
-
-
-        admin.style.display =
-          "none";
-
-
-      }
-
-
-      if(pagina){
-
-
-        pagina.style.display =
-          "block";
-
-
-      }
-
-
-      if(nome){
-
-
-        nome.textContent =
-          "Carregando...";
-
-
-      }
-
-
-      if(active){
-
-
-        active.classList.add(
-          "hidden"
-        );
-
-
-      }
-
-
-      if(inactive){
-
-
-        inactive.classList.add(
-          "hidden"
-        );
-
-
-      }
-
-
-      try{
-
-
-        const docRef =
-          doc(
-            db,
-            CLIENTES_COLLECTION,
-            id
-          );
-
-
-        const docSnap =
-          await getDoc(
-            docRef
-          );
-
-
-        if(docSnap.exists()){
-
-
-          cliente =
-            normalizarCliente({
-
-              id:
-                docSnap.id,
-
-              ...docSnap.data()
-
-            });
-
-
+    if (hash.toLowerCase().startsWith("#nfc=")) {
+        try {
+            id = decodeURIComponent(hash.substring(5));
+        } catch (error) {
+            console.error("Hash NFC inválido:", error);
+            id = "";
         }
-
-
-      }catch(error){
-
-
-        console.error(
-          "Erro ao buscar provedor NFC no Firestore:",
-          error
-        );
-
-
-      }
-
-
     }
 
+    if (!id) return;
 
-    if(!cliente){
+    // 1. Monitoramento do Sininho em tempo real (Mantido original)
+    onSnapshot(doc(db, CLIENTES_COLLECTION, id), (docSnapOuvinte) => {
+        if (docSnapOuvinte.exists()) {
+            const dadosCli = docSnapOuvinte.data();
+            const modalManutencao = document.getElementById("widgetFlutuanteAlerta");
+            const txtManutencao = document.getElementById("txtManutencaoDisplay");
 
+            const mensagemTexto = dadosCli.mensagem_manutencao || "Sistema em Manutenção";
+            const jaFoiVisto = sessionStorage.getItem('dismissed_' + mensagemTexto) === 'true';
 
-      mostrarErroNFC(
-        "Acesso não encontrado",
-        "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
-      );
-
-
-      return true;
-
-
-    }
-
-
-    abrirNFC(
-      id,
-      cliente
-    );
-
-
-    return true;
-
-
-  }
-
-
-  return false;
-
-
+            if (dadosCli.manutencao_ativa && !jaFoiVisto) {
+                if (modalManutencao) {
+    modalManutencao.style.display = "block";
+    modalManutencao.style.opacity = "1";
 }
+                if (txtManutencao) txtManutencao.textContent = mensagemTexto;
+            } else {
+                if (modalManutencao) modalManutencao.style.display = "none";
+            }
+        }
+    });
 
+    // 2. Busca direta e instantânea (Sem esperas artificiais que causam a tremida)
+    let cliente = clientes.find(item => item.id === id) || null;
+
+    if (!cliente) {
+        // Se a lista global ainda estiver carregando, damos apenas uma checagem rápida no Firebase diretamente
+        try {
+            const docRef = doc(db, CLIENTES_COLLECTION, id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                cliente = { id: docSnap.id, ...docSnap.data() };
+            }
+        } catch (e) {
+            console.error("Erro na busca direta:", e);
+        }
+    }
+
+    // 3. Validação final
+    if (!cliente) {
+        mostrarErroNFC(
+            "Acesso não encontrado",
+            "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
+        );
+        return true;
+    }
+
+    // Abre imediatamente sem o atraso que fazia a tela piscar e tremer
+    abrirNFC(id, cliente);
+    return true;
+}
+  
 
 /*
 =========================================================
@@ -8301,9 +8248,59 @@ setInterval(
   60000
 );
 
+window.toggleChatAlerta = function() {
+    const caixa = document.getElementById("caixaMensagemAlerta");
+    if (caixa) {
+   caixa.style.display = caixa.style.display === "none" || caixa.style.display === "" ? "block" : "none";
+    }
+};
+
+window.fecharAlerta = function() {
+    const widget = document.getElementById("widgetFlutuanteAlerta");
+    const caixa = document.getElementById("caixaMensagemAlerta");
+    const txt = document.getElementById("txtManutencaoDisplay");
+
+    if (txt) {
+   sessionStorage.setItem('dismissed_' + txt.textContent, 'true');
+    }
+
+    if (widget) widget.style.display = "none";
+    if (caixa) caixa.style.display = "none";
+};
 
 </script>
 
+
+<!-- Botão Flutuante de Alerta / Promoções -->
+<div id="widgetFlutuanteAlerta" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: none;">
+    <!-- Botão da Bolha com Animação de Pulso -->
+    <div id="btnBolhaAlerta" onclick="toggleChatAlerta()" style="background: #ef4444; color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; animation: pulsarAlerta 2s infinite;">
+        <span style="font-size: 24px;">🔔</span>
+        <span id="badgeContador" style="position: absolute; top: -5px; right: -5px; background: #ffffff; color: #ef4444; font-size: 12px; font-weight: bold; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #ef4444;">1</span>
+    </div>
+    
+    <!-- Balãozinho / Chat Flutuante com a Mensagem -->
+    <div id="caixaMensagemAlerta" style="display: none; position: absolute; bottom: 70px; right: 0; width: 280px; background: #1e1e2f; color: #fff; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); overflow: hidden;">
+        <div style="background: #ef4444; padding: 12px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
+            <span>📢 Comunicado / Promoção</span>
+          <button onclick="fecharAlerta()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        <div style="padding: 15px; font-size: 13px; line-height: 1.5; color: #e2e8f0;" id="txtManutencaoDisplay">
+            Carregando mensagem...
+        </div>
+        <div style="padding: 10px 15px; background: rgba(0,0,0,0.3); text-align: right;">
+       <button id="btnEntendidoAlerta" onclick="fecharAlerta()" style="background: #3b82f6; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Entendido</button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes pulsarAlerta {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+</style>
 
 </body>
 </html>
