@@ -1890,6 +1890,9 @@ input:focus{
             </div>
             <button class="btn red" type="button" onclick="salvarManutencao()" style="margin-top:12px;">💾 ATUALIZAR AVISO</button>
             <p id="provedorManutencaoMsg" style="margin-top: 8px; font-weight: bold;"></p>
+<button type="button" onclick="limparAvisoGeral()" style="background-color: #28a745; color: white; padding: 10px; margin-top: 10px; border: none; border-radius: 6px; cursor: pointer; width: 100%;">
+    🧹 REMOVER AVISO / CAMPANHA DA TELA
+</button>
         </div>
 
     </div>
@@ -2183,23 +2186,27 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 window.salvarManutencao = async function() {
-    // Pega o ID direto da URL (#provedor=...) ou das variáveis da tela
+    // Pega o ID direto da URL (#nfc= ou #provedor=) ou das variáveis da tela
     let clienteId = null;
-    if (window.location.hash && window.location.hash.includes('provedor=')) {
-        clienteId = window.location.hash.split('provedor=')[1].split('&')[0];
+    const hash = window.location.hash;
+    if (hash && hash.includes('nfc=')) {
+        clienteId = hash.split('nfc=')[1].split('&')[0];
+    } else if (hash && hash.includes('provedor=')) {
+        clienteId = hash.split('provedor=')[1].split('&')[0];
     }
+    
     if (!clienteId) {
         const alvo = window.provedorClienteAtual || window.clienteAtual;
         clienteId = alvo?.id;
     }
 
     if (!clienteId) {
-        alert("Erro: ID do provedor não encontrado.");
+        alert("Erro: ID do cliente não encontrado.");
         return;
     }
 
-    const ativo = document.getElementById("checkManutencao").checked;
-    const msg = document.getElementById("txtManutencao").value.trim();
+    const ativo = document.getElementById("checkManutencao") ? document.getElementById("checkManutencao").checked : false;
+    const msg = document.getElementById("txtManutencao") ? document.getElementById("txtManutencao").value.trim() : "";
     const fileInput = document.getElementById("fileImgPromocao");
     const msgStatus = document.getElementById("provedorManutencaoMsg");
 
@@ -2210,7 +2217,6 @@ window.salvarManutencao = async function() {
                 mensagem_manutencao: msg
             };
 
-            // Se o usuário selecionou uma imagem, enviamos ela
             if (imgBase64 !== null) {
                 dadosAtualizacao.imagem_promocao = imgBase64;
             }
@@ -2232,7 +2238,6 @@ window.salvarManutencao = async function() {
         }
     };
 
-    // Verifica se tem imagem nova para enviar
     if (fileInput && fileInput.files && fileInput.files[0]) {
         const reader = new FileReader();
         reader.onload = async function(e) {
@@ -2241,8 +2246,53 @@ window.salvarManutencao = async function() {
         };
         reader.readAsDataURL(fileInput.files[0]);
     } else {
-        // Sem imagem nova, salva apenas o texto e o estado
         await executarSalvamento(null);
+    }
+};
+
+window.limparAvisoGeral = async function() {
+    let clienteId = null;
+    if (window.location.hash && window.location.hash.includes('provedor=')) {
+        clienteId = window.location.hash.split('provedor=')[1].split('&')[0];
+    }
+    if (!clienteId) {
+        const alvo = window.provedorClienteAtual || window.clienteAtual;
+        clienteId = alvo?.id;
+    }
+
+    if (!clienteId) {
+        alert("Erro: ID do provedor não encontrado.");
+        return;
+    }
+
+    if (!confirm("Deseja remover o aviso ou campanha atual da tela dos clientes?")) return;
+
+    const msgStatus = document.getElementById("provedorManutencaoMsg");
+
+    try {
+        await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), {
+            manutencao_ativa: false,
+            mensagem_manutencao: "",
+            imagem_promocao: ""
+        });
+        
+        const check = document.getElementById("checkManutencao");
+        if (check) check.checked = false;
+        const txt = document.getElementById("txtManutencao");
+        if (txt) txt.value = "";
+
+        if (typeof carregarDadosCliente === 'function') {
+            carregarDadosCliente();
+        }
+
+        if (msgStatus) {
+            msgStatus.style.color = "#10b981";
+            msgStatus.textContent = "Aviso/Campanha removido com sucesso!";
+            setTimeout(() => { msgStatus.textContent = ""; }, 3000);
+        }
+    } catch (error) {
+        console.error("Erro ao limpar:", error);
+        alert("Erro ao executar a ação.");
     }
 };
 
@@ -3498,7 +3548,8 @@ function iniciarListenerClientes(){
             )
         ){
 
-          processarNFC();
+      let id = location.hash.split('nfc=')[1]?.split('&')[0] || location.hash.split('provedor=')[1]?.split('&')[0];
+if (id) abrirNFC(id);
 
         }
 
@@ -6171,7 +6222,13 @@ ABRIR NFC
 window.abrirNFC = async function(id, objCliente = null) {
     const cliente = objCliente || clientes.find(item => item.id === id);
 
-    if (!cliente) {
+   if (!cliente) {
+        // Se a lista de clientes ainda estiver vazia, dá um respiro de 1 segundo para o Firebase carregar
+        if (clientes.length === 0) {
+            setTimeout(() => abrirNFC(id, objCliente), 500);
+            return;
+        }
+
         mostrarErroNFC(
             "Acesso não encontrado",
             "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
@@ -7692,75 +7749,104 @@ function processarProvedor(){
 PROCESSAR NFC
 =========================================================
 */
-
-async function processarNFC() {
-    const hash = location.hash || "";
-    let id = "";
-
-    if (hash.toLowerCase().startsWith("#nfc=")) {
-        try {
-            id = decodeURIComponent(hash.substring(5));
-        } catch (error) {
-            console.error("Hash NFC inválido:", error);
-            id = "";
-        }
+window.salvarManutencao = async function() {
+    // Pega o ID direto da URL (#nfc= ou #provedor=) ou das variáveis da tela
+    let clienteId = null;
+    const hash = window.location.hash;
+    if (hash && hash.includes('nfc=')) {
+        clienteId = hash.split('nfc=')[1].split('&')[0];
+    } else if (hash && hash.includes('provedor=')) {
+        clienteId = hash.split('provedor=')[1].split('&')[0];
+    }
+    
+    if (!clienteId) {
+        const alvo = window.provedorClienteAtual || window.clienteAtual;
+        clienteId = alvo?.id;
     }
 
-    if (!id) return;
+    if (!clienteId) {
+        alert("Erro: ID do cliente não encontrado.");
+        return;
+    }
+    
+    const ativado = document.getElementById("checkManutencao") ? document.getElementById("checkManutencao").checked : false;
+    const mensagem = document.getElementById("txtMensagemManutencao") ? document.getElementById("txtMensagemManutencao").value : "";
+    const inputFile = document.getElementById("fileImgPromocao");
 
-    // 1. Monitoramento do Sininho em tempo real (Mantido original)
-    onSnapshot(doc(db, CLIENTES_COLLECTION, id), (docSnapOuvinte) => {
-        if (docSnapOuvinte.exists()) {
-            const dadosCli = docSnapOuvinte.data();
-            const modalManutencao = document.getElementById("widgetFlutuanteAlerta");
-            const txtManutencao = document.getElementById("txtManutencaoDisplay");
+    let imagemBase64 = "";
 
-            const mensagemTexto = dadosCli.mensagem_manutencao || "Sistema em Manutenção";
-            const jaFoiVisto = sessionStorage.getItem('dismissed_' + mensagemTexto) === 'true';
+    // Processa qualquer imagem (qualquer tamanho ou qualidade) sem travar
+    if (inputFile && inputFile.files && inputFile.files[0]) {
+        const file = inputFile.files[0];
 
-            if (dadosCli.manutencao_ativa && !jaFoiVisto) {
-                if (modalManutencao) {
-    modalManutencao.style.display = "block";
-    modalManutencao.style.opacity = "1";
+        imagemBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let largura = img.width;
+                    let altura = img.height;
+
+                    // Limite inteligente para manter alta qualidade sem estourar o banco
+                    const larguraMax = 1200;
+                    if (largura > larguraMax) {
+                        altura = Math.round((altura * larguraMax) / largura);
+                        largura = larguraMax;
+                    }
+
+                    canvas.width = largura;
+                    canvas.height = altura;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, largura, altura);
+
+                    resolve(canvas.toDataURL('image/jpeg', 0.85));
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    try {
+        // Salva os dados atualizados no Firebase
+        await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), {
+            manutencao_ativa: ativado,
+            mensagem_manutencao: mensagem,
+            ...(imagemBase64 && { imagem_promocao: imagemBase64 })
+        });
+
+        alert("Aviso e imagem atualizados com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar aviso:", error);
+        alert("Erro ao enviar. Tente novamente.");
+    }
 }
-                if (txtManutencao) txtManutencao.textContent = mensagemTexto;
-            } else {
-                if (modalManutencao) modalManutencao.style.display = "none";
-            }
-        }
-    });
 
-    // 2. Busca direta e instantânea (Sem esperas artificiais que causam a tremida)
-    let cliente = clientes.find(item => item.id === id) || null;
+async function finalizarManutencao() {
+    const clienteId = id; 
+    if (!confirm("Deseja encerrar a manutenção e remover o aviso da tela dos clientes?")) return;
 
-    if (!cliente) {
-        // Se a lista global ainda estiver carregando, damos apenas uma checagem rápida no Firebase diretamente
-        try {
-            const docRef = doc(db, CLIENTES_COLLECTION, id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                cliente = { id: docSnap.id, ...docSnap.data() };
-            }
-        } catch (e) {
-            console.error("Erro na busca direta:", e);
-        }
+    try {
+        await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), {
+            manutencao_ativa: false,
+            mensagem_manutencao: "",
+            imagem_promocao: ""
+        });
+        
+        const check = document.getElementById("checkManutencao");
+        if (check) check.checked = false;
+        const txt = document.getElementById("txtMensagemManutencao");
+        if (txt) txt.value = "";
+
+        alert("Manutenção encerrada com sucesso!");
+    } catch (error) {
+        console.error("Erro ao encerrar:", error);
+        alert("Erro ao finalizar a manutenção.");
     }
-
-    // 3. Validação final
-    if (!cliente) {
-        mostrarErroNFC(
-            "Acesso não encontrado",
-            "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
-        );
-        return true;
-    }
-
-    // Abre imediatamente sem o atraso que fazia a tela piscar e tremer
-    abrirNFC(id, cliente);
-    return true;
 }
+
   
-
 /*
 =========================================================
 INICIALIZAÇÃO
@@ -7828,9 +7914,8 @@ window.addEventListener(
       iniciarListenerClientes();
 
 
-      processarNFC();
-
-
+let id = location.hash.split('nfc=')[1]?.split('&')[0] || location.hash.split('provedor=')[1]?.split('&')[0];
+if (id) abrirNFC(id);
       return;
 
 
@@ -8060,7 +8145,8 @@ window.addEventListener(
       iniciarListenerClientes();
 
 
-      processarNFC();
+      let id = location.hash.split('nfc=')[1]?.split('&')[0] || location.hash.split('provedor=')[1]?.split('&')[0];
+if (id) abrirNFC(id);
 
 
       return;
@@ -8238,7 +8324,8 @@ setInterval(
     ){
 
 
-      processarNFC();
+      let id = location.hash.split('nfc=')[1]?.split('&')[0] || location.hash.split('provedor=')[1]?.split('&')[0];
+if (id) abrirNFC(id);
 
 
     }
@@ -8287,7 +8374,7 @@ window.fecharAlerta = function() {
         </div>
         <div style="padding: 15px; font-size: 13px; line-height: 1.5; color: #e2e8f0;" id="txtManutencaoDisplay">
             Carregando mensagem...
-        </div>
+        <div id="containerImagemPromocao" style="display: none; padding: 10px;"></div>
         <div style="padding: 10px 15px; background: rgba(0,0,0,0.3); text-align: right;">
        <button id="btnEntendidoAlerta" onclick="fecharAlerta()" style="background: #3b82f6; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Entendido</button>
         </div>
