@@ -2145,12 +2145,6 @@ input:focus{
 
   </div>
 
-<!-- BOLINHA FLUTUANTE DE ALERTA DE MANUTENÇÃO -->
-    <div id="alertaFlutuante" onclick="document.getElementById('modalManutencao').style.display='flex'" 
-         style="display:none; position:fixed; bottom:20px; right:20px; background:#dc2626; color:white; padding:12px 18px; border-radius:50px; z-index:9999; cursor:pointer; box-shadow:0 4px 15px rgba(231, 76, 60, 0.5); font-weight:bold; align-items:center; gap:8px; animation: pulse 1.5s infinite;">
-        <span>⚠️</span> <span>Aviso de Rede</span>
-    </div>
-
     <!-- MODAL DO AVISO -->
     <div id="modalManutencao" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; justify-content:center; align-items:center;">
         <div style="background:white; width:90%; max-width:400px; padding:25px; border-radius:12px; border-top:6px solid #dc2626; text-align:center; color:#0f172a;">
@@ -2185,6 +2179,94 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+
+window.salvarManutencao = async function() {
+    // Pega o ID direto da URL (#nfc= ou #provedor=) ou das variáveis da tela
+    let clienteId = null;
+    const hash = window.location.hash;
+    if (hash && hash.includes('nfc=')) {
+        clienteId = hash.split('nfc=')[1].split('&')[0];
+    } else if (hash && hash.includes('provedor=')) {
+        clienteId = hash.split('provedor=')[1].split('&')[0];
+    }
+    
+    if (!clienteId) {
+        const alvo = window.provedorClienteAtual || window.clienteAtual;
+        clienteId = alvo?.id;
+    }
+
+    console.log("🔍 [Provedor] ID do cliente identificado para salvamento:", clienteId);
+
+    if (!clienteId) {
+        alert("Erro: ID do cliente não encontrado.");
+        return;
+    }
+
+    const ativo = document.getElementById("checkManutencao") ? document.getElementById("checkManutencao").checked : false;
+    const msg = document.getElementById("txtManutencao") ? document.getElementById("txtManutencao").value.trim() : "";
+    const fileInput = document.getElementById("fileImgPromocao");
+    const msgStatus = document.getElementById("provedorManutencaoMsg");
+
+    const executarSalvamento = async (imgBase64) => {
+        try {
+            const dadosAtualizacao = {
+                manutencao_ativa: ativo,
+                mensagem_manutencao: msg
+            };
+
+            if (imgBase64 !== null) {
+                dadosAtualizacao.imagem_promocao = imgBase64;
+            }
+
+            console.log("📤 [Provedor] Enviando dados para o Firebase...");
+            await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), dadosAtualizacao);
+            console.log("✅ [Provedor] Dados salvos com sucesso no Firebase!");
+
+            if (typeof carregarDadosCliente === 'function') {
+                carregarDadosCliente();
+            }
+
+            if (msgStatus) {
+                msgStatus.style.color = "#10b981";
+                msgStatus.textContent = "Aviso e imagem atualizados com sucesso!";
+                setTimeout(() => { msgStatus.textContent = ""; }, 3000);
+            }
+        } catch (e) {
+            console.error("❌ [Provedor] Erro crítico ao salvar no Firebase:", e);
+            alert("Erro ao salvar aviso. Veja o console (F12).");
+        }
+    };
+
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64Image = e.target.result;
+            await executarSalvamento(base64Image);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else {
+        await executarSalvamento(null);
+    }
+};
+
+
+/*
+=========================================================
+CONFIGURAÇÃO FIREBASE
+=========================================================
+*/
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDMZ1faLyK_N77UE3B2Vtdrtmdpbh9FS8",
+  authDomain: "nfc-gestao.firebaseapp.com",
+  projectId: "nfc-gestao",
+  storageBucket: "nfc-gestao.firebasestorage.app",
+  messagingSenderId: "276463620862",
+  appId: "1:276463620862:web:4bbfa8b5c59f36f4bd0baf",
+  measurementId: "G-QDVQX0TJ6X"
+};
 window.salvarManutencao = async function() {
     // Pega o ID direto da URL (#nfc= ou #provedor=) ou das variáveis da tela
     let clienteId = null;
@@ -2229,12 +2311,12 @@ window.salvarManutencao = async function() {
 
             if (msgStatus) {
                 msgStatus.style.color = "#10b981";
-                msgStatus.textContent = "Aviso e imagem atualizados com sucesso!";
+                msgStatus.textContent = "Aviso atualizado com sucesso!";
                 setTimeout(() => { msgStatus.textContent = ""; }, 3000);
             }
         } catch (e) {
-            console.error("Erro ao salvar manutenção:", e);
-            alert("Erro ao salvar aviso.");
+            console.error("Erro crítico ao salvar no Firebase:", e);
+            alert("Erro ao salvar aviso. Veja o console (F12).");
         }
     };
 
@@ -2295,23 +2377,6 @@ window.limparAvisoGeral = async function() {
         alert("Erro ao executar a ação.");
     }
 };
-
-/*
-=========================================================
-CONFIGURAÇÃO FIREBASE
-=========================================================
-*/
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDMZ1faLyK_N77UE3B2Vtdrtmdpbh9FS8",
-  authDomain: "nfc-gestao.firebaseapp.com",
-  projectId: "nfc-gestao",
-  storageBucket: "nfc-gestao.firebasestorage.app",
-  messagingSenderId: "276463620862",
-  appId: "1:276463620862:web:4bbfa8b5c59f36f4bd0baf",
-  measurementId: "G-QDVQX0TJ6X"
-};
-
 const app =
   initializeApp(firebaseConfig);
 
@@ -3221,12 +3286,20 @@ function normalizarCliente(
         c.historicoAcessos
       )
         ? c.historicoAcessos
-        : []
+        : [],
+
+    manutencao_ativa:
+      Boolean(c.manutencao_ativa),
+
+    mensagem_manutencao:
+      String(c.mensagem_manutencao || ""),
+
+    imagem_promocao:
+      String(c.imagem_promocao || "")
 
   };
 
 }
-
 
 /*
 =========================================================
@@ -3483,118 +3556,122 @@ LISTENER MASTER
 function iniciarListenerClientes(){
 
   if(unsubscribeClientes){
-
     unsubscribeClientes();
-
-    unsubscribeClientes =
-      null;
-
+    unsubscribeClientes = null;
   }
 
-  const referencia =
-    collection(
-      db,
-      CLIENTES_COLLECTION
-    );
+  const referencia = collection(
+    db,
+    CLIENTES_COLLECTION
+  );
 
-  const consulta =
-    query(
-      referencia,
-      orderBy("nome")
-    );
+  const consulta = query(
+    referencia,
+    orderBy("nome")
+  );
 
-  unsubscribeClientes =
-    onSnapshot(
-
-      consulta,
-
-      snapshot => {
-
-        clientes =
-          snapshot.docs
-            .map(
-              docSnap => {
-
-                const dados =
-                  docSnap.data();
-
-                return normalizarCliente({
-
-                  id:
-                    docSnap.id,
-
-                  ...dados
-
-                });
-
-              }
-            )
-            .filter(
-              c =>
-                c &&
-                c.id &&
-                c.nome
-            );
-
-        render();
-
-        verificarVencimentos();
-
-        if(
-          location.hash
-            .toLowerCase()
-            .startsWith(
-              "#nfc="
-            )
-        ){
-
-      let id = location.hash.split('nfc=')[1]?.split('&')[0] || location.hash.split('provedor=')[1]?.split('&')[0];
-if (id) abrirNFC(id);
-
-        }
-
-      },
-
-      error => {
-
-        console.error(
-          "Erro no listener do Firestore:",
-          error
+  unsubscribeClientes = onSnapshot(
+    consulta,
+    snapshot => {
+      clientes = snapshot.docs
+        .map(
+          docSnap => {
+            const dados = docSnap.data();
+            return normalizarCliente({
+              id: docSnap.id,
+              ...dados
+            });
+          }
+        )
+        .filter(
+          c => c && c.id && c.nome
         );
 
-        const msg =
-          document.getElementById(
-            "saveMsg"
-          );
+      render();
 
-        if(msg){
+      verificarVencimentos();
+      
+      // --- VERIFICAÇÃO DO AVISO DE MANUTENÇÃO ---
+      const hashAtual = location.hash.toLowerCase();
+      if(hashAtual.startsWith("#nfc=") || hashAtual.startsWith("#provedor=")){
+        let id = location.hash.split('nfc=')[1]?.split('&')[0] || location.hash.split('provedor=')[1]?.split('&')[0];
+        
+        if (id) {
+          abrirNFC(id);
 
-          msg.textContent =
-            "⚠️ Erro de conexão com o banco de dados.";
+          // Pega os elementos da tela
+          const widgetAlerta = document.getElementById('alertaFlutuante');
+          const txtDisplay = document.getElementById('msgManutencaoCliente');
+          const containerImg = document.getElementById('containerImagemPromocao');
+          const caixaMensagem = document.getElementById('modalManutencao');
 
+          // TRAVA DE SEGURANÇA ABSOLUTA: O modal DEVE SEMPRE começar fechado ao carregar ou atualizar!
+          if (caixaMensagem) {
+            caixaMensagem.style.display = 'none';
+          }
+
+          // Acha o cliente atual na lista que acabou de vir do Firebase
+          const clienteAtual = clientes.find(c => c.id === id);
+
+          if (clienteAtual && clienteAtual.manutencao_ativa) {
+            const mensagemAtual = clienteAtual.mensagem_manutencao || "Aviso importante da rede.";
+            const chaveSessao = 'fechou_aviso_' + id + '_' + mensagemAtual.trim();
+            const jaFechou = sessionStorage.getItem(chaveSessao);
+
+            // Se estiver ativa e o cliente não fechou, mostra SÓ o sininho flutuante
+            if (widgetAlerta) {
+              widgetAlerta.style.display = jaFechou ? 'none' : 'block';
+            }
+
+            // Atualiza o texto lá dentro em segundo plano para quando o cliente clicar no sininho
+            if (txtDisplay) {
+              txtDisplay.textContent = mensagemAtual;
+            }
+
+            // Se houver imagem de promoção em Base64, exibe ela no container do modal
+            if (containerImg) {
+              if (clienteAtual.imagem_promocao) {
+                containerImg.innerHTML = `<img src="${clienteAtual.imagem_promocao}" style="max-width: 100%; border-radius: 8px;">`;
+                containerImg.style.display = 'block';
+              } else {
+                containerImg.innerHTML = '';
+                containerImg.style.display = 'none';
+              }
+            }
+          } else {
+            // Se não estiver ativa no painel, esconde o sininho
+            if (widgetAlerta) {
+              widgetAlerta.style.display = 'none';
+            }
+          }
         }
-
-        if(
-          location.hash
-            .toLowerCase()
-            .startsWith(
-              "#nfc="
-            )
-        ){
-
-          mostrarErroNFC(
-            "Acesso temporariamente indisponível",
-            "Não foi possível carregar os dados deste acesso NFC. Tente novamente."
-          );
-
-        }
-
       }
 
-    );
+    },
+    error => {
+      console.error(
+        "Erro no listener do Firestore:",
+        error
+      );
 
+      const msg = document.getElementById("saveMsg");
+      if(msg){
+        msg.textContent = "⚠️ Erro de conexão com o banco de dados.";
+      }
+
+      if(
+        location.hash
+          .toLowerCase()
+          .startsWith("#nfc=")
+      ){
+        mostrarErroNFC(
+          "Acesso temporariamente indisponível",
+          "Não foi possível carregar os dados deste acesso NFC. Tente novamente."
+        );
+      }
+    }
+  );
 }
-
 
 /*
 =========================================================
@@ -3940,77 +4017,55 @@ UPLOAD DA LOGO
 =========================================================
 */
 
-document
-  .getElementById(
-    "logoArquivo"
-  )
-  ?.addEventListener(
-    "change",
-    async event => {
+document.getElementById("logoArquivo")?.addEventListener("change", async event => {
+  const arquivo = event.target.files && event.target.files[0];
 
-      const arquivo =
-        event.target.files &&
-        event.target.files[0];
+  if (!arquivo) {
+    return;
+  }
 
-      if(!arquivo){
-        return;
-      }
+  if (!arquivo.type.startsWith("image/")) {
+    alert("Selecione um arquivo de imagem válido.");
+    event.target.value = "";
+    return;
+  }
 
-      if(
-        !arquivo.type.startsWith(
-          "image/"
-        )
-      ){
+  try {
+    // 1. Envia o arquivo de verdade para o Firebase Storage
+    const storage = getStorage();
+    const nomeArquivo = `perfis_provedores/${Date.now()}_${arquivo.name}`;
+    const storageRef = ref(storage, nomeArquivo);
 
-        alert(
-          "Selecione um arquivo de imagem válido."
-        );
+    const snapshot = await uploadBytes(storageRef, arquivo);
+    const urlDownload = await getDownloadURL(snapshot.ref);
 
-        event.target.value =
-          "";
+    // 2. Salva a URL (link leve) no input oculto/visível da logo
+    document
+      .getElementById(
+        "logo"
+      )
+      .value = urlDownload;
 
-        return;
+    // 3. Atualiza o preview visual na tela com o link do Storage
+    atualizarPreviewLogo(
+      urlDownload
+    );
 
-      }
+  } catch(error){
+    // (O seu código de erro continua igualzinho abaixo)
+    console.error(
+      "Erro ao processar logo:",
+      error
+    );
 
-      try{
+    alert(
+      error.message ||
+      "Não foi possível carregar a logo."
+    );
 
-        const base64 =
-          await imagemParaBase64(
-            arquivo
-          );
-
-        document
-          .getElementById(
-            "logo"
-          )
-          .value =
-            base64;
-
-        atualizarPreviewLogo(
-          base64
-        );
-
-      }catch(error){
-
-        console.error(
-          "Erro ao processar logo:",
-          error
-        );
-
-        alert(
-          error.message ||
-          "Não foi possível carregar a logo."
-        );
-
-        event.target.value =
-          "";
-
-      }
-
-    }
-  );
-
+    event.target.value = "";
+  }
+});
 
 document
   .getElementById(
@@ -6222,7 +6277,7 @@ ABRIR NFC
 window.abrirNFC = async function(id, objCliente = null) {
     const cliente = objCliente || clientes.find(item => item.id === id);
 
-   if (!cliente) {
+    if (!cliente) {
         // Se a lista de clientes ainda estiver vazia, dá um respiro de 1 segundo para o Firebase carregar
         if (clientes.length === 0) {
             setTimeout(() => abrirNFC(id, objCliente), 500);
@@ -6238,13 +6293,35 @@ window.abrirNFC = async function(id, objCliente = null) {
 
     registrarAcessoNFC(cliente.id);
     
-const alertaFlutuante = document.getElementById('alertaFlutuante');
+    const alertaFlutuante = document.getElementById('alertaFlutuante');
     const textoModal = document.getElementById('msgManutencaoCliente');
+    const widgetAlerta = document.getElementById('widgetFlutuanteAlerta');
+    const caixaMensagem = document.getElementById('caixaMensagemAlerta'); // << Pega a caixa interna do chat para forçar a abertura
+    const displayMensagem = document.getElementById('txtManutencaoDisplay');
+    const containerImg = document.getElementById('containerImagemPromocao');
+
     if (cliente.manutencao_ativa && cliente.mensagem_manutencao) {
-        alertaFlutuante.style.display = 'flex';
-        textoModal.textContent = cliente.mensagem_manutencao;
+        if (alertaFlutuante) alertaFlutuante.style.display = 'flex';
+        if (textoModal) textoModal.textContent = cliente.mensagem_manutencao;
+        
+        if (widgetAlerta) widgetAlerta.style.display = 'block';
+        if (caixaMensagem) caixaMensagem.style.display = 'none'; // << Abre o balão do chat automaticamente na tela
+        if (displayMensagem) displayMensagem.textContent = cliente.mensagem_manutencao;
+        
+        if (containerImg) {
+            // CORREÇÃO: Só exibe se houver imagem válida de verdade, ignorando "null", vazios ou espaços
+            if (cliente.imagem_promocao && cliente.imagem_promocao !== "null" && cliente.imagem_promocao.trim() !== "") {
+                containerImg.style.display = 'block';
+                containerImg.innerHTML = `<img src="${cliente.imagem_promocao}" style="max-width:100%; border-radius:8px; margin-top:8px;">`;
+            } else {
+                containerImg.style.display = 'none';
+                containerImg.innerHTML = '';
+            }
+        }
     } else {
-        alertaFlutuante.style.display = 'none';
+        if (alertaFlutuante) alertaFlutuante.style.display = 'none';
+        if (widgetAlerta) widgetAlerta.style.display = 'none';
+        if (caixaMensagem) caixaMensagem.style.display = 'none'; // << Fecha o chat se o provedor desativar
     }
 
     const admin =
@@ -6450,7 +6527,7 @@ const alertaFlutuante = document.getElementById('alertaFlutuante');
 
     marcarNFCPronto();
 
-  };
+};
 
 
 /*
@@ -6598,6 +6675,11 @@ function setLink(
   if(!el){
     return;
   }
+
+// Filtro de segurança: apaga o Gtt, Thh ou qualquer lixo antes do link
+    if (url) {
+   url = String(url).replace(/^.*?(https?:\/\/)/i, '$1');
+    }
 
   const link =
     normalizarLink(
@@ -7750,7 +7832,7 @@ PROCESSAR NFC
 =========================================================
 */
 window.salvarManutencao = async function() {
-    // Pega o ID direto da URL (#nfc= ou #provedor=) ou das variáveis da tela
+    // Pega o ID do cliente da URL ou das variáveis globais
     let clienteId = null;
     const hash = window.location.hash;
     if (hash && hash.includes('nfc=')) {
@@ -7768,60 +7850,60 @@ window.salvarManutencao = async function() {
         alert("Erro: ID do cliente não encontrado.");
         return;
     }
-    
-    const ativado = document.getElementById("checkManutencao") ? document.getElementById("checkManutencao").checked : false;
-    const mensagem = document.getElementById("txtMensagemManutencao") ? document.getElementById("txtMensagemManutencao").value : "";
-    const inputFile = document.getElementById("fileImgPromocao");
 
-    let imagemBase64 = "";
+    // Coleta os valores corretos dos inputs do painel
+    const ativo = document.getElementById("checkManutencao") ? document.getElementById("checkManutencao").checked : false;
+    const msg = document.getElementById("txtManutencao") ? document.getElementById("txtManutencao").value.trim() : "";
+    const fileInput = document.getElementById("fileImgPromocao");
+    const msgStatus = document.getElementById("provedorManutencaoMsg");
 
-    // Processa qualquer imagem (qualquer tamanho ou qualidade) sem travar
-    if (inputFile && inputFile.files && inputFile.files[0]) {
-        const file = inputFile.files[0];
-
-        imagemBase64 = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let largura = img.width;
-                    let altura = img.height;
-
-                    // Limite inteligente para manter alta qualidade sem estourar o banco
-                    const larguraMax = 1200;
-                    if (largura > larguraMax) {
-                        altura = Math.round((altura * larguraMax) / largura);
-                        largura = larguraMax;
-                    }
-
-                    canvas.width = largura;
-                    canvas.height = altura;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, largura, altura);
-
-                    resolve(canvas.toDataURL('image/jpeg', 0.85));
-                };
-                img.src = event.target.result;
+    const executarSalvamento = async (imgBase64) => {
+        try {
+            const dadosAtualizacao = {
+                manutencao_ativa: ativo,
+                mensagem_manutencao: msg
             };
-            reader.readAsDataURL(file);
-        });
-    }
 
-    try {
-        // Salva os dados atualizados no Firebase
-        await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), {
-            manutencao_ativa: ativado,
-            mensagem_manutencao: mensagem,
-            ...(imagemBase64 && { imagem_promocao: imagemBase64 })
-        });
+            // Se houver nova imagem, atualiza; senão, preserva ou limpa conforme necessário
+            if (imgBase64 !== null) {
+                dadosAtualizacao.imagem_promocao = imgBase64;
+            }
 
-        alert("Aviso e imagem atualizados com sucesso!");
-    } catch (error) {
-        console.error("Erro ao salvar aviso:", error);
-        alert("Erro ao enviar. Tente novamente.");
-    }
+            // Salva de forma atômica no Firestore
+            await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), dadosAtualizacao);
+
+            if (msgStatus) {
+                msgStatus.style.color = "#10b981";
+                msgStatus.textContent = "Aviso atualizado com sucesso!";
+                setTimeout(() => { msgStatus.textContent = ""; }, 3000);
+            }
+        } catch (e) {
+            console.error("Erro ao salvar no Firebase:", e);
+            alert("Erro ao salvar aviso.");
+        }
+    };
+
+    // Processa o upload da imagem se houver, ou salva direto o texto
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+  const arquivo = fileInput.files[0];
+  
+  // 1. Prepara o caminho no Storage
+  const storage = getStorage();
+  const nomeArquivo = `promocoes/${Date.now()}_${arquivo.name}`;
+  const storageRef = ref(storage, nomeArquivo);
+
+  // 2. Envia o arquivo de verdade para o Storage
+  const snapshot = await uploadBytes(storageRef, arquivo);
+
+  // 3. Pega a URL do link gerado
+  const urlDownload = await getDownloadURL(snapshot.ref);
+
+  // 4. Salva apenas o link no Firestore (Zero risco de estourar o banco!)
+  await executarSalvamento(urlDownload);
+} else {
+  await executarSalvamento(null);
 }
+};
 
 async function finalizarManutencao() {
     const clienteId = id; 
@@ -8370,13 +8452,14 @@ window.fecharAlerta = function() {
     <div id="caixaMensagemAlerta" style="display: none; position: absolute; bottom: 70px; right: 0; width: 280px; background: #1e1e2f; color: #fff; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); overflow: hidden;">
         <div style="background: #ef4444; padding: 12px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
             <span>📢 Comunicado / Promoção</span>
-          <button onclick="fecharAlerta()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; line-height: 1;">&times;</button>
+            <button onclick="fecharAlerta()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; line-height: 1;">&times;</button>
         </div>
         <div style="padding: 15px; font-size: 13px; line-height: 1.5; color: #e2e8f0;" id="txtManutencaoDisplay">
             Carregando mensagem...
-        <div id="containerImagemPromocao" style="display: none; padding: 10px;"></div>
+        </div>
+        <div id="containerImagemPromocao" style="display: none; padding: 10px; text-align: center;"></div>
         <div style="padding: 10px 15px; background: rgba(0,0,0,0.3); text-align: right;">
-       <button id="btnEntendidoAlerta" onclick="fecharAlerta()" style="background: #3b82f6; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Entendido</button>
+            <button id="btnEntendidoAlerta" onclick="fecharAlerta()" style="background: #3b82f6; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Entendido</button>
         </div>
     </div>
 </div>
