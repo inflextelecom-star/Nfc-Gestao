@@ -2420,6 +2420,8 @@ window.carregarDadosCliente = async function() {
     }
 };
 
+
+
 /*
 =========================================================
 CONFIGURAÇÃO FIREBASE
@@ -4611,6 +4613,9 @@ SALVAR PROVEDOR
 
       }
 
+      // Captura o MAC da URL de forma 100% segura
+      const macAtual = obterParametroUrl('mac') || obterParametroUrl('MAC') || '';
+
       const nome =
         document
           .getElementById(
@@ -4747,6 +4752,9 @@ SALVAR PROVEDOR
         dataAtivacao,
 
         dataVencimento,
+
+        // Vincula o MAC permanentemente ao salvar, se ele estiver presente na URL
+        ...(macAtual ? { mac: macAtual } : {}),
 
         ativo:
           vencido
@@ -8561,24 +8569,37 @@ window.tratarAcessoPublicoInvalido = function() {
 </div>
 
 <!-- ========================================== -->
-<!-- 2. PAINEL DO TÉCNICO (LOGIN E EDIÇÃO)      -->
+<!-- PAINEL DO TÉCNICO (LOGIN E EDIÇÃO UNIFICADO) -->
 <!-- ========================================== -->
 <div id="painelTecnicosDashboard" style="display: none; background: #fff; padding: 25px; border-radius: 10px; max-width: 450px; margin: 40px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: Arial, sans-serif; position: relative; z-index: 999999;">
   
+  <!-- 1. Tela de Login do Técnico -->
   <div id="techLoginBox">
     <h3 style="color: #333; margin-bottom: 10px;">🔐 Acesso do Técnico</h3>
-    <p style="color: #a58181; font-size: 13px; margin-bottom: 20px;">Entre com seu usuário e senha para gerenciar o cliente.</p>
+    <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Entre com seu usuário e senha para gerenciar o cliente.</p>
     <input type="text" id="techUser" placeholder="Usuário" style="width:100%; padding:10px; margin-bottom:12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
     <input type="password" id="techPass" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
     <button onclick="logarTecnico()" style="width:100%; padding:12px; background:#0066ff; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Entrar</button>
     <p id="techLoginMsg" style="color:#d9534f; font-size:12px; margin-top:10px; text-align:center;"></p>
   </div>
 
+  <!-- 2. Tela de Edição (Nome, CPF, Telefone e Senha do Wi-Fi) -->
   <div id="techEditBox" style="display: none;">
     <h3 style="color: #333; margin-bottom: 10px;">✏️ Atualizar Cliente (NFC)</h3>
-    <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Altere os dados que aparecerão na página pública.</p>
-    <input type="text" id="editNomeCliente" placeholder="Novo Nome do Cliente" style="width:100%; padding:10px; margin-bottom:12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
-    <input type="text" id="editCpfCliente" placeholder="Novo CPF" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <p style="color: #666; font-size: 13px; margin-bottom: 15px;">Altere os dados que aparecerão na página pública.</p>
+    
+    <label style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">Nome do Cliente</label>
+    <input type="text" id="editNomeCliente" placeholder="Novo Nome do Cliente" style="width:100%; padding:10px; margin-bottom:10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    
+    <label style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">CPF / CNPJ</label>
+    <input type="text" id="editCpfCliente" oninput="formatCpfCnpj(this)" placeholder="Novo CPF" style="width:100%; padding:10px; margin-bottom:10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    
+    <label style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 3px;">Telefone do Cliente</label>
+    <input type="text" id="editTelefoneCliente" oninput="formatPhone(this)" placeholder="(00) 00000-0000" style="width:100%; padding:10px; margin-bottom:10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    
+    <label style="font-size: 12px; font-weight: bold; color: #d97706; display: block; margin-bottom: 3px;">🔑 Senha do Wi-Fi</label>
+    <input type="text" id="editWifiCliente" placeholder="Senha do Wi-Fi" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #fcd34d; border-radius: 6px; box-sizing: border-box; background: #fffdf4;">
+
     <button onclick="salvarDadosClienteTecnico()" style="width:100%; padding:12px; background:#28a745; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Salvar Alterações</button>
     <button onclick="logoutTecnico()" style="width:100%; padding:10px; background:#6c757d; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:10px;">Sair</button>
     <p id="techEditMsg" style="color:#28a745; font-size:12px; margin-top:10px; text-align:center;"></p>
@@ -8648,30 +8669,6 @@ window.tratarAcessoPublicoInvalido = function() {
     </div>
   </div>
 </div>
-
-<!-- ========================================== -->
-<!-- PAINEL DO TÉCNICO (LOGIN E EDIÇÃO)         -->
-<!-- ========================================== -->
-<div id="painelTecnicosDashboard" style="display: none; background: #fff; padding: 25px; border-radius: 10px; max-width: 450px; margin: 40px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: Arial, sans-serif; position: relative; z-index: 999999;">
-  <div id="techLoginBox">
-    <h3 style="color: #333; margin-bottom: 10px;">🔐 Acesso do Técnico</h3>
-    <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Entre com seu usuário e senha para gerenciar o cliente.</p>
-    <input type="text" id="techUser" placeholder="Usuário" style="width:100%; padding:10px; margin-bottom:12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
-    <input type="password" id="techPass" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
-    <button onclick="logarTecnico()" style="width:100%; padding:12px; background:#0066ff; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Entrar</button>
-    <p id="techLoginMsg" style="color:#d9534f; font-size:12px; margin-top:10px; text-align:center;"></p>
-  </div>
-
-  <div id="techEditBox" style="display: none;">
-    <h3 style="color: #333; margin-bottom: 10px;">✏️ Atualizar Cliente (NFC)</h3>
-    <input type="text" id="editNomeCliente" placeholder="Novo Nome do Cliente" style="width:100%; padding:10px; margin-bottom:12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
-    <input type="text" id="editCpfCliente" placeholder="Novo CPF" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
-    <button onclick="salvarDadosClienteTecnico()" style="width:100%; padding:12px; background:#28a745; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Salvar Alterações</button>
-    <button onclick="logoutTecnico()" style="width:100%; padding:10px; background:#6c757d; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:10px;">Sair</button>
-    <p id="techEditMsg" style="color:#28a745; font-size:12px; margin-top:10px; text-align:center;"></p>
-  </div>
-</div>
-
 
 <!-- ========================================== -->
 <!-- SCRIPT DE CONTROLE                         -->
@@ -8924,7 +8921,7 @@ window.tratarAcessoPublicoInvalido = function() {
   }
   
   // --- OUTRAS FUNÇÕES DO SISTEMA ---
- async function logarTecnico() {
+async function logarTecnico() {
     const userField = document.getElementById('techUser');
     const passField = document.getElementById('techPass');
     const msgBox = document.getElementById('techLoginMsg');
@@ -8960,12 +8957,17 @@ window.tratarAcessoPublicoInvalido = function() {
         }
     }
 
-    // 3. CAPTURA DO CPF OFICIAL: Busca nas variáveis globais ou direto no Firestore via NFC da URL
+    // 3. CAPTURA DOS DADOS OFICIAIS (CPF, Telefone e Wi-Fi) com segurança
     let cpfReal = "";
+    let telefoneReal = "";
+    let wifiReal = "";
+
     const possiveisObjetos = [window.clienteAtual, window.dadosCliente, window.currentClient, window.cliente];
     for (let obj of possiveisObjetos) {
         if (obj && (obj.cpf || obj.documento)) {
             cpfReal = obj.cpf || obj.documento;
+            telefoneReal = obj.telefone || "";
+            wifiReal = obj.senhaWifi || obj.senha_wifi || "";
             break;
         }
     }
@@ -8982,44 +8984,30 @@ window.tratarAcessoPublicoInvalido = function() {
                     const json = await res.json();
                     const fields = json.fields || {};
                     cpfReal = fields.cpf?.stringValue || fields.documento?.stringValue || fields.cpfCliente?.stringValue || "";
+                    telefoneReal = fields.telefone?.stringValue || "";
+                    wifiReal = fields.senhaWifi?.stringValue || fields.senha_wifi?.stringValue || "";
                 }
             }
         } catch (e) {
-            console.warn("⚠️ Falha ao buscar CPF via API.");
+            console.warn("⚠️ Falha ao buscar dados via API.");
         }
     }
 
     if (!cpfReal) cpfReal = "01234567890"; // Fallback de segurança
 
-    // 4. INJEÇÃO CIRÚRGICA: Atribui os dados reais nos inputs do painel
+    // 4. INJEÇÃO CIRÚRGICA NOS INPUTS DO PAINEL
     const inputNome = document.getElementById('editNomeCliente');
     const inputCpf = document.getElementById('editCpfCliente');
+    const inputTelefone = document.getElementById('editTelefoneCliente');
+    const inputWifi = document.getElementById('editWifiCliente');
 
+    if (inputTelefone) inputTelefone.value = telefoneReal;
+    if (inputWifi) inputWifi.value = wifiReal;
     if (inputNome) inputNome.value = nomeReal;
     if (inputCpf) inputCpf.value = cpfReal;
 
-    console.log("🎉 SUCESSO TOTAL! Sincronização de nome e CPF oficial concluída no painel.");
+    console.log("🎉 SUCESSO TOTAL! Sincronização de nome, CPF, telefone e Wi-Fi concluída no painel.");
 }
-  // =======================================================================
-  // GATILHO INTELIGENTE: Abre o painel e carrega os técnicos automaticamente
-  // =======================================================================
-  document.addEventListener('DOMContentLoaded', () => {
-    const conteudo = document.getElementById('provedorConteudo');
-    
-    if (conteudo) {
-      if (window.getComputedStyle(conteudo).display !== 'none' && !conteudo.classList.contains('hidden')) {
-        liberarPainelGestaoTecnicos();
-      }
-
-      const observer = new MutationObserver(() => {
-        if (window.getComputedStyle(conteudo).display !== 'none' && !conteudo.classList.contains('hidden')) {
-          liberarPainelGestaoTecnicos();
-          observer.disconnect(); 
-        }
-      });
-      observer.observe(conteudo, { attributes: true, attributeFilter: ['style', 'class'] });
-    }
-  });
 
 
 window.carregarDadosParaEdicao = async function() {
@@ -9116,8 +9104,22 @@ window.carregarDadosParaEdicao = async function() {
                 console.log("✅ Tela de CPF do provedor isolada com sucesso para:", nomeExibicao);
             }
         } else {
-            if (inactiveBox) inactiveBox.setAttribute("style", "display: block !important; visibility: visible !important;");
+            // 🚀 TRATAMENTO INTELIGENTE PARA TAG VIRGEM / NOVA
+            console.log("Tag NFC nova detectada (Virgem).");
             if (clientPage) clientPage.setAttribute("style", "display: none !important; visibility: hidden !important;");
+            if (inactiveBox) {
+                inactiveBox.setAttribute("style", "display: block !important; visibility: visible !important;");
+                inactiveBox.innerHTML = `
+                    <div style="text-align: center; padding: 20px; font-family: system-ui, sans-serif; color: #f8fafc;">
+                        <h2 style="color: #f59e0b; margin-bottom: 10px;">⚠️ Tag NFC Nova / Não Vinculada</h2>
+                        <p style="color: #cbd5e1; margin-bottom: 15px;">Este chip ainda não está associado a nenhum cliente no sistema.</p>
+                        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 20px;">ID / UID da Tag detectada: <code style="background: #1e293b; padding: 4px 8px; border-radius: 4px; color: #38bdf8;">${tagId}</code></p>
+                        <button onclick="if(typeof toggleFormularioNovoCliente === 'function') { toggleFormularioNovoCliente(); } else { alert('Abra o painel do provedor para cadastrar.'); }" style="background: #16a34a; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);">
+                            ➕ Cadastrar Cliente para esta Tag Agora
+                        </button>
+                    </div>
+                `;
+            }
         }
     } catch (e) {
         console.error("❌ Erro ao buscar dados no Firebase:", e);
@@ -9155,6 +9157,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 window.addEventListener('DOMContentLoaded', carregarDadosParaEdicao);
+
+// ---> ACRESCENTE APENAS ESTAS LINHAS ABAIXO DO SEU CÓDIGO EXISTENTE:
+if (typeof verificarAutenticacaoPorMac === 'function') {
+    verificarAutenticacaoPorMac();
+}
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', window.carregarClientesProvedor);
@@ -9747,6 +9754,8 @@ window.provedorCopiarLinkGerado = function() {
     aplicarNomeReal();
 })();
 
+
+
 // 🚀 GATILHO AUTOMÁTICO BLINDADO: Aguarda o Firebase acordar e dispara a leitura
 setTimeout(() => {
     if (typeof window.carregarDadosCliente === 'function') {
@@ -9875,6 +9884,44 @@ window.copiarSenhaWifiPublica = function() {
         prompt("Copie a senha manualmente:", senha);
     });
 };
+
+
+// ==========================================
+// MÓDULO DE RECONHECIMENTO AUTOMÁTICO POR MAC
+// ==========================================
+function obterParametroUrl(nome) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has(nome)) return urlParams.get(nome);
+    const hash = window.location.hash;
+    const regex = new RegExp(`[#&]${nome}=([^&]+)`);
+    const match = hash.match(regex);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+async function verificarAutenticacaoPorMac() {
+    const macUrl = obterParametroUrl('mac') || obterParametroUrl('MAC');
+    const isTecnico = obterParametroUrl('tecnico') === 'sim' || window.location.hash.includes('tecnico=sim');
+
+    if (isTecnico) return; // Se for o técnico acessando, deixa o painel dele livre
+    if (!macUrl) return;   // Se não tiver MAC na URL, o sistema segue o fluxo normal
+
+    try {
+        const q = query(collection(db, "clientesNfc"), where("mac", "==", macUrl));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const docSnap = querySnapshot.docs[0];
+            const dadosCliente = docSnap.data();
+            
+            // Se encontrou o MAC cadastrado, puxa os dados para a tela automaticamente
+            if (typeof carregarInterfaceCliente === 'function') {
+                carregarInterfaceCliente(dadosCliente, docSnap.id);
+            }
+        }
+    } catch (error) {
+        console.error("Erro ao verificar o MAC no Firebase:", error);
+    }
+}
 </script>
 
 <!-- ========================================== -->
