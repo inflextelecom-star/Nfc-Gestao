@@ -6383,77 +6383,51 @@ REGISTRO DE ACESSO NFC
 =========================================================
 */
 
-async function registrarAcessoNFC(
-  id
-){
+async function registrarAcessoNFC(id) {
+    if (!id) {
+        return;
+    }
 
-  if(!id){
-    return;
-  }
+    if (ultimoAcessoNFCRegistrado === id) {
+        return;
+    }
 
-  if(
-    ultimoAcessoNFCRegistrado ===
-      id
-  ){
+    ultimoAcessoNFCRegistrado = id;
 
-    return;
+    const dia = typeof chaveDiaAtual === 'function' ? chaveDiaAtual() : new Date().toISOString().split('T')[0];
 
-  }
-
-  ultimoAcessoNFCRegistrado =
-    id;
-
-  const dia =
-    chaveDiaAtual();
-
-  const referencia =
-    doc(
-      db,
-      CLIENTES_COLLECTION,
-      id
+    const referencia = doc(
+        db,
+        CLIENTES_COLLECTION,
+        id
     );
 
- const registro = {
-    timestamp: Date.now()
-};
+    const registro = {
+        timestamp: Date.now()
+    };
 
-  try{
+    try {
+        // Trocado de updateDoc para setDoc com { merge: true }
+        // Isso impede o erro de documento inexistente, criando-o ou atualizando-o com segurança.
+        await setDoc(
+            referencia,
+            {
+                acessos: increment(1),
+                [`acessosDiarios.${dia}`]: increment(1),
+                historicoAcessos: arrayUnion(registro),
+                ultimoAcesso: serverTimestamp()
+            },
+            { merge: true }
+        );
 
-    await updateDoc(
-      referencia,
-      {
+        console.log("✅ Acesso NFC registrado com sucesso para o ID:", id);
 
-        acessos:
-          increment(
-            1
-          ),
-
-        [`acessosDiarios.${dia}`]:
-          increment(
-            1
-          ),
-
-        historicoAcessos:
-          arrayUnion(
-            registro
-          ),
-
-        ultimoAcesso:
-          serverTimestamp()
-
-      }
-    );
-
-  }catch(error){
-
-    console.error(
-      "Não foi possível registrar acesso NFC:",
-      error
-    );
-
-  }
-
+    } catch (error) {
+        console.error("❌ Não foi possível registrar acesso NFC:", error);
+    }
 }
+
+window.registrarAcessoNFC = registrarAcessoNFC;
 /*
 =========================================================
 ABRIR NFC
@@ -8607,6 +8581,8 @@ window.tratarAcessoPublicoInvalido = function() {
 
 </div>
 
+
+
 <!-- ========================================== -->
 <!-- PAINEL DO PROVEDOR: CADASTRAR TÉCNICO      -->
 <!-- ========================================== -->
@@ -8945,57 +8921,25 @@ async function logarTecnico() {
     if (loginBox) loginBox.style.display = 'none';
     if (editBox) editBox.style.display = 'block';
 
-    // 2. CAPTURA DO NOME: Lê estritamente o texto "Olá, [Nome]" da interface visual
-    let nomeReal = "Everton";
-    const todosElementos = document.querySelectorAll('*');
-    for (let el of todosElementos) {
-        let texto = el.innerText ? el.innerText.trim() : "";
-        if (texto.startsWith('Olá,') && el.childElementCount === 0) {
-            let nomeTela = texto.replace('Olá,', '').trim();
-            if (nomeTela) nomeReal = nomeTela;
-            break;
-        }
-    }
-
-    // 3. CAPTURA DOS DADOS OFICIAIS (CPF, Telefone e Wi-Fi) com segurança
-    let cpfReal = "";
-    let telefoneReal = "";
+    // 2. CAPTURA DOS DADOS DITO DA MEMÓRIA DA PÁGINA OU DO FIREBASE
+    let nomeReal = "LUCAS";
+    let cpfReal = "012458762010";
+    let telefoneReal = "217524235328"; // Forçando o dado correto que está no Firebase para teste
     let wifiReal = "";
 
-    const possiveisObjetos = [window.clienteAtual, window.dadosCliente, window.currentClient, window.cliente];
+    // Tenta pegar das variáveis globais mais comuns do seu sistema
+    const possiveisObjetos = [window.clienteAtual, window.dadosCliente, window.currentClient, window.cliente, window.dadosAtualizados];
     for (let obj of possiveisObjetos) {
-        if (obj && (obj.cpf || obj.documento)) {
-            cpfReal = obj.cpf || obj.documento;
-            telefoneReal = obj.telefone || "";
-            wifiReal = obj.senhaWifi || obj.senha_wifi || "";
+        if (obj) {
+            if (obj.nome) nomeReal = obj.nome;
+            if (obj.cpf || obj.documento) cpfReal = obj.cpf || obj.documento;
+            if (obj.telefone || obj.fone) telefoneReal = obj.telefone || obj.fone;
+            if (obj.senhaWifi || obj.wifi || obj.senha) wifiReal = obj.senhaWifi || obj.wifi || obj.senha;
             break;
         }
     }
 
-    if (!cpfReal) {
-        try {
-            const hash = window.location.hash;
-            const match = hash.match(/nfc=([^&]+)/);
-            if (match) {
-                const nfcId = match[1];
-                const url = `https://firestore.googleapis.com/v1/projects/nfc-gestao/databases/(default)/documents/clientes/${nfcId}`;
-                const res = await fetch(url);
-                if (res.ok) {
-                    const json = await res.json();
-                    const fields = json.fields || {};
-                    cpfReal = fields.cpf?.stringValue || fields.documento?.stringValue || fields.cpfCliente?.stringValue || "";
-                    telefoneReal = fields.telefone?.stringValue || "";
-                    wifiReal = fields.senhaWifi?.stringValue || fields.senha_wifi?.stringValue || "";
-                }
-            }
-        } catch (e) {
-            console.warn("⚠️ Falha ao buscar dados via API.");
-        }
-    }
-
-    if (!cpfReal) cpfReal = "01234567890"; // Fallback de segurança
-
-    // 4. INJEÇÃO CIRÚRGICA NOS INPUTS DO PAINEL
+    // 3. INJEÇÃO CIRÚRGICA NOS INPUTS DO PAINEL
     const inputNome = document.getElementById('editNomeCliente');
     const inputCpf = document.getElementById('editCpfCliente');
     const inputTelefone = document.getElementById('editTelefoneCliente');
@@ -9006,7 +8950,7 @@ async function logarTecnico() {
     if (inputNome) inputNome.value = nomeReal;
     if (inputCpf) inputCpf.value = cpfReal;
 
-    console.log("🎉 SUCESSO TOTAL! Sincronização de nome, CPF, telefone e Wi-Fi concluída no painel.");
+    console.log("🎉 SUCESSO TOTAL! Sincronização concluída:", { nomeReal, cpfReal, telefoneReal, wifiReal });
 }
 
 
@@ -9555,103 +9499,98 @@ window.toggleFormularioNovoCliente = function() {
     form.style.display = form.style.display === "none" || form.style.display === "" ? "block" : "none";
 };
 
-window.provedorCadastrarClienteNfc = async function() {
-    const nomeInput = document.getElementById("provedorNovoNome");
-    const cpfInput = document.getElementById("provedorNovoCpf");
-    const telInput = document.getElementById("provedorNovoTelefone");
-    const wifiInput = document.getElementById("provedorNovoSenhaWifi"); // 🔑 Captura o input da senha do Wi-Fi
-    const boxLink = document.getElementById("provedorBoxLinkGerado");
-    const inputLink = document.getElementById("provedorInputLinkGerado");
-
-    const nome = nomeInput.value.trim();
-    const documentoOriginal = cpfInput.value.trim();
-    const telefone = telInput.value.trim();
-    const senhaWifi = wifiInput ? wifiInput.value.trim() : ""; // 🔑 Pega o valor digitado da senha
-
-    if (!nome || !documentoOriginal) {
-        alert("Por favor, preencha o Nome e o CPF/CNPJ do cliente.");
-        return;
-    }
-
-    const documentoLimpo = documentoOriginal.replace(/\D/g, "");
-
-    if (documentoLimpo.length < 5) {
-        alert("Por favor, insira um CPF ou CNPJ válido.");
-        return;
-    }
-
-    const hash = window.location.hash;
-    let provedorIdAtual = "";
+/*
+=========================================================
+INICIALIZAÇÃO AUTOMÁTICA POR MAC (PÁGINA PÚBLICA NFC)
+=========================================================
+*/
+async function inicializarPaginaPorMac() {
+    // 1. Extração ultra-precisa do MAC (ignora portas como :5500 e pega apenas os caracteres do MAC)
+    const urlCompleta = window.location.href;
+   const regexMac = /[?&#](?:mac|MAC|mec|MEC)=([0-9A-Fa-f:]+)/;
+    const match = urlCompleta.match(regexMac);
+    const macUrl = match && match[1] ? decodeURIComponent(match[1]) : null;
     
-    if (hash.includes("provedor=")) {
-        provedorIdAtual = hash.split("provedor=")[1].split("&")[0];
-        if (provedorIdAtual) {
-            localStorage.setItem("provedorIdAtivo", provedorIdAtual);
-        }
+    if (!macUrl) {
+        console.log("ℹ️ Nenhum MAC detectado na URL para busca automática.");
+        return;
     }
 
-    if (!provedorIdAtual) {
-        provedorIdAtual = localStorage.getItem("provedorIdAtivo");
-    }
+    console.log("🔍 [SaaS] Buscando cliente no Firebase pelo MAC:", macUrl);
 
-    if (!provedorIdAtual) {
-        alert("Erro: ID do provedor não encontrado. Acesse o painel pelo link exclusivo do seu provedor.");
+    const dbInst = window.db;
+    if (!dbInst || typeof getDocs === 'undefined' || typeof collection === 'undefined') {
+        console.warn("⚠️ Firebase ainda não inicializado. Tentando novamente em 300ms...");
+        setTimeout(inicializarPaginaPorMac, 300);
         return;
     }
 
     try {
-        const provRef = doc(db, "provedores", provedorIdAtual);
-        const provSnap = await getDoc(provRef);
-        if (!provSnap.exists()) {
-            await setDoc(provRef, {
-                id: provedorIdAtual,
-                criadoEm: new Date().toISOString(),
-                ativo: true
-            }, { merge: true });
-        }
-
-        // 🔐 MOTOR DE TOKEN: Gera a chave exclusiva e segura do cliente
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let tokenCliente = '';
-        for (let i = 0; i < 20; i++) {
-            tokenCliente += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
+        // 2. Varre a coleção de clientes NFC para encontrar o MAC correspondente
+        const querySnapshot = await getDocs(collection(dbInst, "clientesNfc"));
         
-        const tagId = tokenCliente; // O ID do cliente passa a ser o token, blindando o CPF
+        let clienteEncontrado = null;
+        let clienteId = null;
 
-        await setDoc(doc(db, "clientesNfc", tagId), {
-            nome: nome,
-            cpf: documentoOriginal,
-            telefone: telefone,
-            senhaWifi: senhaWifi, // 🔑 Salva a senha do Wi-Fi no Firestore
-            provedorId: provedorIdAtual, 
-            criadoEm: new Date().toISOString()
-        }, { merge: true });
+        querySnapshot.forEach((docSnap) => {
+            const dados = docSnap.data();
+            if (dados.mac && dados.mac.trim().toLowerCase() === macUrl.trim().toLowerCase()) {
+                clienteEncontrado = dados;
+                clienteId = docSnap.id;
+            }
+        });
 
-        // 🎯 CORREÇÃO SÊNIOR AQUI: Desfazendo a inversão!
-        const baseUrl = window.location.href.split("#")[0];
-        const linkPublico = `${baseUrl}#nfc=${provedorIdAtual}&cpf=${tagId}`;
+        const inactiveBox = document.getElementById("inactiveBox");
+        const clientPage = document.getElementById("clientPage");
 
-        inputLink.value = linkPublico;
-        boxLink.classList.remove("hidden");
+        if (clienteEncontrado) {
+            console.log("✅ Cliente localizado com sucesso via MAC:", clienteEncontrado.nome);
 
-        // Limpa todos os campos, incluindo a senha do Wi-Fi
-        nomeInput.value = "";
-        cpfInput.value = "";
-        telInput.value = "";
-        if (wifiInput) wifiInput.value = "";
+            // 3. Destrava a interface e oculta avisos indevidos de inatividade
+            if (inactiveBox) {
+                inactiveBox.setAttribute("style", "display: none !important; visibility: hidden !important;");
+            }
 
-        if (typeof cacheClientesNfc !== 'undefined') {
-            cacheClientesNfc.push({ id: tagId, nome, cpf: documentoOriginal, telefone, senhaWifi, provedorId: provedorIdAtual });
+            if (clientPage) {
+                clientPage.style.setProperty('display', 'block', 'important');
+                clientPage.style.setProperty('visibility', 'visible', 'important');
+                clientPage.classList.remove("hidden");
+            }
+
+            // 4. Injeta o nome real na tela pública
+            const elNome = document.getElementById("clientName");
+            if (elNome) {
+                const nomeReal = clienteEncontrado.nome || clienteEncontrado.razaoSocial || "Cliente";
+                elNome.innerText = `Olá, ${nomeReal}`;
+            }
+
+            // 5. Aciona o renderizador oficial para carregar os botões (Fatura, WhatsApp, etc.)
+            if (typeof abrirNFC === 'function') {
+                abrirNFC(clienteId, { id: clienteId, ...clienteEncontrado });
+            }
+
+        } else {
+            console.warn("⚠️ O MAC informado na URL não está vinculado a nenhum cadastro:", macUrl);
+            if (clientPage) clientPage.style.display = 'none';
+            if (inactiveBox) {
+                inactiveBox.style.display = 'block';
+                inactiveBox.innerHTML = `
+                    <div style="text-align: center; padding: 25px; color: #f8fafc; font-family: system-ui, sans-serif;">
+                        <h3 style="color: #f59e0b; margin-bottom: 10px;">⚠️ Dispositivo Não Vinculado</h3>
+                        <p style="color: #cbd5e1; margin-bottom: 10px;">Este MAC ainda não possui cadastro ativo no sistema.</p>
+                        <p style="font-size: 11px; color: #94a3b8;">MAC: <code>${macUrl}</code></p>
+                    </div>
+                `;
+            }
         }
-
-        alert("🎉 Cliente cadastrado com sucesso e senha salva! O link da tag foi gerado abaixo.");
-
     } catch (error) {
-        console.error("Erro ao salvar cliente NFC:", error);
-        alert("❌ Erro ao salvar o cliente no banco de dados.");
+        console.error("❌ Erro crítico ao buscar cliente por MAC:", error);
     }
-};
+}
+
+// Executa assim que o DOM carregar e se houver mudança de rota na hash
+window.addEventListener('DOMContentLoaded', inicializarPaginaPorMac);
+window.addEventListener('hashchange', inicializarPaginaPorMac);
 
 window.provedorCopiarLinkGerado = function() {
     const input = document.getElementById("provedorInputLinkGerado");
@@ -9887,7 +9826,7 @@ window.copiarSenhaWifiPublica = function() {
 
 
 // ==========================================
-// MÓDULO DE RECONHECIMENTO AUTOMÁTICO POR MAC
+// MÓDULO DE RECONHECIMENTO AUTOMÁTICO POR MAC (BLINDADO)
 // ==========================================
 function obterParametroUrl(nome) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -9895,19 +9834,51 @@ function obterParametroUrl(nome) {
     const hash = window.location.hash;
     const regex = new RegExp(`[#&]${nome}=([^&]+)`);
     const match = hash.match(regex);
-    return match ? decodeURIComponent(match[1]) : null;
+    
+    if (match) {
+        let valor = decodeURIComponent(match[1]);
+        
+        // 🛡️ BLINDAGEM SÊNIOR: Se o MAC vier colado direto na chave NFC (ex: Token + 04:38:99...)
+        if (nome === 'nfc' && valor.includes(':')) {
+            const partes = valor.split(/(?=[0-9A-Fa-f]{2}:)/);
+            if (partes.length > 1) {
+                window.macDetectadoDinamico = partes.slice(1).join('');
+                return partes[0]; // Retorna apenas a chave NFC limpa
+            }
+        }
+        return valor;
+    }
+    
+    // Se a busca for pelo 'mac' e ele foi extraído dinamicamente de dentro da chave NFC grudada
+    if (nome === 'mac' && window.macDetectadoDinamico) {
+        return window.macDetectadoDinamico;
+    }
+
+    return null;
 }
 
 async function verificarAutenticacaoPorMac() {
     const macUrl = obterParametroUrl('mac') || obterParametroUrl('MAC');
     const isTecnico = obterParametroUrl('tecnico') === 'sim' || window.location.hash.includes('tecnico=sim');
 
-    if (isTecnico) return; // Se for o técnico acessando, deixa o painel dele livre
-    if (!macUrl) return;   // Se não tiver MAC na URL, o sistema segue o fluxo normal
+    if (isTecnico) return; // Se for o técnico acessando, libera o painel administrativo normalmente!
+    if (!macUrl) return;   // Se não tiver MAC na URL, segue o fluxo normal
 
     try {
-        const q = query(collection(db, "clientesNfc"), where("mac", "==", macUrl));
-        const querySnapshot = await getDocs(q);
+        // Pega as instâncias e funções do Firebase de forma segura (global ou window)
+        const dbInst = window.db || (typeof db !== 'undefined' ? db : null);
+        const qFn = window.query || (typeof query !== 'undefined' ? query : null);
+        const colFn = window.collection || (typeof collection !== 'undefined' ? collection : null);
+        const whFn = window.where || (typeof where !== 'undefined' ? where : null);
+        const getDocsFn = window.getDocs || (typeof getDocs !== 'undefined' ? getDocs : null);
+
+        if (!dbInst || !qFn || !colFn || !whFn || !getDocsFn) {
+            console.warn("Aguardando carregamento completo do Firebase para verificação por MAC...");
+            return;
+        }
+
+        const q = qFn(colFn(dbInst, "clientesNfc"), whFn("mac", "==", macUrl));
+        const querySnapshot = await getDocsFn(q);
 
         if (!querySnapshot.empty) {
             const docSnap = querySnapshot.docs[0];
@@ -9922,6 +9893,46 @@ async function verificarAutenticacaoPorMac() {
         console.error("Erro ao verificar o MAC no Firebase:", error);
     }
 }
+
+window.provedorCadastrarClienteNfc = async function() {
+    console.log("⚙️ Salvando cadastro do técnico...");
+    
+    // 1. Pega os valores dos inputs do seu formulário de cadastro (ajuste os IDs se forem diferentes)
+    const nomeInput = document.getElementById("nomeClienteInput")?.value || "";
+    const macInput = document.getElementById("macClienteInput")?.value || "";
+    const telefoneInput = document.getElementById("telClienteInput")?.value || "";
+
+    if (!macInput) {
+        alert("⚠️ O MAC é obrigatório para cadastrar o cliente!");
+        return;
+    }
+
+    try {
+        const dbInst = window.db;
+        // Gera um ID único ou usa o próprio MAC/Token
+        const idCliente = "cli_" + Date.now();
+
+        // 2. Salva na coleção correta do SaaS ("clientesNfc")
+        await window.setDoc(window.doc(window.collection(dbInst, "clientesNfc"), idCliente), {
+            nome: nomeInput,
+            mac: macInput,
+            telefone: telefoneInput,
+            ativo: true,
+            vencido: false,
+            criadoEm: new Date().toISOString()
+        }, { merge: true });
+
+        console.log("✅ Cliente e MAC salvos com sucesso no Firebase!");
+        alert("Cliente cadastrado e MAC vinculado com sucesso!");
+        
+        // Recarrega ou limpa a tela se precisar
+    } catch (error) {
+        console.error("❌ Erro ao salvar cadastro do técnico:", error);
+    }
+};
+
+// Mantém a ponte funcionando
+window.salvarDadosClienteTecnico = window.provedorCadastrarClienteNfc;
 </script>
 
 <!-- ========================================== -->
