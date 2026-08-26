@@ -8937,7 +8937,7 @@ async function logarTecnico() {
             if (obj.senhaWifi || obj.wifi || obj.senha) wifiReal = obj.senhaWifi || obj.wifi || obj.senha;
             break;
         }
-    }
+    }alert("⚠️ O MAC é obrigatório
 
     // 3. INJEÇÃO CIRÚRGICA NOS INPUTS DO PAINEL
     const inputNome = document.getElementById('editNomeCliente');
@@ -9897,7 +9897,7 @@ async function verificarAutenticacaoPorMac() {
 window.provedorCadastrarClienteNfc = async function() {
     console.log("⚙️ Salvando cadastro do técnico...");
     
-// 1. CAPTURA INTELIGENTE DO MAC/MEC DIRETO DA URL
+    // 1. CAPTURA INTELIGENTE DO MAC/MEC DIRETO DA URL
     const urlParams = new URLSearchParams(window.location.search);
     let macUrl = urlParams.get('mec') || urlParams.get('mac');
     
@@ -9907,10 +9907,14 @@ window.provedorCadastrarClienteNfc = async function() {
         macUrl = hashParams.get('mec') || hashParams.get('mac');
     }
 
-    // 1. Pega os valores dos inputs do seu formulário de cadastro (ajuste os IDs se forem diferentes)
-    const nomeInput = document.getElementById("nomeClienteInput")?.value || "";
-    const macInput = document.getElementById("macClienteInput")?.value || "";
-    const telefoneInput = document.getElementById("telClienteInput")?.value || "";
+    // 2. PEGA OS VALORES DOS INPUTS DO PAINEL (Com suporte aos IDs reais do HTML)
+    const nomeInput = document.getElementById("editNomeCliente")?.value || document.getElementById("nomeClienteInput")?.value || "";
+    const cpfInput = document.getElementById("editCpfCliente")?.value || document.getElementById("cpfClienteInput")?.value || "";
+    const telefoneInput = document.getElementById("editTelefoneCliente")?.value || document.getElementById("telClienteInput")?.value || "";
+    const wifiInput = document.getElementById("editWifiCliente")?.value || document.getElementById("wifiClienteInput")?.value || "";
+
+    // 3. O MAC FINAL USA O DA URL AUTOMATICAMENTE (Fim dos alertas!)
+    const macInput = macUrl || document.getElementById("editMacCliente")?.value || "";
 
     if (!macInput) {
         alert("⚠️ O MAC é obrigatório para cadastrar o cliente!");
@@ -9919,25 +9923,30 @@ window.provedorCadastrarClienteNfc = async function() {
 
     try {
         const dbInst = window.db;
-        // Gera um ID único ou usa o próprio MAC/Token
+        // Gera um ID único para o registro
         const idCliente = "cli_" + Date.now();
 
-        // 2. Salva na coleção correta do SaaS ("clientesNfc")
+        // 4. SALVA NO FIREBASE COM TODOS OS DADOS (Nome, CPF, Telefone, Senha do Wi-Fi e o MAC)
         await window.setDoc(window.doc(window.collection(dbInst, "clientesNfc"), idCliente), {
             nome: nomeInput,
+            cpf: cpfInput,
             mac: macInput,
             telefone: telefoneInput,
+            senhaWifi: wifiInput,
             ativo: true,
             vencido: false,
             criadoEm: new Date().toISOString()
         }, { merge: true });
 
-        console.log("✅ Cliente e MAC salvos com sucesso no Firebase!");
+        console.log("✅ Cliente, MAC e Senha do Wi-Fi salvos com sucesso no Firebase!");
         alert("Cliente cadastrado e MAC vinculado com sucesso!");
         
-        // Recarrega ou limpa a tela se precisar
+        // Recarrega a página para atualizar o status do cliente
+        location.reload();
+
     } catch (error) {
         console.error("❌ Erro ao salvar cadastro do técnico:", error);
+        alert("Erro ao salvar no banco de dados: " + error.message);
     }
 };
 
