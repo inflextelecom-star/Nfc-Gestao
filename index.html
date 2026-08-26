@@ -9897,6 +9897,16 @@ async function verificarAutenticacaoPorMac() {
 window.provedorCadastrarClienteNfc = async function() {
     console.log("⚙️ Salvando cadastro do técnico...");
     
+// 1. CAPTURA INTELIGENTE DO MAC/MEC DIRETO DA URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let macUrl = urlParams.get('mec') || urlParams.get('mac');
+    
+    if (!macUrl && window.location.hash) {
+        const hashLimpo = window.location.hash.replace('#', '?');
+        const hashParams = new URLSearchParams(hashLimpo);
+        macUrl = hashParams.get('mec') || hashParams.get('mac');
+    }
+
     // 1. Pega os valores dos inputs do seu formulário de cadastro (ajuste os IDs se forem diferentes)
     const nomeInput = document.getElementById("nomeClienteInput")?.value || "";
     const macInput = document.getElementById("macClienteInput")?.value || "";
