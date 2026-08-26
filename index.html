@@ -9033,10 +9033,18 @@ window.carregarDadosParaEdicao = async function() {
     let tagId = null;
     let tipo = 'cliente';
 
-    // 2. Varredura da URL e Hash
+    // 2. Varredura da URL e Hash com prioridade absoluta para o token do cliente (cpf=)
+    const hash = window.location.hash;
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('nfc')) {
-        tagId = urlParams.get('nfc');
+
+    const matchCpfHash = hash.match(/[#&]cpf=([^&]+)/);
+    const paramCpf = urlParams.get('cpf');
+
+    if (matchCpfHash) {
+        tagId = matchCpfHash[1];
+        tipo = 'cliente';
+    } else if (paramCpf) {
+        tagId = paramCpf;
         tipo = 'cliente';
     } else if (urlParams.get('provedor')) {
         tagId = urlParams.get('provedor');
@@ -9044,15 +9052,18 @@ window.carregarDadosParaEdicao = async function() {
     } else if (urlParams.get('tag')) {
         tagId = urlParams.get('tag');
         tipo = 'cliente';
-    }
-
-    if (!tagId && window.location.hash) {
-        const hash = window.location.hash;
-        if (hash.includes('nfc=')) {
-            tagId = hash.split('nfc=')[1].split('&')[0];
+    } else if (hash.includes('provedor=')) {
+        tagId = hash.split('provedor=')[1].split('&')[0];
+        tipo = 'provedor';
+    } else if (hash.includes('nfc=')) {
+        // Se tem nfc na hash, verifica se há um cpf anexado junto
+        const subMatch = hash.match(/[#&]cpf=([^&]+)/);
+        if (subMatch) {
+            tagId = subMatch[1];
             tipo = 'cliente';
-        } else if (hash.includes('provedor=')) {
-            tagId = hash.split('provedor=')[1].split('&')[0];
+        } else {
+            // Se for apenas nfc= sem cpf, trata como provedor
+            tagId = hash.split('nfc=')[1].split('&')[0];
             tipo = 'provedor';
         }
     }
@@ -9085,7 +9096,6 @@ window.carregarDadosParaEdicao = async function() {
                     if (inactiveBox) {
                         inactiveBox.setAttribute("style", "display: block !important; visibility: visible !important;");
                         
-                        // 👉 Coloque este trecho aqui dentro:
                         const elAvisoTexto = inactiveBox.querySelector('p'); 
                         if (elAvisoTexto && dados.aviso) {
                             elAvisoTexto.innerText = dados.aviso;
@@ -9651,16 +9661,36 @@ window.provedorCopiarLinkGerado = function() {
     });
 };
  
-// === SCRIPT DEFINITIVO DO CLIENTE NFC (FIREBASE + ANTI-TESTE) ===
+// === SCRIPT DEFINITIVO DO CLIENTE NFC (FIREBASE + CORRIGIDO) ===
 (function() {
-   // 1. Pega o CPF ou NFC direto da URL de forma segura (procura na barra de endereços)
-    const params = new URLSearchParams(window.location.search);
-    let cpf = params.get('cpf') || params.get('nfc');
+    // 1. Pega o CPF/Token do cliente de forma segura na Hash (#nfc=PROV&cpf=TOKEN) ou Query Params
+    const hash = window.location.hash;
+    const searchParams = new URLSearchParams(window.location.search);
+    let cpf = null;
+
+    // Prioriza o 'cpf' da hash (que é o token real do cliente gerado no painel)
+    const matchCpf = hash.match(/[#&]cpf=([^&]+)/);
+    if (matchCpf) {
+        cpf = matchCpf[1];
+    } else {
+        // Tenta buscar nos parâmetros de busca tradicionais (?)
+        cpf = searchParams.get('cpf') || searchParams.get('nfc');
+        
+        // Se ainda não achou, verifica se há um parâmetro nfc na hash (formato antigo)
+        if (!cpf && hash.includes('nfc=')) {
+            const parts = hash.replace('#', '').split('&');
+            for (let part of parts) {
+                if (part.startsWith('nfc=')) {
+                    cpf = part.split('=')[1];
+                }
+            }
+        }
+    }
     
-    // Se não tiver CPF na URL, o script para silenciosamente
+    // Se não tiver o CPF/Token na URL, o script para silenciosamente
     if (!cpf) return; 
 
-    // 2. Função principal que busca no banco e atualiza a interface
+    // 2. Função principal que busca no banco e atualiza a interface instantaneamente
     async function aplicarNomeReal() {
         try {
             const dbInst = window.db || (typeof db !== 'undefined' ? db : null);
@@ -9699,7 +9729,6 @@ window.provedorCopiarLinkGerado = function() {
     }
 
     // 3. O "Cão de Guarda" (Escudo Anti-Teste)
-    // Se algum outro script tentar colocar a palavra "teste", nós corrigimos na mesma hora
     const observador = new MutationObserver((mutations) => {
         const elemento = document.getElementById("clientName");
         if (elemento && elemento.innerText.toLowerCase().includes("teste")) {
@@ -9710,11 +9739,11 @@ window.provedorCopiarLinkGerado = function() {
     // Inicia a vigilância na página
     observador.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 
-    // 4. Dispara a função automaticamente em todas as fases do carregamento
+    // 4. Dispara a função automaticamente em todas as fases do carregamento e mudança de hash
     window.addEventListener('DOMContentLoaded', aplicarNomeReal);
     window.addEventListener('load', aplicarNomeReal);
+    window.addEventListener('hashchange', aplicarNomeReal);
     
-    // Tenta rodar imediatamente também (para conexões mais rápidas)
     aplicarNomeReal();
 })();
 
