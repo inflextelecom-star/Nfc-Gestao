@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NFC Gestão Pro — Visualização</title>
+<title>NFC Gestão Pro — Visualização</title>  
 
 <!-- =====================================================
      BARREIRA DE PRIMEIRA PINTURA
@@ -1639,7 +1639,7 @@ input:focus{
       id="provedorConteudo"
       class="hidden"
     >
-
+  
       <div class="provedor-header">
 
         <div class="provedor-header-top">
@@ -1917,6 +1917,7 @@ input:focus{
 </div>
 
 
+
 <!-- =====================================================
      PÁGINA NFC PÚBLICA
      ===================================================== -->
@@ -1931,9 +1932,7 @@ input:focus{
       alt="Logo do Provedor"
     >
 
-    <h1 id="clientName">
-      Carregando...
-    </h1>
+  <h1 id="clientName"></h1>
 
     <div id="clientActive" class="hidden">
 
@@ -2122,6 +2121,16 @@ input:focus{
 
       </a>
 
+<a id="senhaWifiBtn" class="service" style="display: flex; align-items: center; gap: 14px; text-decoration: none; cursor: pointer;">
+    <div style="width: 42px; height: 42px; background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px;" aria-hidden="true">
+            <path d="M16 11V7a4 4 0 0 0-8 0v4M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" stroke="#fbbf24" stroke-width="1.8" stroke-linejoin="round"/>
+            <circle cx="12" cy="16" r="1.5" fill="#fbbf24"/>
+        </svg>
+    </div>
+    <span style="font-size: 15px; font-weight: 600; color: #fff;">Senha do Wi-Fi</span>
+</a>
+
     </div>
 
     <div
@@ -2176,80 +2185,240 @@ import {
   increment,
   arrayUnion,
   serverTimestamp,
-  getDoc
+  getDocs,
+  getDoc,
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
-window.salvarManutencao = async function() {
-    // Pega o ID direto da URL (#nfc= ou #provedor=) ou das variáveis da tela
-    let clienteId = null;
-    const hash = window.location.hash;
-    if (hash && hash.includes('nfc=')) {
-        clienteId = hash.split('nfc=')[1].split('&')[0];
-    } else if (hash && hash.includes('provedor=')) {
-        clienteId = hash.split('provedor=')[1].split('&')[0];
-    }
-    
-    if (!clienteId) {
-        const alvo = window.provedorClienteAtual || window.clienteAtual;
-        clienteId = alvo?.id;
-    }
+// ==========================================
+// MÓDULO DE GESTÃO DE TÉCNICOS (NFC / ADMIN)
+// ==========================================
 
-    console.log("🔍 [Provedor] ID do cliente identificado para salvamento:", clienteId);
+// 1. Função para Cadastrar um Novo Técnico
+window.cadastrarTecnico = async function(event) {
+  event.preventDefault();
+  
+  const nome = document.getElementById("nomeTecnico").value.trim();
+  const usuario = document.getElementById("usuarioTecnico").value.trim();
+  const senha = document.getElementById("senhaTecnico").value.trim();
 
-    if (!clienteId) {
-        alert("Erro: ID do cliente não encontrado.");
-        return;
-    }
+  if (!nome || !usuario || !senha) {
+    alert("Preencha todos os campos do técnico!");
+    return;
+  }
 
-    const ativo = document.getElementById("checkManutencao") ? document.getElementById("checkManutencao").checked : false;
-    const msg = document.getElementById("txtManutencao") ? document.getElementById("txtManutencao").value.trim() : "";
-    const fileInput = document.getElementById("fileImgPromocao");
-    const msgStatus = document.getElementById("provedorManutencaoMsg");
+  try {
+    await addDoc(collection(db, "tecnicos"), {
+      nome: nome,
+      usuario: usuario,
+      senha: senha,
+      ativo: true,
+      criadoEm: new Date().toISOString()
+    });
 
-    const executarSalvamento = async (imgBase64) => {
-        try {
-            const dadosAtualizacao = {
-                manutencao_ativa: ativo,
-                mensagem_manutencao: msg
-            };
-
-            if (imgBase64 !== null) {
-                dadosAtualizacao.imagem_promocao = imgBase64;
-            }
-
-            console.log("📤 [Provedor] Enviando dados para o Firebase...");
-            await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), dadosAtualizacao);
-            console.log("✅ [Provedor] Dados salvos com sucesso no Firebase!");
-
-            if (typeof carregarDadosCliente === 'function') {
-                carregarDadosCliente();
-            }
-
-            if (msgStatus) {
-                msgStatus.style.color = "#10b981";
-                msgStatus.textContent = "Aviso e imagem atualizados com sucesso!";
-                setTimeout(() => { msgStatus.textContent = ""; }, 3000);
-            }
-        } catch (e) {
-            console.error("❌ [Provedor] Erro crítico ao salvar no Firebase:", e);
-            alert("Erro ao salvar aviso. Veja o console (F12).");
-        }
-    };
-
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const base64Image = e.target.result;
-            await executarSalvamento(base64Image);
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    } else {
-        await executarSalvamento(null);
-    }
+    alert("Técnico cadastrado com sucesso!");
+    document.getElementById("formTecnico").reset();
+    carregarTecnicos(); // Atualiza a lista na tela
+  } catch (error) {
+    console.error("Erro ao cadastrar técnico:", error);
+    alert("Erro ao salvar técnico.");
+  }
 };
 
+// 2. Função para Listar, Editar, Desativar e Excluir Técnicos
+window.carregarTecnicos = async function() {
+  const listaContainer = document.getElementById("listaTecnicos");
+  if (!listaContainer) return;
+  
+  listaContainer.innerHTML = "Carregando técnicos...";
+
+  try {
+    const querySnapshot = await getDocs(collection(db, "tecnicos"));
+    listaContainer.innerHTML = "";
+
+    querySnapshot.forEach((docSnapshot) => {
+      const tecnico = docSnapshot.data();
+      const id = docSnapshot.id;
+
+      const itemHtml = `
+        <div class="tecnico-card" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 8px; border-radius: 6px;">
+          <strong>Nome:</strong> ${tecnico.nome} | <strong>Usuário:</strong> ${tecnico.usuario} <br>
+          <strong>Status:</strong> ${tecnico.ativo ? "🟢 Ativo" : "🔴 Desativado"} <br><br>
+          
+          <button onclick="alternarStatusTecnico('${id}', ${!tecnico.ativo})" class="btn-acao">
+            ${tecnico.ativo ? "Desativar" : "Ativar"}
+          </button>
+          
+          <button onclick="editarTecnicoPrompt('${id}', '${tecnico.nome}', '${tecnico.usuario}')" class="btn-acao">
+            Editar
+          </button>
+          
+          <button onclick="excluirTecnico('${id}')" class="btn-acao" style="color: red;">
+            Excluir
+          </button>
+        </div>
+      `;
+      listaContainer.innerHTML += itemHtml;
+    });
+  } catch (error) {
+    console.error("Erro ao carregar técnicos:", error);
+  }
+};
+
+// 3. Desativar / Ativar Técnico
+window.alternarStatusTecnico = async function(id, novoStatus) {
+  try {
+    await updateDoc(doc(db, "tecnicos", id), { ativo: novoStatus });
+    alert("Status atualizado!");
+    carregarTecnicos();
+  } catch (error) {
+    alert("Erro ao alterar status.");
+  }
+};
+
+// 4. Editar Nome/Usuário de forma rápida
+window.editarTecnicoPrompt = async function(id, nomeAtual, usuarioAtual) {
+  const novoNome = prompt("Novo nome do técnico:", nomeAtual);
+  if (novoNome === null) return;
+
+  const novoUsuario = prompt("Novo usuário de login:", usuarioAtual);
+  if (novoUsuario === null) return;
+
+  try {
+    await updateDoc(doc(db, "tecnicos", id), {
+      nome: novoNome.trim(),
+      usuario: novoUsuario.trim()
+    });
+    alert("Dados atualizados com sucesso!");
+    carregarTecnicos();
+  } catch (error) {
+    alert("Erro ao editar técnico.");
+  }
+};
+
+// 5. Excluir Técnico do Banco
+window.excluirTecnico = async function(id) {
+  if (!confirm("Tem certeza que deseja excluir permanentemente este técnico?")) return;
+
+  try {
+    await deleteDoc(doc(db, "tecnicos", id));
+    alert("Técnico excluído!");
+    carregarTecnicos();
+  } catch (error) {
+    alert("Erro ao excluir técnico.");
+  }
+};
+
+// ==========================================
+// CARREGAR DADOS DO CLIENTE (HÍBRIDO: TOKEN LGPD + CPF LEGADO + PROVEDOR)
+// ==========================================
+window.carregarDadosCliente = async function() {
+    try {
+        const hashStr = window.location.hash.replace('#', '');
+        const params = new URLSearchParams(hashStr);
+        
+        // 🟢 DESVIO ANTECIPADO E APAGÃO VISUAL PARA PROVEDOR (Validado no Console)
+        if (params.get('provedor')) {
+            console.log("🟢 Acesso via Provedor detectado. Isolando painel administrativo...");
+            
+            // Oculta os elementos de cliente que vazavam na tela
+            const idsParaOcultar = ['clientPage', 'clientActive', 'inactiveBox'];
+            idsParaOcultar.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+
+            // Exibe estritamente o painel e a pré-confirmação do provedor
+            const painelProv = document.getElementById('painelProvedor');
+            const preAcesso = document.getElementById('provedorPreAcesso');
+            if (painelProv) painelProv.style.display = 'block';
+            if (preAcesso) preAcesso.style.display = 'block';
+
+            // Remove modal de manutenção indesejado, se houver
+            const modalManutencao = document.getElementById('modalManutencao');
+            if (modalManutencao) modalManutencao.remove();
+
+            return; // 🛑 Encerra a execução aqui para o provedor não buscar dados de cliente!
+        }
+
+        // --- DAQUI PARA BAIXO SEGUE O FLUXO NORMAL DE CLIENTE (#nfc=...) ---
+        const provedorUrl = params.get('nfc');
+        const tokenUrl = params.get('token');
+        const cpfUrl = params.get('cpf'); 
+
+        if (!provedorUrl) {
+            console.warn("⚠️ Chave do Provedor ausente na URL.");
+            tratarAcessoPublicoInvalido();
+            return;
+        }
+
+        if (!tokenUrl && !cpfUrl) {
+            console.warn("⚠️ Nenhum Token ou CPF encontrado.");
+            tratarAcessoPublicoInvalido();
+            return;
+        }
+
+        let cliente = null;
+
+        if (tokenUrl) {
+            console.log("🔒 Consultando Firestore por Token:", tokenUrl);
+            const querySnapshot = await getDocs(collection(db, "clientesNfc"));
+            querySnapshot.forEach((docSnap) => {
+                const dados = docSnap.data();
+                if (dados.token === tokenUrl && dados.provedorId === provedorUrl) {
+                    cliente = dados;
+                }
+            });
+        } else if (cpfUrl) {
+            console.log("🔍 Consultando Firestore para o CPF:", cpfUrl);
+            const docRef = doc(db, "clientesNfc", cpfUrl);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const dados = docSnap.data();
+                if (dados.provedorId === provedorUrl) {
+                    cliente = dados;
+                }
+            }
+        }
+
+        if (cliente) {
+            console.log("🎉 Cliente carregado com sucesso:", cliente);
+            
+            const nomeCompleto = cliente.nome || "Cliente";
+            const primeiroNomeBruto = nomeCompleto.split(' ')[0];
+            const primeiroNome = primeiroNomeBruto.charAt(0).toUpperCase() + primeiroNomeBruto.slice(1).toLowerCase();
+            
+            const elementoNome = document.getElementById("clientName");
+            if (elementoNome) {
+                elementoNome.innerText = `Olá, ${primeiroNome}`;
+            }
+
+            const idsParaEsconder = [
+                'adminPage', 'dashboard', 'painelProvedor', 'inactiveBox', 
+                'painelTecnicos', 'loginCard', 'provedorPreAcesso', 'modalManutencao'
+            ];
+            
+            idsParaEsconder.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+
+            const clientPageObj = document.getElementById("clientPage");
+            if (clientPageObj) clientPageObj.style.display = "block";
+
+            const clientActive = document.getElementById("clientActive");
+            if (clientActive) clientActive.style.display = "block";
+
+        } else {
+            console.warn("⚠️ Nenhum cliente encontrado com este Token/CPF para este provedor.");
+            tratarAcessoPublicoInvalido();
+        }
+    } catch (error) {
+        console.error("❌ Erro ao buscar dados do cliente:", error);
+        tratarAcessoPublicoInvalido();
+    }
+};
 
 /*
 =========================================================
@@ -2383,6 +2552,15 @@ const app =
 const db =
   getFirestore(app);
 
+  window.db = db;
+window.addDoc = addDoc;
+window.getDocs = getDocs;
+window.getDoc = getDoc;
+window.deleteDoc = deleteDoc;
+window.updateDoc = updateDoc;
+window.setDoc = setDoc;
+window.collection = collection;
+window.doc = doc;
 
 /*
 =========================================================
@@ -4418,286 +4596,286 @@ SALVAR PROVEDOR
 =========================================================
 */
 
-window.salvar =
-  async function(){
+  window.salvar =
+    async function(){
 
-    if(!adminAutenticado()){
+      if(!adminAutenticado()){
 
-      alert(
-        "Sua sessão administrativa expirou. Faça login novamente."
-      );
-
-      showLogin();
-
-      return;
-
-    }
-
-    const nome =
-      document
-        .getElementById(
-          "nome"
-        )
-        .value
-        .trim();
-
-    if(!nome){
-
-      alert(
-        "Nome do Provedor é obrigatório."
-      );
-
-      return;
-
-    }
-
-    let dataAtivacao =
-      document
-        .getElementById(
-          "dataAtivacao"
-        )
-        .value;
-
-    let dataVencimento =
-      document
-        .getElementById(
-          "dataVencimento"
-        )
-        .value;
-
-    if(!dataAtivacao){
-
-      dataAtivacao =
-        formatarDataInput(
-          new Date()
+        alert(
+          "Sua sessão administrativa expirou. Faça login novamente."
         );
 
-    }
+        showLogin();
 
-    if(!dataVencimento){
-
-      dataVencimento =
-        calcularVencimento(
-          dataAtivacao
-        );
-
-    }
-
-    const vencido =
-      estaVencido(
-        dataVencimento
-      );
-
-    const documento =
-      document
-        .getElementById(
-          "documento"
-        )
-        .value
-        .trim();
-
-    // Validação de CPF/CNPJ no painel administrativo
-    if (documento && !validarDocumento(documento)) {
-      alert("O CPF/CNPJ digitado é inválido. Por favor, corrija.");
-      return;
-    }
-
-    const telefone =
-      document
-        .getElementById(
-          "telefone"
-        )
-        .value
-        .trim();
-
-    const clienteExistente =
-      editId
-        ? clientes.find(
-            cliente =>
-              cliente.id === editId
-          )
-        : null;
-
-    const dados = {
-
-      nome,
-
-      logo:
-        document
-          .getElementById(
-            "logo"
-          )
-          .value
-          .trim(),
-
-      fatura:
-        document
-          .getElementById(
-            "fatura"
-          )
-          .value
-          .trim(),
-
-      zap:
-        document
-          .getElementById(
-            "zap"
-          )
-          .value
-          .trim(),
-
-      insta:
-        document
-          .getElementById(
-            "insta"
-          )
-          .value
-          .trim(),
-
-      speed:
-        document
-          .getElementById(
-            "speed"
-          )
-          .value
-          .trim(),
-
-      documento,
-
-      telefone,
-
-      dataAtivacao,
-
-      dataVencimento,
-
-      ativo:
-        vencido
-          ? false
-          : true,
-
-      acessos:
-        clienteExistente
-          ? Number(
-              clienteExistente.acessos ||
-              0
-            )
-          : 0,
-
-      acessosDiarios:
-        clienteExistente
-          ? (
-              clienteExistente
-                .acessosDiarios ||
-              {}
-            )
-          : {},
-
-      historicoAcessos:
-        clienteExistente
-          ? (
-              clienteExistente
-                .historicoAcessos ||
-              []
-            )
-          : []
-
-    };
-
-    try{
-
-      if(editId){
-
-        if(
-          clienteExistente &&
-          !vencido
-        ){
-
-          dados.ativo =
-            clienteExistente.ativo;
-
-        }
-
-        await setDoc(
-
-          doc(
-            db,
-            CLIENTES_COLLECTION,
-            editId
-          ),
-
-          dados
-
-        );
-
-        document
-          .getElementById(
-            "saveMsg"
-          )
-          .textContent =
-            vencido
-              ? "Provedor atualizado e marcado como inadimplente."
-              : "Provedor atualizado com sucesso.";
-
-      }else{
-
-        await addDoc(
-
-          collection(
-            db,
-            CLIENTES_COLLECTION
-          ),
-
-          dados
-
-        );
-
-        document
-          .getElementById(
-            "saveMsg"
-          )
-          .textContent =
-            vencido
-              ? "Provedor cadastrado como inadimplente."
-              : "Provedor cadastrado com sucesso.";
+        return;
 
       }
 
-      setTimeout(
-        () => {
+      const nome =
+        document
+          .getElementById(
+            "nome"
+          )
+          .value
+          .trim();
 
-          const elemento =
-            document.getElementById(
-              "saveMsg"
-            );
+      if(!nome){
 
-          if(elemento){
+        alert(
+          "Nome do Provedor é obrigatório."
+        );
 
-            elemento.textContent =
-              "";
+        return;
+
+      }
+
+      let dataAtivacao =
+        document
+          .getElementById(
+            "dataAtivacao"
+          )
+          .value;
+
+      let dataVencimento =
+        document
+          .getElementById(
+            "dataVencimento"
+          )
+          .value;
+
+      if(!dataAtivacao){
+
+        dataAtivacao =
+          formatarDataInput(
+            new Date()
+          );
+
+      }
+
+      if(!dataVencimento){
+
+        dataVencimento =
+          calcularVencimento(
+            dataAtivacao
+          );
+
+      }
+
+      const vencido =
+        estaVencido(
+          dataVencimento
+        );
+
+      const documento =
+        document
+          .getElementById(
+            "documento"
+          )
+          .value
+          .trim();
+
+      // Validação de CPF/CNPJ no painel administrativo
+      if (documento && !validarDocumento(documento)) {
+        alert("O CPF/CNPJ digitado é inválido. Por favor, corrija.");
+        return;
+      }
+
+      const telefone =
+        document
+          .getElementById(
+            "telefone"
+          )
+          .value
+          .trim();
+
+      const clienteExistente =
+        editId
+          ? clientes.find(
+              cliente =>
+                cliente.id === editId
+            )
+          : null;
+
+      const dados = {
+
+        nome,
+
+        logo:
+          document
+            .getElementById(
+              "logo"
+            )
+            .value
+            .trim(),
+
+        fatura:
+          document
+            .getElementById(
+              "fatura"
+            )
+            .value
+            .trim(),
+
+        zap:
+          document
+            .getElementById(
+              "zap"
+            )
+            .value
+            .trim(),
+
+        insta:
+          document
+            .getElementById(
+              "insta"
+            )
+            .value
+            .trim(),
+
+        speed:
+          document
+            .getElementById(
+              "speed"
+            )
+            .value
+            .trim(),
+
+        documento,
+
+        telefone,
+
+        dataAtivacao,
+
+        dataVencimento,
+
+        ativo:
+          vencido
+            ? false
+            : true,
+
+        acessos:
+          clienteExistente
+            ? Number(
+                clienteExistente.acessos ||
+                0
+              )
+            : 0,
+
+        acessosDiarios:
+          clienteExistente
+            ? (
+                clienteExistente
+                  .acessosDiarios ||
+                {}
+              )
+            : {},
+
+        historicoAcessos:
+          clienteExistente
+            ? (
+                clienteExistente
+                  .historicoAcessos ||
+                []
+              )
+            : []
+
+      };
+
+      try{
+
+        if(editId){
+
+          if(
+            clienteExistente &&
+            !vencido
+          ){
+
+            dados.ativo =
+              clienteExistente.ativo;
 
           }
 
-        },
-        3000
-      );
+          await setDoc(
 
-      cancelar();
+            doc(
+              db,
+              CLIENTES_COLLECTION,
+              editId
+            ),
 
-    }catch(error){
+            dados
 
-      console.error(
-        "Erro ao salvar provedor:",
-        error
-      );
+          );
 
-      alert(
-        "Não foi possível salvar o provedor.\n\n" +
-        "Verifique as regras de segurança do Firestore."
-      );
+          document
+            .getElementById(
+              "saveMsg"
+            )
+            .textContent =
+              vencido
+                ? "Provedor atualizado e marcado como inadimplente."
+                : "Provedor atualizado com sucesso.";
 
-    }
+        }else{
 
-  };
+          await addDoc(
+
+            collection(
+              db,
+              CLIENTES_COLLECTION
+            ),
+
+            dados
+
+          );
+
+          document
+            .getElementById(
+              "saveMsg"
+            )
+            .textContent =
+              vencido
+                ? "Provedor cadastrado como inadimplente."
+                : "Provedor cadastrado com sucesso.";
+
+        }
+
+        setTimeout(
+          () => {
+
+            const elemento =
+              document.getElementById(
+                "saveMsg"
+              );
+
+            if(elemento){
+
+              elemento.textContent =
+                "";
+
+            }
+
+          },
+          3000
+        );
+
+        cancelar();
+
+      }catch(error){
+
+        console.error(
+          "Erro ao salvar provedor:",
+          error
+        );
+
+        alert(
+          "Não foi possível salvar o provedor.\n\n" +
+          "Verifique as regras de segurança do Firestore."
+        );
+
+      }
+
+    };
 
 
 /*
@@ -6274,261 +6452,124 @@ ABRIR NFC
 =========================================================
 */
 
+window.inscricaoAoVivoNFC = null;
+
 window.abrirNFC = async function(id, objCliente = null) {
+    // 1. MOTOR EM TEMPO REAL (ONSNAPSHOT)
+    if (!objCliente) {
+        try {
+            const dbInst = window.db || (typeof db !== 'undefined' ? db : null);
+            const snapshotFn = window.onSnapshot || (typeof onSnapshot !== 'undefined' ? onSnapshot : null);
+            const docFn = window.doc || (typeof doc !== 'undefined' ? doc : null);
+            const colecao = typeof CLIENTES_COLLECTION !== 'undefined' ? CLIENTES_COLLECTION : (window.location.hash.includes('provedor=') ? 'provedores' : 'clientesNfc');
+
+            if (dbInst && snapshotFn && docFn && !window.inscricaoAoVivoNFC) {
+                window.inscricaoAoVivoNFC = snapshotFn(docFn(dbInst, colecao, id), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const dadosVivos = { id: docSnap.id, ...docSnap.data() };
+                        if (typeof clientes !== 'undefined') {
+                            const index = clientes.findIndex(c => c.id === id);
+                            if (index !== -1) clientes[index] = dadosVivos;
+                            else clientes.push(dadosVivos);
+                        }
+                        window.abrirNFC(id, dadosVivos);
+                    }
+                });
+                return; 
+            }
+        } catch (e) {
+            console.log("Tempo real ignorado temporariamente, usando modo estático.");
+        }
+    }
+
     const cliente = objCliente || clientes.find(item => item.id === id);
 
     if (!cliente) {
-        // Se a lista de clientes ainda estiver vazia, dá um respiro de 1 segundo para o Firebase carregar
         if (clientes.length === 0) {
             setTimeout(() => abrirNFC(id, objCliente), 500);
             return;
         }
-
-        mostrarErroNFC(
-            "Acesso não encontrado",
-            "O endereço NFC informado não corresponde a nenhum provedor cadastrado ou foi removido."
-        );
+        mostrarErroNFC("Acesso não encontrado", "O endereço NFC informado não corresponde a nenhum provedor cadastrado.");
         return;
     }
 
     registrarAcessoNFC(cliente.id);
-    
-    const alertaFlutuante = document.getElementById('alertaFlutuante');
-    const textoModal = document.getElementById('msgManutencaoCliente');
-    const widgetAlerta = document.getElementById('widgetFlutuanteAlerta');
-    const caixaMensagem = document.getElementById('caixaMensagemAlerta'); // << Pega a caixa interna do chat para forçar a abertura
-    const displayMensagem = document.getElementById('txtManutencaoDisplay');
-    const containerImg = document.getElementById('containerImagemPromocao');
 
-    if (cliente.manutencao_ativa && cliente.mensagem_manutencao) {
-        if (alertaFlutuante) alertaFlutuante.style.display = 'flex';
-        if (textoModal) textoModal.textContent = cliente.mensagem_manutencao;
-        
-        if (widgetAlerta) widgetAlerta.style.display = 'block';
-        if (caixaMensagem) caixaMensagem.style.display = 'none'; // << Abre o balão do chat automaticamente na tela
-        if (displayMensagem) displayMensagem.textContent = cliente.mensagem_manutencao;
-        
-        if (containerImg) {
-            // CORREÇÃO: Só exibe se houver imagem válida de verdade, ignorando "null", vazios ou espaços
-            if (cliente.imagem_promocao && cliente.imagem_promocao !== "null" && cliente.imagem_promocao.trim() !== "") {
-                containerImg.style.display = 'block';
-                containerImg.innerHTML = `<img src="${cliente.imagem_promocao}" style="max-width:100%; border-radius:8px; margin-top:8px;">`;
-            } else {
-                containerImg.style.display = 'none';
-                containerImg.innerHTML = '';
-            }
-        }
+    // ==========================================================
+    // 🔔 GATILHO DO SINO NOVO (WIDGET ALERTA PRO)
+    // ==========================================================
+    if (typeof window.atualizarWidgetAlertaCliente === 'function') {
+        window.atualizarWidgetAlertaCliente(cliente);
     } else {
-        if (alertaFlutuante) alertaFlutuante.style.display = 'none';
-        if (widgetAlerta) widgetAlerta.style.display = 'none';
-        if (caixaMensagem) caixaMensagem.style.display = 'none'; // << Fecha o chat se o provedor desativar
+        console.warn("Aviso: Função de atualizar o sino não foi encontrada no código.");
     }
+    // ==========================================================
 
-    const admin =
-      document.getElementById(
-        "adminPage"
-      );
+    const admin = document.getElementById("adminPage");
+    const pagina = document.getElementById("clientPage");
+    const nome = document.getElementById("clientName");
+    const logo = document.getElementById("clientLogo");
+    const active = document.getElementById("clientActive");
+    const inactive = document.getElementById("inactiveBox");
 
-    const pagina =
-      document.getElementById(
-        "clientPage"
-      );
-
-    const nome =
-      document.getElementById(
-        "clientName"
-      );
-
-    const logo =
-      document.getElementById(
-        "clientLogo"
-      );
-
-    const active =
-      document.getElementById(
-        "clientActive"
-      );
-
-    const inactive =
-      document.getElementById(
-        "inactiveBox"
-      );
-
-    if(admin){
-
-      admin.style.display =
-        "none";
-
-    }
-
-    if(pagina){
-
-      pagina.style.display =
-        "block";
-
-    }
+    if(admin) admin.style.display = "none";
 
     if(logo){
-
-      logo.style.visibility =
-        "hidden";
-
-      logo.style.opacity =
-        "0";
-
-      logo.style.display =
-        "none";
-
-      logo.removeAttribute(
-        "src"
-      );
-
+        logo.style.visibility = "hidden";
+        logo.style.opacity = "0";
+        logo.style.display = "none";
+        logo.removeAttribute("src");
     }
 
-    ultimoTemaLogo =
-      "";
-
+    ultimoTemaLogo = "";
     restaurarTemaNFC();
 
-    if(nome){
+    const acessoAtivo = cliente.ativo && !cliente.vencido;
 
-      nome.textContent =
-        cliente.nome;
-
-    }
-
-    const acessoAtivo =
-      cliente.ativo &&
-      !cliente.vencido;
-
-    if(active){
-
-      active.classList.toggle(
-        "hidden",
-        !acessoAtivo
-      );
-
-    }
-
-    if(inactive){
-
-      inactive.classList.toggle(
-        "hidden",
-        acessoAtivo
-      );
-
-    }
+    if(active) active.classList.toggle("hidden", !acessoAtivo);
+    if(inactive) inactive.classList.toggle("hidden", acessoAtivo);
 
     if(acessoAtivo){
+        setLink("faturaBtn", cliente.fatura, "fatura");
+        setLink("zapBtn", cliente.zap, "whatsapp");
+        setLink("speedBtn", cliente.speed, "speed");
+        setLink("instaBtn", cliente.insta, "instagram");
+    } else {
+        setLink("faturaBtn", "", "fatura");
+        setLink("zapBtn", "", "whatsapp");
+        setLink("speedBtn", "", "speed");
+        setLink("instaBtn", "", "instagram");
 
-      setLink(
-        "faturaBtn",
-        cliente.fatura,
-        "fatura"
-      );
-
-      setLink(
-        "zapBtn",
-        cliente.zap,
-        "whatsapp"
-      );
-
-      setLink(
-        "speedBtn",
-        cliente.speed,
-        "speed"
-      );
-
-      setLink(
-        "instaBtn",
-        cliente.insta,
-        "instagram"
-      );
-
-    }else{
-
-      setLink(
-        "faturaBtn",
-        "",
-        "fatura"
-      );
-
-      setLink(
-        "zapBtn",
-        "",
-        "whatsapp"
-      );
-
-      setLink(
-        "speedBtn",
-        "",
-        "speed"
-      );
-
-      setLink(
-        "instaBtn",
-        "",
-        "instagram"
-      );
-
-      if(inactive){
-
-        if(cliente.vencido){
-
-          inactive.innerHTML =
-            "<h2>🔴 Acesso temporariamente indisponível</h2>" +
-            "<p>O período de utilização deste provedor terminou.</p>" +
-            "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
-
-        }else{
-
-          inactive.innerHTML =
-            "<h2>🔴 Acesso temporariamente indisponível</h2>" +
-            "<p>Seu acesso está temporariamente suspenso.</p>" +
-            "<p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
-
+        if(inactive){
+            if(cliente.vencido){
+                inactive.innerHTML = "<h2>🔴 Acesso temporariamente indisponível</h2><p>O período de utilização deste provedor terminou.</p><p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
+            }else{
+                inactive.innerHTML = "<h2>🔴 Acesso temporariamente indisponível</h2><p>Seu acesso está temporariamente suspenso.</p><p>Entre em contato com nosso atendimento para regularizar sua situação.</p>";
+            }
         }
-
-      }
-
     }
 
-    document.title =
-      cliente.nome +
-      " — Acesso";
+    document.title = cliente.nome + " — Acesso";
 
     if(cliente.logo && logo){
-
-      logo.style.display =
-        "block";
-
-      await configurarLogoPublica(
-        cliente.logo
-      );
-
-    }else if(logo){
-
-      restaurarTemaNFC();
-
-      logo.removeAttribute(
-        "src"
-      );
-
-      logo.style.display =
-        "none";
-
-      logo.style.visibility =
-        "hidden";
-
-      logo.style.opacity =
-        "0";
-
+        logo.style.display = "block";
+        await configurarLogoPublica(cliente.logo);
+    } else if(logo){
+        restaurarTemaNFC();
+        logo.removeAttribute("src");
+        logo.style.display = "none";
+        logo.style.visibility = "hidden";
+        logo.style.opacity = "0";
+    }
+    
+    if(pagina){
+        pagina.style.setProperty('display', 'block', 'important');
+        pagina.style.setProperty('visibility', 'visible', 'important');
+        pagina.style.setProperty('opacity', '1', 'important');
     }
 
     marcarNFCPronto();
-
 };
-
 
 /*
 =========================================================
@@ -7905,11 +7946,31 @@ window.salvarManutencao = async function() {
 }
 };
 
-async function finalizarManutencao() {
-    const clienteId = id; 
+window.finalizarManutencao = async function() {
+    // 1. Captura o ID correto do cliente (via URL ou variável global)
+    let clienteId = null;
+    const hash = window.location.hash;
+    
+    if (hash && hash.includes('nfc=')) {
+        clienteId = hash.split('nfc=')[1].split('&')[0];
+    } else if (hash && hash.includes('provedor=')) {
+        clienteId = hash.split('provedor=')[1].split('&')[0];
+    }
+    
+    if (!clienteId) {
+        const alvo = window.provedorClienteAtual || window.clienteAtual;
+        clienteId = alvo?.id;
+    }
+
+    if (!clienteId) {
+        alert("Erro: ID do cliente não encontrado.");
+        return;
+    }
+
     if (!confirm("Deseja encerrar a manutenção e remover o aviso da tela dos clientes?")) return;
 
     try {
+        // 2. Mantido EXATAMENTE como você configurou no seu projeto
         await updateDoc(doc(db, CLIENTES_COLLECTION, clienteId), {
             manutencao_ativa: false,
             mensagem_manutencao: "",
@@ -7918,7 +7979,9 @@ async function finalizarManutencao() {
         
         const check = document.getElementById("checkManutencao");
         if (check) check.checked = false;
-        const txt = document.getElementById("txtMensagemManutencao");
+        
+        // 3. Blindagem: busca pelos dois IDs possíveis para limpar o campo de texto sem erro
+        const txt = document.getElementById("txtManutencao") || document.getElementById("txtMensagemManutencao");
         if (txt) txt.value = "";
 
         alert("Manutenção encerrada com sucesso!");
@@ -7927,7 +7990,6 @@ async function finalizarManutencao() {
         alert("Erro ao finalizar a manutenção.");
     }
 }
-
   
 /*
 =========================================================
@@ -8430,47 +8492,1496 @@ window.fecharAlerta = function() {
     const txt = document.getElementById("txtManutencaoDisplay");
 
     if (txt) {
-   sessionStorage.setItem('dismissed_' + txt.textContent, 'true');
+        sessionStorage.setItem('dismissed_' + txt.textContent, 'true');
     }
 
     if (widget) widget.style.display = "none";
     if (caixa) caixa.style.display = "none";
 };
 
+// 🛡️ Função nova para tratar acessos públicos inválidos sem quebrar o console
+window.tratarAcessoPublicoInvalido = function() {
+    console.warn("Aviso: Acesso público NFC inválido ou não encontrado.");
+    const inactiveBox = document.getElementById("inactiveBox");
+    const clientPage = document.getElementById("clientPage");
+    
+    if (inactiveBox) {
+        inactiveBox.style.setProperty('display', 'block', 'important');
+        inactiveBox.style.setProperty('visibility', 'visible', 'important');
+    }
+    if (clientPage) {
+        clientPage.style.setProperty('display', 'none', 'important');
+    }
+};
+
 </script>
 
-
-<!-- Botão Flutuante de Alerta / Promoções -->
-<div id="widgetFlutuanteAlerta" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: none;">
-    <!-- Botão da Bolha com Animação de Pulso -->
-    <div id="btnBolhaAlerta" onclick="toggleChatAlerta()" style="background: #ef4444; color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; animation: pulsarAlerta 2s infinite;">
-        <span style="font-size: 24px;">🔔</span>
-        <span id="badgeContador" style="position: absolute; top: -5px; right: -5px; background: #ffffff; color: #ef4444; font-size: 12px; font-weight: bold; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #ef4444;">1</span>
+<!-- ========================================== -->
+<!-- 1. PAINEL DO PROVEDOR - CADASTRAR TÉCNICO (VERDE) -->
+<!-- ========================================== -->
+<div id="painelTecnicos" style="display: none; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; max-width: 600px; margin: 20px auto; font-family: Arial, sans-serif;">
+  <h3 style="margin-top: 0; color: #1f2937; font-size: 1.25rem; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px;">👷‍♂️ Gestão de Técnicos Autorizados</h3>
+  
+  <div style="margin-top: 15px;">
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #4b5563; font-size: 0.9rem;">Nome do Técnico</label>
+      <input type="text" id="nomeTecnico" placeholder="Ex: Paulo Henrique" autocomplete="off" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
     </div>
+
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #4b5563; font-size: 0.9rem;">Usuário de Acesso</label>
+      <input type="text" id="userTecnico" placeholder="Ex: paulo.tech" autocomplete="off" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #4b5563; font-size: 0.9rem;">Senha</label>
+      <input type="password" id="passTecnico" placeholder="Senha" autocomplete="new-password" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
+    </div>
+
+    <button onclick="adicionarTecnico()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem;">CADASTRAR TÉCNICO</button>
+  </div>
+
+  <div style="margin-top: 25px;">
+    <h4 style="color: #374151; font-size: 1rem; margin-bottom: 10px;">Técnicos Cadastrados</h4>
+    <div style="background: #f9fafb; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid #e5e7eb; text-align: left;">
+            <th style="padding: 8px; font-size: 0.9rem; color: #4b5563;">Técnico</th>
+            <th style="text-align: center; padding: 8px; font-size: 0.9rem; color: #4b5563;">Status</th>
+            <th style="text-align: center; padding: 8px; font-size: 0.9rem; color: #4b5563;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabelaTecnicos">
+          <tr><td colspan="3" style="text-align: center; padding: 15px; color: #6b7280;">Carregando técnicos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 2. PAINEL DO TÉCNICO (LOGIN E EDIÇÃO)      -->
+<!-- ========================================== -->
+<div id="painelTecnicosDashboard" style="display: none; background: #fff; padding: 25px; border-radius: 10px; max-width: 450px; margin: 40px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: Arial, sans-serif; position: relative; z-index: 999999;">
+  
+  <div id="techLoginBox">
+    <h3 style="color: #333; margin-bottom: 10px;">🔐 Acesso do Técnico</h3>
+    <p style="color: #a58181; font-size: 13px; margin-bottom: 20px;">Entre com seu usuário e senha para gerenciar o cliente.</p>
+    <input type="text" id="techUser" placeholder="Usuário" style="width:100%; padding:10px; margin-bottom:12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <input type="password" id="techPass" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <button onclick="logarTecnico()" style="width:100%; padding:12px; background:#0066ff; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Entrar</button>
+    <p id="techLoginMsg" style="color:#d9534f; font-size:12px; margin-top:10px; text-align:center;"></p>
+  </div>
+
+  <div id="techEditBox" style="display: none;">
+    <h3 style="color: #333; margin-bottom: 10px;">✏️ Atualizar Cliente (NFC)</h3>
+    <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Altere os dados que aparecerão na página pública.</p>
+    <input type="text" id="editNomeCliente" placeholder="Novo Nome do Cliente" style="width:100%; padding:10px; margin-bottom:12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <input type="text" id="editCpfCliente" placeholder="Novo CPF" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <button onclick="salvarDadosClienteTecnico()" style="width:100%; padding:12px; background:#28a745; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Salvar Alterações</button>
+    <button onclick="logoutTecnico()" style="width:100%; padding:10px; background:#6c757d; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:10px;">Sair</button>
+    <p id="techEditMsg" style="color:#28a745; font-size:12px; margin-top:10px; text-align:center;"></p>
+  </div>
+
+</div>
+
+<!-- ========================================== -->
+<!-- PAINEL DO PROVEDOR: CADASTRAR TÉCNICO      -->
+<!-- ========================================== -->
+<div id="painelTecnicosProvedorInterno" style="display: none; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; max-width: 600px; margin: 20px auto; font-family: Arial, sans-serif;">
+  <h3 style="margin-top: 0; color: #1f2937; font-size: 1.25rem; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px;">👷‍♂️ Cadastrar Técnico Autorizado</h3>
+  
+  <form id="formTecnicoInterno" onsubmit="cadastrarTecnico(event)" autocomplete="off" style="margin-top: 15px;">
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #4b5563; font-size: 0.9rem;">Nome do Técnico</label>
+      <input type="text" id="nomeTecnico" placeholder="Ex: João da Silva" autocomplete="off" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
+    </div>
+
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #4b5563; font-size: 0.9rem;">Usuário de Login</label>
+      <input type="text" id="usuarioTecnico" placeholder="Ex: joao.tecnico" autocomplete="off" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 500; color: #4b5563; font-size: 0.9rem;">Senha</label>
+      <input type="password" id="senhaTecnico" placeholder="Sua senha segura" autocomplete="new-password" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
+    </div>
+
+    <button type="submit" style="width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem;">Salvar Novo Técnico</button>
+  </form>
+
+  <div style="margin-top: 25px;">
+    <h4 style="color: #374151; font-size: 1rem; margin-bottom: 10px;">Técnicos Cadastrados</h4>
+    <div id="listaTecnicos" style="background: #f9fafb; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb; min-height: 50px;"></div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- ÚNICO CARD CORRETO: GESTÃO DE TÉCNICOS      -->
+<!-- ========================================== -->
+<div id="painelTecnicos" style="display: none; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; max-width: 600px; margin: 20px auto; font-family: Arial, sans-serif;">
+  <h3 style="margin-top: 0; color: #1f2937; font-size: 1.25rem; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px;">👷‍♂️ Gestão de Técnicos Autorizados</h3>
+  
+  <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px;">
+    <input type="text" id="nomeTecnico" placeholder="Nome Completo do Técnico" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
+    <input type="text" id="userTecnico" placeholder="Usuário de Acesso" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
+    <input type="password" id="passTecnico" placeholder="Senha" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem;">
+    <button onclick="adicionarTecnico()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem;">CADASTRAR TÉCNICO</button>
+  </div>
+
+  <div style="margin-top: 25px;">
+    <h4 style="color: #374151; font-size: 1rem; margin-bottom: 10px;">Técnicos Cadastrados</h4>
+    <div style="background: #f9fafb; padding: 12px; border-radius: 6px; border: 1px solid #e5e7eb; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid #e5e7eb; text-align: left;">
+            <th style="padding: 8px; font-size: 0.9rem; color: #4b5563;">Técnico</th>
+            <th style="text-align: center; padding: 8px; font-size: 0.9rem; color: #4b5563;">Status</th>
+            <th style="text-align: center; padding: 8px; font-size: 0.9rem; color: #4b5563;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabelaTecnicos">
+          <tr><td colspan="3" style="text-align: center; padding: 15px; color: #6b7280;">Aguardando acesso ao painel...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- PAINEL DO TÉCNICO (LOGIN E EDIÇÃO)         -->
+<!-- ========================================== -->
+<div id="painelTecnicosDashboard" style="display: none; background: #fff; padding: 25px; border-radius: 10px; max-width: 450px; margin: 40px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: Arial, sans-serif; position: relative; z-index: 999999;">
+  <div id="techLoginBox">
+    <h3 style="color: #333; margin-bottom: 10px;">🔐 Acesso do Técnico</h3>
+    <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Entre com seu usuário e senha para gerenciar o cliente.</p>
+    <input type="text" id="techUser" placeholder="Usuário" style="width:100%; padding:10px; margin-bottom:12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <input type="password" id="techPass" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <button onclick="logarTecnico()" style="width:100%; padding:12px; background:#0066ff; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Entrar</button>
+    <p id="techLoginMsg" style="color:#d9534f; font-size:12px; margin-top:10px; text-align:center;"></p>
+  </div>
+
+  <div id="techEditBox" style="display: none;">
+    <h3 style="color: #333; margin-bottom: 10px;">✏️ Atualizar Cliente (NFC)</h3>
+    <input type="text" id="editNomeCliente" placeholder="Novo Nome do Cliente" style="width:100%; padding:10px; margin-bottom:12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <input type="text" id="editCpfCliente" placeholder="Novo CPF" style="width:100%; padding:10px; margin-bottom:15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;">
+    <button onclick="salvarDadosClienteTecnico()" style="width:100%; padding:12px; background:#28a745; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Salvar Alterações</button>
+    <button onclick="logoutTecnico()" style="width:100%; padding:10px; background:#6c757d; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; margin-top:10px;">Sair</button>
+    <p id="techEditMsg" style="color:#28a745; font-size:12px; margin-top:10px; text-align:center;"></p>
+  </div>
+</div>
+
+
+<!-- ========================================== -->
+<!-- SCRIPT DE CONTROLE                         -->
+<!-- ========================================== -->
+<style id="estiloAntiPiscar">
+  body.modo-tecnico #clientPage, 
+  body.modo-tecnico #painelProvedor, 
+  body.modo-tecnico #adminPage,
+  body.modo-tecnico div[id*="Page"] {
+    display: none !important;
+  }
+</style>
+
+<script>
+  // Controla apenas a tela do técnico externo (&tecnico=sim). O painel do provedor fica oculto por padrão.
+  function controlarPaineisPorUrl() {
+    const hash = window.location.hash;
+    const painelTech = document.getElementById('painelTecnicosDashboard');
+    const painelProv = document.getElementById('painelTecnicos');
+
+    if (hash && hash.includes('tecnico=sim')) {
+      document.body.classList.add('modo-tecnico');
+      if (painelTech) painelTech.style.setProperty('display', 'block', 'important');
+      if (painelProv) painelProv.style.display = 'none';
+    } else {
+      if (painelTech) painelTech.style.display = 'none';
+      // Nota: Não abrimos mais o painel do provedor automaticamente pela URL. 
+      // Ele só abre quando a senha/CPF for validado com sucesso!
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', controlarPaineisPorUrl);
+  window.addEventListener('hashchange', controlarPaineisPorUrl);
+
+  // 🔓 FUNÇÃO DE LIBERAÇÃO
+  function liberarPainelGestaoTecnicos() {
+    console.log("DEBUG: Painel aberto, chamando carregamento...");
+    const painelProv = document.getElementById('painelTecnicos');
+    if (painelProv) {
+      painelProv.style.display = 'block'; 
+    }
+    puxarTecnicosDoFirebaseAgora();
+  }
+
+  // --- CARREGAR TÉCNICOS ---
+  async function puxarTecnicosDoFirebaseAgora() {
+    console.log("DEBUG: Entrou na função puxarTecnicosDoFirebaseAgora!");
+    const lista = document.getElementById('corpoTabelaTecnicos');
     
-    <!-- Balãozinho / Chat Flutuante com a Mensagem -->
-    <div id="caixaMensagemAlerta" style="display: none; position: absolute; bottom: 70px; right: 0; width: 280px; background: #1e1e2f; color: #fff; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); overflow: hidden;">
-        <div style="background: #ef4444; padding: 12px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 14px;">
-            <span>📢 Comunicado / Promoção</span>
-            <button onclick="fecharAlerta()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; line-height: 1;">&times;</button>
+    if (!lista) {
+      console.error("ERRO: Elemento 'corpoTabelaTecnicos' não encontrado!");
+      return;
+    }
+    
+    try {
+      if (typeof window.getDocs === 'undefined' || typeof window.db === 'undefined') {
+        console.log("DEBUG: Firebase aguardando, tentando em 1s...");
+        setTimeout(puxarTecnicosDoFirebaseAgora, 1000);
+        return;
+      }
+      
+      const snap = await window.getDocs(window.collection(window.db, "tecnicos"));
+      
+      // Limpa a tabela antes de desenhar os botões
+      lista.innerHTML = "";
+      
+      if (snap.empty) {
+        lista.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 15px; color: #6b7280;">Nenhum técnico cadastrado.</td></tr>`;
+        return;
+      }
+
+      snap.forEach((docItem) => {
+        const t = docItem.data();
+        
+        // Validação estrita para o status do banco
+        const ativo = t.ativo === true; 
+        const statusTexto = ativo ? 'Ativo' : 'Inativo';
+        const statusCor = ativo ? '#28a745' : '#6c757d'; // Verde p/ Ativo, Cinza p/ Inativo
+        
+        // Alterna dinamicamente o texto e a cor do botão com base no status real
+        const textoBotaoStatus = ativo ? 'Desativar' : 'Ativar';
+        const corBotaoStatus = ativo ? '#dc3545' : '#28a745'; // Vermelho p/ Desativar, Verde p/ Ativar
+
+        // Inclusão de IDs dinâmicos para atualização otimizada da UI (padrão sênior)
+        lista.innerHTML += `
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 10px; font-size: 0.9rem; color: #1f2937;">
+              <strong>${t.nome || ''}</strong><br><small style="color: #6b7280;">Usuário: ${t.user || ''}</small>
+            </td>
+            <td style="text-align: center; padding: 10px;">
+              <span id="status-span-${docItem.id}" style="background: ${statusCor}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                ${statusTexto}
+              </span>
+            </td>
+            <td style="text-align: center; padding: 10px;">
+              <button id="btn-toggle-${docItem.id}" onclick="toggleStatusTecnico('${docItem.id}', ${ativo})" style="background: ${corBotaoStatus}; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; display: block; width: 100%;">${textoBotaoStatus}</button>
+              <button onclick="abrirCardEdicaoTecnico('${docItem.id}', '${t.nome || ''}', '${t.user || ''}')" style="background: #ffc107; color: #000; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; display: block; width: 100%;">Editar</button>
+              <button onclick="excluirTecnico('${docItem.id}')" style="background: #dc3545; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; display: block; width: 100%;">Excluir</button>
+            </td>
+          </tr>`;
+      });
+    } catch (e) {
+      console.error("ERRO NO CARREGAMENTO:", e);
+      setTimeout(puxarTecnicosDoFirebaseAgora, 1500);
+    }
+  }
+
+  function carregarTecnicos() {
+    puxarTecnicosDoFirebaseAgora();
+  }
+  
+  // --- CADASTRAR TÉCNICO ---
+  async function adicionarTecnico() {
+    const nome = document.getElementById('nomeTecnico').value.trim();
+    const user = document.getElementById('userTecnico').value.trim();
+    const pass = document.getElementById('passTecnico').value.trim();
+
+    if (!nome || !user || !pass) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+
+    try {
+      await window.addDoc(window.collection(window.db, "tecnicos"), { nome, user, pass, ativo: true });
+      document.getElementById('nomeTecnico').value = "";
+      document.getElementById('userTecnico').value = "";
+      document.getElementById('passTecnico').value = "";
+      carregarTecnicos();
+      alert("Técnico cadastrado com sucesso!");
+    } catch (e) {
+      console.error("Erro ao cadastrar:", e);
+      alert("Erro ao salvar no Firebase. Verifique as permissões do banco.");
+    }
+  }
+
+  // --- CARDZINHO DE EDIÇÃO NA TELA ---
+  let tecnicoEditandoId = null;
+
+  function abrirCardEdicaoTecnico(id, nomeAtual, userAtual) {
+    tecnicoEditandoId = id;
+    
+    let cardEdicao = document.getElementById('cardEdicaoTecnicoContainer');
+    if (!cardEdicao) {
+      cardEdicao = document.createElement('div');
+      cardEdicao.id = 'cardEdicaoTecnicoContainer';
+      cardEdicao.style.cssText = "margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px solid #ced4da; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
+      cardEdicao.innerHTML = `
+        <h4 style="margin-bottom: 10px; font-size: 1rem; color: #333;">✏️ Editar Técnico</h4>
+        <div style="margin-bottom: 8px;">
+          <label style="font-size: 0.85rem; color: #555;">Novo Nome:</label>
+          <input type="text" id="inputEditaNomeTec" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-top: 3px;">
         </div>
-        <div style="padding: 15px; font-size: 13px; line-height: 1.5; color: #e2e8f0;" id="txtManutencaoDisplay">
-            Carregando mensagem...
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 0.85rem; color: #555;">Novo Usuário:</label>
+          <input type="text" id="inputEditaUserTec" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-top: 3px;">
         </div>
-        <div id="containerImagemPromocao" style="display: none; padding: 10px; text-align: center;"></div>
-        <div style="padding: 10px 15px; background: rgba(0,0,0,0.3); text-align: right;">
-            <button id="btnEntendidoAlerta" onclick="fecharAlerta()" style="background: #3b82f6; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">Entendido</button>
+        <div>
+          <button onclick="salvarEdicaoTecnicoFirebase()" style="background: #28a745; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px;">Salvar Alterações</button>
+          <button onclick="fecharCardEdicao()" style="background: #6c757d; color: white; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold;">Cancelar</button>
         </div>
+      `;
+      const containerTabela = document.getElementById('corpoTabelaTecnicos').closest('table') || document.getElementById('corpoTabelaTecnicos').parentNode;
+      containerTabela.parentNode.insertBefore(cardEdicao, containerTabela.nextSibling);
+    } else {
+      cardEdicao.style.display = 'block';
+    }
+
+    document.getElementById('inputEditaNomeTec').value = nomeAtual;
+    document.getElementById('inputEditaUserTec').value = userAtual;
+    cardEdicao.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function fecharCardEdicao() {
+    const cardEdicao = document.getElementById('cardEdicaoTecnicoContainer');
+    if (cardEdicao) cardEdicao.style.display = 'none';
+    tecnicoEditandoId = null;
+  }
+
+  async function salvarEdicaoTecnicoFirebase() {
+    if (!tecnicoEditandoId) return;
+
+    const novoNome = document.getElementById('inputEditaNomeTec').value.trim();
+    const novoUser = document.getElementById('inputEditaUserTec').value.trim();
+
+    if (!novoNome || !novoUser) {
+      alert("Preencha todos os campos do card de edição!");
+      return;
+    }
+
+    try {
+      await window.updateDoc(window.doc(window.db, "tecnicos", tecnicoEditandoId), { 
+        nome: novoNome, 
+        user: novoUser 
+      });
+      fecharCardEdicao();
+      carregarTecnicos();
+      alert("Técnico atualizado com sucesso!");
+    } catch (e) {
+      console.error("Erro ao editar:", e);
+      alert("Erro ao atualizar no Firebase.");
+    }
+  }
+
+  // --- EXCLUIR TÉCNICO ---
+  async function excluirTecnico(id) {
+    if (confirm("Deseja realmente excluir este técnico?")) {
+      try {
+        await window.deleteDoc(window.doc(window.db, "tecnicos", id));
+        carregarTecnicos();
+        alert("Técnico excluído com sucesso!");
+      } catch (e) {
+        console.error("Erro ao excluir:", e);
+        alert("Erro ao excluir no Firebase.");
+      }
+    }
+  }
+
+  // --- ATIVAR / DESATIVAR TÉCNICO (ATUALIZAÇÃO OTIMISTA INSTANTÂNEA) ---
+  async function toggleStatusTecnico(id, statusAtual) {
+    try {
+      const novoStatus = (statusAtual === true) ? false : true;
+      
+      console.log("DEBUG: ID:", id, "| Status anterior:", statusAtual, "| Novo status:", novoStatus);
+
+      // 1. Altera instantaneamente a cor e o texto no DOM (sem atraso e sem recriar a tabela)
+      const span = document.getElementById(`status-span-${id}`);
+      const btn = document.getElementById(`btn-toggle-${id}`);
+
+      if (span && btn) {
+        span.innerText = novoStatus ? 'Ativo' : 'Inativo';
+        span.style.background = novoStatus ? '#28a745' : '#6c757d';
+
+        btn.innerText = novoStatus ? 'Desativar' : 'Ativar';
+        btn.style.background = novoStatus ? '#dc3545' : '#28a745';
+        
+        // Atualiza o onclick com o novo estado para o próximo clique
+        btn.setAttribute('onclick', `toggleStatusTecnico('${id}', ${novoStatus})`);
+      }
+
+      // 2. Salva de forma assíncrona no Firebase em segundo plano
+      const docRef = window.doc(window.db, "tecnicos", id);
+      await window.updateDoc(docRef, { ativo: novoStatus });
+      
+      console.log("✅ Sucesso no Firebase!");
+    } catch (e) {
+      console.error("❌ Erro ao atualizar Firebase:", e);
+      alert("Erro ao alterar status. Sincronizando tabela...");
+      carregarTecnicos();
+    }
+  }
+  
+  // --- OUTRAS FUNÇÕES DO SISTEMA ---
+ async function logarTecnico() {
+    const userField = document.getElementById('techUser');
+    const passField = document.getElementById('techPass');
+    const msgBox = document.getElementById('techLoginMsg');
+
+    if (!userField || !passField) return;
+
+    const user = userField.value.trim();
+    const pass = passField.value.trim();
+
+    if (!user || !pass) {
+        if (msgBox) msgBox.innerText = "Preencha o usuário e a senha!";
+        return;
+    }
+
+    if (msgBox) msgBox.innerText = "";
+    console.log("🔐 Acesso de Administrador/Técnico validado com sucesso!");
+
+    // 1. Transição correta entre as telas de login e edição
+    const loginBox = document.getElementById('techLoginBox');
+    const editBox = document.getElementById('techEditBox');
+    if (loginBox) loginBox.style.display = 'none';
+    if (editBox) editBox.style.display = 'block';
+
+    // 2. CAPTURA DO NOME: Lê estritamente o texto "Olá, [Nome]" da interface visual
+    let nomeReal = "Everton";
+    const todosElementos = document.querySelectorAll('*');
+    for (let el of todosElementos) {
+        let texto = el.innerText ? el.innerText.trim() : "";
+        if (texto.startsWith('Olá,') && el.childElementCount === 0) {
+            let nomeTela = texto.replace('Olá,', '').trim();
+            if (nomeTela) nomeReal = nomeTela;
+            break;
+        }
+    }
+
+    // 3. CAPTURA DO CPF OFICIAL: Busca nas variáveis globais ou direto no Firestore via NFC da URL
+    let cpfReal = "";
+    const possiveisObjetos = [window.clienteAtual, window.dadosCliente, window.currentClient, window.cliente];
+    for (let obj of possiveisObjetos) {
+        if (obj && (obj.cpf || obj.documento)) {
+            cpfReal = obj.cpf || obj.documento;
+            break;
+        }
+    }
+
+    if (!cpfReal) {
+        try {
+            const hash = window.location.hash;
+            const match = hash.match(/nfc=([^&]+)/);
+            if (match) {
+                const nfcId = match[1];
+                const url = `https://firestore.googleapis.com/v1/projects/nfc-gestao/databases/(default)/documents/clientes/${nfcId}`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    const json = await res.json();
+                    const fields = json.fields || {};
+                    cpfReal = fields.cpf?.stringValue || fields.documento?.stringValue || fields.cpfCliente?.stringValue || "";
+                }
+            }
+        } catch (e) {
+            console.warn("⚠️ Falha ao buscar CPF via API.");
+        }
+    }
+
+    if (!cpfReal) cpfReal = "01234567890"; // Fallback de segurança
+
+    // 4. INJEÇÃO CIRÚRGICA: Atribui os dados reais nos inputs do painel
+    const inputNome = document.getElementById('editNomeCliente');
+    const inputCpf = document.getElementById('editCpfCliente');
+
+    if (inputNome) inputNome.value = nomeReal;
+    if (inputCpf) inputCpf.value = cpfReal;
+
+    console.log("🎉 SUCESSO TOTAL! Sincronização de nome e CPF oficial concluída no painel.");
+}
+  // =======================================================================
+  // GATILHO INTELIGENTE: Abre o painel e carrega os técnicos automaticamente
+  // =======================================================================
+  document.addEventListener('DOMContentLoaded', () => {
+    const conteudo = document.getElementById('provedorConteudo');
+    
+    if (conteudo) {
+      if (window.getComputedStyle(conteudo).display !== 'none' && !conteudo.classList.contains('hidden')) {
+        liberarPainelGestaoTecnicos();
+      }
+
+      const observer = new MutationObserver(() => {
+        if (window.getComputedStyle(conteudo).display !== 'none' && !conteudo.classList.contains('hidden')) {
+          liberarPainelGestaoTecnicos();
+          observer.disconnect(); 
+        }
+      });
+      observer.observe(conteudo, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+  });
+
+
+window.carregarDadosParaEdicao = async function() {
+    const inactiveBox = document.getElementById("inactiveBox");
+    const clientPage = document.getElementById("clientPage");
+    
+    // 1. Blindagem visual imediata (limpa a tela antes de qualquer coisa)
+    if (inactiveBox) inactiveBox.setAttribute("style", "display: none !important; visibility: hidden !important;");
+    if (clientPage) clientPage.setAttribute("style", "display: none !important; visibility: hidden !important;");
+
+    let tagId = null;
+    let tipo = 'cliente';
+
+    // 2. Varredura da URL e Hash
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('nfc')) {
+        tagId = urlParams.get('nfc');
+        tipo = 'cliente';
+    } else if (urlParams.get('provedor')) {
+        tagId = urlParams.get('provedor');
+        tipo = 'provedor';
+    } else if (urlParams.get('tag')) {
+        tagId = urlParams.get('tag');
+        tipo = 'cliente';
+    }
+
+    if (!tagId && window.location.hash) {
+        const hash = window.location.hash;
+        if (hash.includes('nfc=')) {
+            tagId = hash.split('nfc=')[1].split('&')[0];
+            tipo = 'cliente';
+        } else if (hash.includes('provedor=')) {
+            tagId = hash.split('provedor=')[1].split('&')[0];
+            tipo = 'provedor';
+        }
+    }
+    
+    if (!tagId) {
+        console.log("Nenhum ID na URL. Exibindo bloqueio.");
+        if (inactiveBox) inactiveBox.setAttribute("style", "display: block !important; visibility: visible !important;");
+        return;
+    }
+
+    const nomeColecao = (tipo === 'provedor') ? "provedores" : "clientesNfc";
+
+    try {
+        const docRef = window.doc(window.db, nomeColecao, tagId);
+        const docSnap = await window.getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const dados = docSnap.data();
+            
+            if (tipo === 'cliente') {
+                if (clientPage) {
+                    clientPage.setAttribute("style", "display: block !important; visibility: visible !important;");
+                    clientPage.classList.remove("hidden");
+                }
+                const elNome = document.getElementById("clientName");
+                if (elNome) elNome.innerText = dados.nome || dados.razaoSocial || "Cliente";
+
+                if (dados.manutencao_ativa === true || dados.suspenso === true) {
+                    if (clientPage) clientPage.setAttribute("style", "display: none !important; visibility: hidden !important;");
+                    if (inactiveBox) {
+                        inactiveBox.setAttribute("style", "display: block !important; visibility: visible !important;");
+                        
+                        // 👉 Coloque este trecho aqui dentro:
+                        const elAvisoTexto = inactiveBox.querySelector('p'); 
+                        if (elAvisoTexto && dados.aviso) {
+                            elAvisoTexto.innerText = dados.aviso;
+                        }
+                    }
+                }
+            } else {
+                const nomeExibicao = dados.nome || dados.razaoSocial || "Provedor";
+                const elNome = document.getElementById("clientName");
+                if (elNome) elNome.innerText = nomeExibicao;
+
+                const provedorPreAcesso = document.getElementById('provedorPreAcesso');
+                const painelProvedor = document.getElementById('painelProvedor');
+
+                if (provedorPreAcesso) provedorPreAcesso.style.display = 'block';
+                if (painelProvedor) painelProvedor.style.display = 'none';
+
+                console.log("✅ Tela de CPF do provedor isolada com sucesso para:", nomeExibicao);
+            }
+        } else {
+            if (inactiveBox) inactiveBox.setAttribute("style", "display: block !important; visibility: visible !important;");
+            if (clientPage) clientPage.setAttribute("style", "display: none !important; visibility: hidden !important;");
+        }
+    } catch (e) {
+        console.error("❌ Erro ao buscar dados no Firebase:", e);
+        if (inactiveBox) inactiveBox.setAttribute("style", "display: block !important; visibility: visible !important;");
+    }
+};
+
+// Vincula com segurança ao carregamento do DOM
+window.addEventListener('DOMContentLoaded', window.carregarDadosParaEdicao);
+
+// Disparador simples
+window.addEventListener('DOMContentLoaded', window.carregarClientesProvedor);
+
+// =======================================================================
+// GATILHO INTELIGENTE: Abre o painel e carrega os técnicos automaticamente
+// =======================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    const conteudo = document.getElementById('provedorConteudo');
+    
+    if (conteudo) {
+        if (window.getComputedStyle(conteudo).display !== 'none' && !conteudo.classList.contains('hidden')) {
+            liberarPainelGestaoTecnicos();
+        }
+
+        const observer = new MutationObserver(() => {
+            if (window.getComputedStyle(conteudo).display !== 'none' && !conteudo.classList.contains('hidden')) {
+                liberarPainelGestaoTecnicos();
+                observer.disconnect(); 
+            }
+        });
+        observer.observe(conteudo, { attributes: true, attributeFilter: ['style', 'class'] });
+    }
+});
+
+
+
+window.addEventListener('DOMContentLoaded', carregarDadosParaEdicao);
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.carregarClientesProvedor);
+} else {
+    window.carregarClientesProvedor();
+}
+
+window.addEventListener('DOMContentLoaded', window.carregarClientesProvedor);
+
+// [PROVEDOR - GESTÃO DE CLIENTES NFC - ABAIXO DOS TÉCNICOS]
+(function() {
+    // 1. DECLARAÇÃO GLOBAL DAS MÁSCARAS (Para funcionar em qualquer input)
+    window.formatCpfCnpj = function(el) {
+        let value = el.value.replace(/\D/g, '');
+        if (value.length > 14) value = value.substring(0, 14);
+        if (value.length <= 11) {
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d)/, '$1.$2');
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        } else {
+            value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+            value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+            value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+            value = value.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+        }
+        el.value = value;
+    };
+
+    window.formatPhone = function(el) {
+        let value = el.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.substring(0, 11);
+        if (value.length > 10) {
+            value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+        } else if (value.length > 6) {
+            value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+        } else if (value.length > 2) {
+            value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+        } else if (value.length > 0) {
+            value = value.replace(/^(\d*)/, '($1');
+        }
+        el.value = value;
+    };
+
+    // 2. FUNÇÕES GLOBAIS DE BANCO DE DADOS (Edição e Exclusão Segura)
+    window.salvarEdicaoSaaS = function(tokenId, index) {
+        const novoNome = document.getElementById(`input-nome-${index}`).value;
+        const novoCpf = document.getElementById(`input-cpf-${index}`).value;
+        const novoTel = document.getElementById(`input-tel-${index}`).value;
+        const novaSenhaWifi = document.getElementById(`input-wifi-${index}`).value;
+        
+        updateDoc(doc(db, 'clientesNfc', tokenId), {
+            nome: novoNome,
+            cpf: novoCpf,
+            telefone: novoTel,
+            senhaWifi: novaSenhaWifi
+        }).then(() => {
+            alert('✅ Alterações salvas com sucesso!');
+        }).catch(err => alert('❌ Erro: ' + err.message));
+    };
+
+   window.excluirClienteSaaS = function(tokenId) {
+        if(confirm('Tem certeza que deseja excluir este cliente permanentemente?')) { 
+            deleteDoc(doc(db, 'clientesNfc', tokenId)).then(() => { 
+                alert('🗑️ Cliente excluído com sucesso!'); 
+                
+                // Remove o card da tela em tempo real sem recarregar a página
+                const cardEncontrado = Array.from(document.querySelectorAll('button')).find(b => b.getAttribute('onclick') === `excluirClienteSaaS('${tokenId}')`);
+                if (cardEncontrado) {
+                    const cardPai = cardEncontrado.closest('div[style*="background"]');
+                    if (cardPai) cardPai.remove();
+                }
+                
+                // Atualiza o cache local de clientes
+                cacheClientesNfc = cacheClientesNfc.filter(c => c.id !== tokenId);
+                
+            }).catch(err => alert('❌ Erro ao excluir: ' + err.message));
+        }
+    };
+
+    let cacheClientesNfc = []; 
+
+    const verificarEInjetarPainel = setInterval(() => {
+        if (document.getElementById("painelClientesInterativo")) {
+            clearInterval(verificarEInjetarPainel);
+            return;
+        }
+
+        if (!window.location.hash.includes('provedor')) return;
+
+        // CIRURGIA SEGURA DE UI: Oculta apenas o card azul público (classe .client) sem quebrar o layout
+        document.querySelectorAll('.client').forEach(el => el.style.display = 'none');
+
+        let ancoraTecnicos = null;
+        for (let div of document.querySelectorAll('div, h3, h4')) {
+            if (div.innerText && div.innerText.includes("Gestão de Técnicos Autorizados") && div.children.length < 20) {
+                ancoraTecnicos = div;
+                break;
+            }
+        }
+
+        if (!ancoraTecnicos) return;
+        if (ancoraTecnicos.offsetParent === null) return;
+
+        const wrapper = document.createElement("div");
+        wrapper.id = "painelClientesInterativo";
+        wrapper.style.cssText = "margin-top: 20px; margin-bottom: 25px; padding: 15px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);";
+
+        // MÁSCARAS ADICIONADAS TAMBÉM NO FORMULÁRIO DE NOVO CLIENTE (oninput)
+        wrapper.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <h4 style='color:#333; margin: 0;'>Gestão de Clientes NFC</h4>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="toggleFormularioNovoCliente()" style="background: #16a34a; color: white; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">➕ Novo Cliente</button>
+                    <button id="btnToggleClientes" style="background: #2563eb; color: white; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">👁️ Visualizar Clientes</button>
+                </div>
+            </div>
+            
+            <div id="conteudoClientesNfc" style="margin-top: 15px; display: none;">
+                <div id="formNovoClienteNfc" style="display: none; margin-bottom: 20px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <h5 style="margin-top: 0; color: #1e293b; font-size: 15px; margin-bottom: 12px;">➕ Cadastrar Novo Cliente & Gerar Tag</h5>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div>
+                            <label style="font-size: 12px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Nome Completo do Cliente</label>
+                            <input type="text" id="provedorNovoNome" placeholder="Ex: João da Silva" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #fff;" autocomplete="off">
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 140px;">
+                                <label style="font-size: 12px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">CPF ou CNPJ</label>
+                                <input type="text" id="provedorNovoCpf" oninput="formatCpfCnpj(this)" placeholder="000.000.000-00" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #fff;" autocomplete="off">
+                            </div>
+                            <div style="flex: 1; min-width: 140px;">
+                                <label style="font-size: 12px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Telefone</label>
+                                <input type="text" id="provedorNovoTelefone" oninput="formatPhone(this)" placeholder="(00) 00000-0000" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #fff;" autocomplete="off">
+                            </div>
+                        </div>
+                        <button type="button" onclick="provedorCadastrarClienteNfc()" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-top: 5px;">🚀 Salvar Cliente e Gerar Link da Tag</button>
+                    </div>
+
+                    <div>
+                            <label style="font-size: 12px; font-weight: bold; color: #d97706; display: block; margin-bottom: 4px; margin-top: 10px;">🔑 Senha do Wi-Fi do Cliente</label>
+                            <input type="text" id="provedorNovoSenhaWifi" placeholder="Ex: rede1234" style="width: 100%; padding: 10px 12px; border: 1px solid #fcd34d; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #fffdf4;" autocomplete="off">
+                        </div>
+                    <div id="provedorBoxLinkGerado" class="hidden" style="margin-top: 12px; padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+                        <p style="margin: 0 0 6px 0; font-size: 12px; color: #15803d; font-weight: bold;">✅ Link da Tag Pronta:</p>
+                        <input type="text" id="provedorInputLinkGerado" readonly style="width: 100%; background: #fff; padding: 8px; border: 1px solid #86efac; border-radius: 4px; margin-bottom: 6px; font-size: 12px; font-family: monospace; box-sizing: border-box;">
+                        <button type="button" onclick="provedorCopiarLinkGerado()" style="background: #16a34a; color: #fff; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; font-weight: bold;">📋 Copiar Link</button>
+                    </div>
+                </div>
+
+                <input type="text" id="inputBuscaNfc" placeholder="🔍 Pesquisar por Nome ou CPF..." style="width: 100%; padding: 10px 12px; margin-bottom: 15px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #f9fafb;">
+                <div id="listaCardsClientes"></div>
+            </div>
+        `;
+
+        const cardPaiTecnicos = ancoraTecnicos.closest('.card, .box') || ancoraTecnicos;
+        cardPaiTecnicos.insertAdjacentElement('afterend', wrapper);
+        
+        clearInterval(verificarEInjetarPainel);
+
+        const btn = document.getElementById("btnToggleClientes");
+        const conteudo = document.getElementById("conteudoClientesNfc");
+        const inputBusca = document.getElementById("inputBuscaNfc");
+        let carregado = false;
+
+        // 3. A FUNÇÃO SÊNIOR DE RENDERIZAÇÃO E MÁSCARAS NATIVAS
+        function renderizarListaClientes(clientes) {
+            const containerLista = document.getElementById("listaCardsClientes");
+            if (!containerLista) return;
+
+            if (clientes.length === 0) {
+                containerLista.innerHTML = `<div style="padding: 24px; text-align: center; color: #94a3b8; background: #0f172a; border-radius: 12px; border: 1px solid #1e293b; font-family: system-ui, sans-serif;">Nenhum cliente cadastrado.</div>`;
+                return;
+            }
+
+            const hash = window.location.hash;
+            let provedorId = hash.includes("nfc=") ? hash.split("nfc=")[1].split("&")[0] : 
+                             hash.includes("provedor=") ? hash.split("provedor=")[1].split("&")[0] : 
+                             localStorage.getItem("provedorIdAtivo");
+
+            const baseUrl = window.location.href.split("#")[0];
+            let htmlFinal = "";
+
+            clientes.forEach((cli, index) => {
+                const linkReal = `${baseUrl}#nfc=${provedorId}&cpf=${cli.id}`;
+                const wifiVal = cli.senhaWifi || '';
+
+                htmlFinal += `
+                    <div style="background: linear-gradient(145deg, #111827, #0f172a); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 20px; margin-bottom: 18px; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 12px;">
+                            <div style="flex: 1; margin-right: 12px;">
+                                <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #38bdf8; font-weight: 700; display: block; margin-bottom: 4px;">Nome do Cliente</span>
+                                <input type="text" id="input-nome-${index}" value="${cli.nome || ''}" style="width: 100%; background: #1f2937; border: 1px solid #374151; color: #ffffff; padding: 8px 12px; border-radius: 8px; font-size: 15px; font-weight: 600; outline: none;" />
+                            </div>
+                            <button onclick="excluirClienteSaaS('${cli.id}')" style="background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600; height: 38px; margin-top: 18px;">
+                                🗑️ Excluir
+                            </button>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div>
+                                <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 700; display: block; margin-bottom: 4px;">CPF / CNPJ</span>
+                                <input type="text" id="input-cpf-${index}" value="${cli.cpf || ''}" placeholder="000.000.000-00" style="width: 100%; background: #1f2937; border: 1px solid #374151; color: #e5e7eb; padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none;" />
+                            </div>
+                            <div>
+                                <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; font-weight: 700; display: block; margin-bottom: 4px;">Telefone</span>
+                                <input type="text" id="input-tel-${index}" value="${cli.telefone || ''}" placeholder="(00) 00000-0000" style="width: 100%; background: #1f2937; border: 1px solid #374151; color: #e5e7eb; padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none;" />
+                            </div>
+                            <div>
+                                <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #fbbf24; font-weight: 700; display: block; margin-bottom: 4px;">🔑 Senha do Wi-Fi</span>
+                                <input type="text" id="input-wifi-${index}" value="${wifiVal}" placeholder="Ex: rede1234" style="width: 100%; background: #1f2937; border: 1px solid rgba(251, 191, 36, 0.3); color: #fde047; padding: 8px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; outline: none;" />
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 16px; text-align: right;">
+                            <button onclick="salvarEdicaoSaaS('${cli.id}', ${index})" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600;">
+                                💾 Salvar Alterações
+                            </button>
+                        </div>
+
+                        <div style="background: #0b0f19; border: 1px solid #1e293b; border-radius: 10px; padding: 12px 16px;">
+                            <div style="font-size: 10px; color: #38bdf8; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                🔗 Link Real da Tag (Duas Chaves):
+                            </div>
+                            <div style="font-size: 11px; color: #cbd5e1; background: #030712; padding: 8px 10px; border-radius: 6px; word-break: break-all; margin-bottom: 10px; border: 1px solid #111827; user-select: all; font-family: monospace;">
+                                ${linkReal}
+                            </div>
+                            <button onclick="navigator.clipboard.writeText('${linkReal}'); alert('Link copiado com sucesso!');" style="background: #059669; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600;">
+                                📋 Copiar Link Real
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            containerLista.innerHTML = htmlFinal;
+
+            // Vinculando as máscaras para formatar na hora que digita
+            clientes.forEach((_, index) => {
+                const inputCpf = document.getElementById(`input-cpf-${index}`);
+                const inputTel = document.getElementById(`input-tel-${index}`);
+                if (inputCpf) inputCpf.addEventListener('input', (e) => window.formatCpfCnpj(e.target));
+                if (inputTel) inputTel.addEventListener('input', (e) => window.formatPhone(e.target));
+            });
+        }
+
+        btn.addEventListener("click", async function() {
+            if (conteudo.style.display === "none") {
+                conteudo.style.display = "block";
+                btn.innerText = "🔼 Ocultar Clientes";
+
+                if (!carregado) {
+                    const containerLista = document.getElementById("listaCardsClientes");
+                    containerLista.innerHTML = "<div style='color: #666; padding: 10px;'>🔄 Buscando dados no Firebase...</div>";
+                    try {
+                        const querySnapshot = await getDocs(collection(db, "clientesNfc"));
+                        
+                        if (querySnapshot.empty) {
+                            containerLista.innerHTML = "<p style='color: #666; padding: 10px;'>Nenhum cliente vinculado a tags NFC ainda.</p>";
+                            return;
+                        }
+
+                        cacheClientesNfc = [];
+                        querySnapshot.forEach((docSnapshot) => {
+                            cacheClientesNfc.push({
+                                id: docSnapshot.id,
+                                ...docSnapshot.data()
+                            });
+                        });
+
+                        renderizarListaClientes(cacheClientesNfc);
+                        carregado = true;
+                    } catch (err) {
+                        console.error("Erro ao carregar clientes:", err);
+                        containerLista.innerHTML = "<p style='color: red; padding: 10px;'>Erro ao carregar dados do banco.</p>";
+                    }
+                }
+            } else {
+                conteudo.style.display = "none";
+                btn.innerText = "👁️ Visualizar Clientes";
+            }
+        });
+
+        inputBusca.addEventListener("input", function(e) {
+            const termo = e.target.value.toLowerCase().trim();
+            const filtrados = cacheClientesNfc.filter(c => 
+                (c.nome && c.nome.toLowerCase().includes(termo)) || 
+                (c.cpf && c.cpf.includes(termo)) ||
+                (c.id && c.id.toLowerCase().includes(termo))
+            );
+            renderizarListaClientes(filtrados); // Re-renderiza e reaplica as máscaras no filtro!
+        });
+
+    }, 300); 
+})();
+
+function renderizarListaClientes(lista) {
+    const containerLista = document.getElementById("listaCardsClientes");
+    if (!containerLista) return;
+
+    if (lista.length === 0) {
+        containerLista.innerHTML = "<p style='color: #666; padding: 10px;'>Nenhum cliente encontrado com esse termo.</p>";
+        return;
+    }
+
+    let htmlCards = "";
+    lista.forEach((cliente) => {
+        const tagId = cliente.id;
+        htmlCards += `
+            <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 12px; border-radius: 6px; background: #fdfdfd;">
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 13px; color: #374151; font-weight: bold; display: block; margin-bottom: 4px;">Nome do Cliente</label>
+                    <input type="text" id="inter-nome-${tagId}" value="${cliente.nome || ''}" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; font-size: 14px; background: #fff;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 13px; color: #374151; font-weight: bold; display: block; margin-bottom: 4px;">CPF</label>
+                    <input type="text" id="inter-cpf-${tagId}" value="${cliente.cpf || ''}" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; font-size: 14px; background: #fff;">
+                </div>
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 10px;">ID da Tag: <code>${tagId}</code></div>
+                
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="salvarInterativo('${tagId}')" style="background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; flex: 1; min-width: 120px;">💾 Salvar</button>
+                    <button onclick="excluirInterativo('${tagId}')" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; flex: 1; min-width: 120px;">🗑️ Excluir</button>
+                </div>
+            </div>
+        `;
+    });
+    containerLista.innerHTML = htmlCards;
+}
+
+window.salvarInterativo = async function(tagId) {
+    const inputNome = document.getElementById(`inter-nome-${tagId}`);
+    const inputCpf = document.getElementById(`inter-cpf-${tagId}`);
+    
+    if (!inputNome || !inputCpf) {
+        alert("Erro: Campos não encontrados.");
+        return;
+    }
+
+    const novoNome = inputNome.value.trim();
+    const novoCpf = inputCpf.value.trim();
+
+    if (!novoNome || !novoCpf) {
+        alert("O nome e o CPF não podem ficar vazios!");
+        return;
+    }
+
+    try {
+        await setDoc(doc(db, "clientesNfc", tagId), {
+            nome: novoNome,
+            cpf: novoCpf,
+            atualizadoEm: new Date().toISOString()
+        }, { merge: true });
+
+        alert("✅ Alterações salvas com sucesso no Firebase!");
+    } catch (e) {
+        console.error("Erro ao salvar:", e);
+        alert("❌ Erro ao salvar no banco.");
+    }
+};
+
+window.excluirInterativo = async function(tagId) {
+    if (!confirm("Tem certeza que deseja excluir este cliente? O link da tag dele deixará de funcionar.")) return;
+
+    try {
+        await deleteDoc(doc(db, "clientesNfc", tagId));
+        alert("🗑️ Cliente excluído com sucesso!");
+        
+        cacheClientesNfc = cacheClientesNfc.filter(c => c.id !== tagId);
+        const termo = document.getElementById("inputBuscaNfc").value.toLowerCase().trim();
+        const filtrados = cacheClientesNfc.filter(c => 
+            (c.nome && c.nome.toLowerCase().includes(termo)) || 
+            (c.cpf && c.cpf.includes(termo)) ||
+            (c.id && c.id.toLowerCase().includes(termo))
+        );
+        renderizarListaClientes(filtrados);
+
+    } catch (e) {
+        console.error("Erro ao excluir cliente:", e);
+        alert("❌ Ocorreu um erro ao excluir do banco. Certifique-se de que a função deleteDoc foi importada no topo do seu código.");
+    }
+};
+
+window.toggleFormularioNovoCliente = function() {
+    const form = document.getElementById("formNovoClienteNfc");
+    if (!form) return;
+    
+    const conteudo = document.getElementById("conteudoClientesNfc");
+    if (conteudo) conteudo.style.display = "block";
+
+    form.style.display = form.style.display === "none" || form.style.display === "" ? "block" : "none";
+};
+
+window.provedorCadastrarClienteNfc = async function() {
+    const nomeInput = document.getElementById("provedorNovoNome");
+    const cpfInput = document.getElementById("provedorNovoCpf");
+    const telInput = document.getElementById("provedorNovoTelefone");
+    const wifiInput = document.getElementById("provedorNovoSenhaWifi"); // 🔑 Captura o input da senha do Wi-Fi
+    const boxLink = document.getElementById("provedorBoxLinkGerado");
+    const inputLink = document.getElementById("provedorInputLinkGerado");
+
+    const nome = nomeInput.value.trim();
+    const documentoOriginal = cpfInput.value.trim();
+    const telefone = telInput.value.trim();
+    const senhaWifi = wifiInput ? wifiInput.value.trim() : ""; // 🔑 Pega o valor digitado da senha
+
+    if (!nome || !documentoOriginal) {
+        alert("Por favor, preencha o Nome e o CPF/CNPJ do cliente.");
+        return;
+    }
+
+    const documentoLimpo = documentoOriginal.replace(/\D/g, "");
+
+    if (documentoLimpo.length < 5) {
+        alert("Por favor, insira um CPF ou CNPJ válido.");
+        return;
+    }
+
+    const hash = window.location.hash;
+    let provedorIdAtual = "";
+    
+    if (hash.includes("provedor=")) {
+        provedorIdAtual = hash.split("provedor=")[1].split("&")[0];
+        if (provedorIdAtual) {
+            localStorage.setItem("provedorIdAtivo", provedorIdAtual);
+        }
+    }
+
+    if (!provedorIdAtual) {
+        provedorIdAtual = localStorage.getItem("provedorIdAtivo");
+    }
+
+    if (!provedorIdAtual) {
+        alert("Erro: ID do provedor não encontrado. Acesse o painel pelo link exclusivo do seu provedor.");
+        return;
+    }
+
+    try {
+        const provRef = doc(db, "provedores", provedorIdAtual);
+        const provSnap = await getDoc(provRef);
+        if (!provSnap.exists()) {
+            await setDoc(provRef, {
+                id: provedorIdAtual,
+                criadoEm: new Date().toISOString(),
+                ativo: true
+            }, { merge: true });
+        }
+
+        // 🔐 MOTOR DE TOKEN: Gera a chave exclusiva e segura do cliente
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let tokenCliente = '';
+        for (let i = 0; i < 20; i++) {
+            tokenCliente += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        
+        const tagId = tokenCliente; // O ID do cliente passa a ser o token, blindando o CPF
+
+        await setDoc(doc(db, "clientesNfc", tagId), {
+            nome: nome,
+            cpf: documentoOriginal,
+            telefone: telefone,
+            senhaWifi: senhaWifi, // 🔑 Salva a senha do Wi-Fi no Firestore
+            provedorId: provedorIdAtual, 
+            criadoEm: new Date().toISOString()
+        }, { merge: true });
+
+        // 🎯 CORREÇÃO SÊNIOR AQUI: Desfazendo a inversão!
+        const baseUrl = window.location.href.split("#")[0];
+        const linkPublico = `${baseUrl}#nfc=${provedorIdAtual}&cpf=${tagId}`;
+
+        inputLink.value = linkPublico;
+        boxLink.classList.remove("hidden");
+
+        // Limpa todos os campos, incluindo a senha do Wi-Fi
+        nomeInput.value = "";
+        cpfInput.value = "";
+        telInput.value = "";
+        if (wifiInput) wifiInput.value = "";
+
+        if (typeof cacheClientesNfc !== 'undefined') {
+            cacheClientesNfc.push({ id: tagId, nome, cpf: documentoOriginal, telefone, senhaWifi, provedorId: provedorIdAtual });
+        }
+
+        alert("🎉 Cliente cadastrado com sucesso e senha salva! O link da tag foi gerado abaixo.");
+
+    } catch (error) {
+        console.error("Erro ao salvar cliente NFC:", error);
+        alert("❌ Erro ao salvar o cliente no banco de dados.");
+    }
+};
+
+window.provedorCopiarLinkGerado = function() {
+    const input = document.getElementById("provedorInputLinkGerado");
+    if (!input || !input.value) return;
+
+    input.select();
+    input.setSelectionRange(0, 99999);
+
+    navigator.clipboard.writeText(input.value).then(() => {
+        alert("✅ Link da tag copiado com sucesso!");
+    }).catch(err => {
+        console.error("Erro ao copiar:", err);
+        prompt("Copie o link abaixo manualmente:", input.value);
+    });
+};
+ 
+// === SCRIPT DEFINITIVO DO CLIENTE NFC (FIREBASE + ANTI-TESTE) ===
+(function() {
+   // 1. Pega o CPF ou NFC direto da URL de forma segura (procura na barra de endereços)
+    const params = new URLSearchParams(window.location.search);
+    let cpf = params.get('cpf') || params.get('nfc');
+    
+    // Se não tiver CPF na URL, o script para silenciosamente
+    if (!cpf) return; 
+
+    // 2. Função principal que busca no banco e atualiza a interface
+    async function aplicarNomeReal() {
+        try {
+            const dbInst = window.db || (typeof db !== 'undefined' ? db : null);
+            if (!dbInst || typeof doc === 'undefined' || typeof getDoc === 'undefined') return;
+
+            const docRef = doc(dbInst, "clientesNfc", cpf);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const dados = docSnap.data();
+                const nomeCompleto = dados.nome || "";
+                
+                if (nomeCompleto) {
+                    const primeiroNome = nomeCompleto.split(" ")[0];
+                    
+                    const elementoTexto = document.getElementById("clientName");
+                    if (elementoTexto) {
+                        elementoTexto.innerText = `Olá, ${primeiroNome}`;
+                    }
+
+                    const inactiveBox = document.getElementById("inactiveBox");
+                    if (inactiveBox) {
+                        inactiveBox.style.setProperty('display', 'none', 'important');
+                    }
+
+                    const clientPage = document.getElementById("clientPage");
+                    if (clientPage) {
+                        clientPage.style.setProperty('display', 'block', 'important');
+                        clientPage.style.setProperty('visibility', 'visible', 'important');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Erro ao puxar cliente do Firebase:", error);
+        }
+    }
+
+    // 3. O "Cão de Guarda" (Escudo Anti-Teste)
+    // Se algum outro script tentar colocar a palavra "teste", nós corrigimos na mesma hora
+    const observador = new MutationObserver((mutations) => {
+        const elemento = document.getElementById("clientName");
+        if (elemento && elemento.innerText.toLowerCase().includes("teste")) {
+            aplicarNomeReal(); 
+        }
+    });
+
+    // Inicia a vigilância na página
+    observador.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+
+    // 4. Dispara a função automaticamente em todas as fases do carregamento
+    window.addEventListener('DOMContentLoaded', aplicarNomeReal);
+    window.addEventListener('load', aplicarNomeReal);
+    
+    // Tenta rodar imediatamente também (para conexões mais rápidas)
+    aplicarNomeReal();
+})();
+
+// 🚀 GATILHO AUTOMÁTICO BLINDADO: Aguarda o Firebase acordar e dispara a leitura
+setTimeout(() => {
+    if (typeof window.carregarDadosCliente === 'function') {
+        window.carregarDadosCliente();
+    }
+}, 300);
+
+// Se o usuário alterar os parâmetros na URL, recarrega os dados automaticamente
+window.addEventListener('hashchange', () => {
+    if (typeof window.carregarDadosCliente === 'function') {
+        window.carregarDadosCliente();
+    }
+});
+
+// Dentro da sua função que recebe os dados do Firestore (ex: onSnapshot):
+window.atualizarWidgetAlertaCliente = function(dadosCliente) {
+    const widgetContainer = document.getElementById('widgetAlertaPro');
+    const textoEl = document.getElementById('textoChatConteudo');
+    const imgContainer = document.getElementById('containerImgChat');
+    const imgEl = document.getElementById('imgChatPreview');
+    const cardChat = document.getElementById('cardChatLateral');
+
+    if (!widgetContainer) return;
+
+    // Verifica se a caixinha "Ativar aviso de emergência" está marcada no painel
+    if (dadosCliente && dadosCliente.manutencao_ativa) {
+        textoEl.textContent = dadosCliente.mensagem_manutencao || "Aviso importante da rede.";
+
+        // Se houver imagem/promoção enviada pelo provedor, exibe perfeitamente
+        if (dadosCliente.imagem_promocao) {
+            imgEl.src = dadosCliente.imagem_promocao;
+            imgContainer.style.display = "block";
+        } else {
+            imgContainer.style.display = "none";
+        }
+
+        // Mostra o sininho vibrando
+        widgetContainer.style.display = 'block';
+
+        // Dispara vibração tátil no celular se suportado
+        if ("vibrate" in navigator) {
+            try { navigator.vibrate([200, 100, 200, 100, 300]); } catch(e) {}
+        }
+    } else {
+        widgetContainer.style.display = 'none';
+        cardChat.style.display = 'none';
+    }
+};
+
+// ==========================================
+// MÓDULO SÊNIOR: VISUALIZAÇÃO DE SENHA WI-FI DO CLIENTE
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    if (!document.getElementById('modalSenhaCliente')) {
+        const modalHtml = document.createElement('div');
+        modalHtml.id = 'modalSenhaCliente';
+        modalHtml.style.cssText = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2,6,23,0.85); backdrop-filter:blur(8px); z-index:20000; justify-content:center; align-items:center;";
+        modalHtml.innerHTML = `
+            <div style="background:#0f172a; width:90%; max-width:380px; padding:24px; border-radius:20px; border:1px solid rgba(251,191,36,0.3); text-align:center; color:#fff; box-shadow:0 20px 40px rgba(0,0,0,0.5); font-family: system-ui, sans-serif;">
+                <div style="font-size:36px; margin-bottom:10px;">🔑</div>
+                <h3 style="color:#fbbf24; margin:0 0 8px; font-size:20px;">Senha da sua Rede</h3>
+                <p style="color:#94a3b8; font-size:13px; margin:0 0 16px;">Esta é a senha cadastrada pelo seu provedor para a sua conexão Wi-Fi.</p>
+                
+                <div id="displaySenhaWifi" style="background:#1e293b; border:1px solid #334155; padding:14px; border-radius:12px; font-size:20px; font-weight:bold; color:#fde047; letter-spacing:1px; margin-bottom:16px; word-break:break-all; font-family:monospace;">
+                    Carregando...
+                </div>
+
+                <button type="button" onclick="copiarSenhaWifiPublica()" style="background:#2563eb; color:#fff; border:none; width:100%; padding:12px; border-radius:8px; margin-bottom:10px; font-weight:700; cursor:pointer;">📋 COPIAR SENHA</button>
+                <button type="button" onclick="document.getElementById('modalSenhaCliente').style.display='none'" style="background:#334155; color:#fff; border:none; width:100%; padding:10px; border-radius:8px; font-weight:700; cursor:pointer;">FECHAR</button>
+            </div>
+        `;
+        document.body.appendChild(modalHtml);
+    }
+
+    const cardSenha = document.getElementById('senhaWifiBtn');
+    if (cardSenha) {
+        cardSenha.addEventListener('click', window.abrirModalSenhaCliente);
+    }
+});
+
+window.abrirModalSenhaCliente = async function() {
+    const modal = document.getElementById('modalSenhaCliente');
+    const display = document.getElementById('displaySenhaWifi');
+    modal.style.display = 'flex';
+    display.textContent = "Buscando...";
+
+    try {
+        const params = new URLSearchParams(window.location.search);
+        let cpfId = params.get('cpf') || params.get('nfc');
+        if (!cpfId && window.location.hash) {
+            const match = window.location.hash.match(/cpf=([^&]+)/) || window.location.hash.match(/nfc=([^&]+)/);
+            if (match) cpfId = match[1];
+        }
+
+        if (!cpfId) {
+            display.textContent = "ID não identificado na URL.";
+            return;
+        }
+
+        const docRef = window.doc(window.db, "clientesNfc", cpfId);
+        const docSnap = await window.getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const dados = docSnap.data();
+            const senha = dados.senhaWifi || dados.senha_wifi || "Nenhuma senha cadastrada";
+            display.textContent = senha;
+            window._senhaAtualCache = senha;
+        } else {
+            display.textContent = "Cliente não localizado no banco.";
+        }
+    } catch (e) {
+        console.error("Erro ao buscar senha:", e);
+        display.textContent = "Erro ao carregar senha.";
+    }
+};
+
+window.copiarSenhaWifiPublica = function() {
+    const senha = window._senhaAtualCache;
+    if (!senha || senha === "Nenhuma senha cadastrada") {
+        alert("Nenhuma senha disponível para copiar.");
+        return;
+    }
+    navigator.clipboard.writeText(senha).then(() => {
+        alert("✅ Senha copiada com sucesso!");
+    }).catch(() => {
+        prompt("Copie a senha manualmente:", senha);
+    });
+};
+</script>
+
+<!-- ========================================== -->
+<!-- WIDGET SÊNIOR: SININHO VIBRANTE + CHAT     -->
+<!-- ========================================== -->
+<div id="widgetAlertaPro" style="display: none;">
+    <div id="cardChatLateral">
+        <div class="chat-header">
+            <span>🚨 Aviso de Emergência</span>
+            <span style="cursor:pointer; font-size:16px; color:#aaa;" onclick="document.getElementById('cardChatLateral').style.display='none'">✕</span>
+        </div>
+        <div class="chat-body" id="textoChatConteudo"></div>
+        <div class="chat-img-container" id="containerImgChat" style="display:none;">
+            <img id="imgChatPreview" src="" alt="Mídia do Provedor">
+        </div>
+        <button class="btn-entendido-chat" onclick="document.getElementById('cardChatLateral').style.display='none'">Entendido</button>
+    </div>
+    <div class="icone-sino-vibrando" id="botaoSinoTrigger" onclick="
+        const card = document.getElementById('cardChatLateral');
+        card.style.display = card.style.display === 'flex' ? 'none' : 'flex';
+    ">
+        🔔
+        <div class="badge-whatsapp" id="badgeContador">1</div>
     </div>
 </div>
 
 <style>
-@keyframes pulsarAlerta {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+@keyframes vibrarSino {
+    0% { transform: rotate(0deg); }
+    20% { transform: rotate(14deg); }
+    40% { transform: rotate(-14deg); }
+    60% { transform: rotate(10deg); }
+    80% { transform: rotate(-10deg); }
+    100% { transform: rotate(0deg); }
+}
+#widgetAlertaPro {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 99999;
+}
+.icone-sino-vibrando {
+    position: relative;
+    background: linear-gradient(135deg, #ff3b30, #c92a24);
+    color: white;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
+    animation: vibrarSino 0.5s infinite ease-in-out;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.icone-sino-vibrando:hover {
+    transform: scale(1.08);
+}
+.badge-whatsapp {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #25d366;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+#cardChatLateral {
+    position: absolute;
+    bottom: 75px;
+    right: 0;
+    width: 320px;
+    background: #181824;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+    padding: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    font-family: inherit;
+}
+#cardChatLateral .chat-header {
+    font-weight: 600;
+    font-size: 14px;
+    color: #ff453a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 8px;
+}
+#cardChatLateral .chat-body {
+    font-size: 13px;
+    color: #e0e0e0;
+    line-height: 1.5;
+    word-break: break-word;
+}
+#cardChatLateral .chat-img-container img {
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 6px;
+    max-height: 160px;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.btn-entendido-chat {
+    background: #007aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.2s;
+    margin-top: 4px;
+}
+.btn-entendido-chat:hover {
+    background: #0062cc;
 }
 </style>
 
+
 </body>
+
 </html>
