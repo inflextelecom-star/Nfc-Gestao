@@ -8921,25 +8921,25 @@ async function logarTecnico() {
     if (loginBox) loginBox.style.display = 'none';
     if (editBox) editBox.style.display = 'block';
 
-    // 2. COMEÇAM TUDO VAZIO (Essencial para tag virgem nascer limpa!)
+    // 2. CAPTURA DOS DADOS DA MEMÓRIA DA PÁGINA OU DO FIREBASE (Começam vazios para tag virgem)
     let nomeReal = "";
     let cpfReal = "";
-    let telefoneReal = "";
+    let telefoneReal = ""; 
     let wifiReal = "";
 
-    // 3. Tenta pegar das variáveis globais SOMENTE SE houver dados reais de um cliente
+    // Tenta pegar das variáveis globais mais comuns do seu sistema
     const possiveisObjetos = [window.clienteAtual, window.dadosCliente, window.currentClient, window.cliente, window.dadosAtualizados];
     for (let obj of possiveisObjetos) {
-        if (obj && (obj.nome || obj.cpf || obj.documento)) {
-            nomeReal = obj.nome || "";
-            cpfReal = obj.cpf || obj.documento || "";
-            telefoneReal = obj.telefone || obj.fone || "";
-            wifiReal = obj.senhaWifi || obj.wifi || obj.senha || "";
+        if (obj) {
+            if (obj.nome) nomeReal = obj.nome;
+            if (obj.cpf || obj.documento) cpfReal = obj.cpf || obj.documento;
+            if (obj.telefone || obj.fone) telefoneReal = obj.telefone || obj.fone;
+            if (obj.senhaWifi || obj.wifi || obj.senha) wifiReal = obj.senhaWifi || obj.wifi || obj.senha;
             break;
         }
     }
 
-    // 4. INJEÇÃO CIRÚRGICA NOS INPUTS DO PAINEL
+    // 3. INJEÇÃO CIRÚRGICA NOS INPUTS DO PAINEL
     const inputNome = document.getElementById('editNomeCliente');
     const inputCpf = document.getElementById('editCpfCliente');
     const inputTelefone = document.getElementById('editTelefoneCliente');
@@ -8950,7 +8950,7 @@ async function logarTecnico() {
     if (inputNome) inputNome.value = nomeReal;
     if (inputCpf) inputCpf.value = cpfReal;
 
-    console.log("🎉 Painel carregado com sucesso!", { nomeReal, cpfReal, telefoneReal, wifiReal });
+    console.log("🎉 SUCESSO TOTAL! Sincronização concluída:", { nomeReal, cpfReal, telefoneReal, wifiReal });
 }
 
 
