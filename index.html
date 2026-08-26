@@ -8921,25 +8921,25 @@ async function logarTecnico() {
     if (loginBox) loginBox.style.display = 'none';
     if (editBox) editBox.style.display = 'block';
 
-    // 2. CAPTURA DOS DADOS DITO DA MEMÓRIA DA PÁGINA OU DO FIREBASE
-    let nomeReal = "LUCAS";
-    let cpfReal = "012458762010";
-    let telefoneReal = "217524235328"; // Forçando o dado correto que está no Firebase para teste
+    // 2. COMEÇAM TUDO VAZIO (Essencial para tag virgem nascer limpa!)
+    let nomeReal = "";
+    let cpfReal = "";
+    let telefoneReal = "";
     let wifiReal = "";
 
-    // Tenta pegar das variáveis globais mais comuns do seu sistema
+    // 3. Tenta pegar das variáveis globais SOMENTE SE houver dados reais de um cliente
     const possiveisObjetos = [window.clienteAtual, window.dadosCliente, window.currentClient, window.cliente, window.dadosAtualizados];
     for (let obj of possiveisObjetos) {
-        if (obj) {
-            if (obj.nome) nomeReal = obj.nome;
-            if (obj.cpf || obj.documento) cpfReal = obj.cpf || obj.documento;
-            if (obj.telefone || obj.fone) telefoneReal = obj.telefone || obj.fone;
-            if (obj.senhaWifi || obj.wifi || obj.senha) wifiReal = obj.senhaWifi || obj.wifi || obj.senha;
+        if (obj && (obj.nome || obj.cpf || obj.documento)) {
+            nomeReal = obj.nome || "";
+            cpfReal = obj.cpf || obj.documento || "";
+            telefoneReal = obj.telefone || obj.fone || "";
+            wifiReal = obj.senhaWifi || obj.wifi || obj.senha || "";
             break;
         }
     }
 
-    // 3. INJEÇÃO CIRÚRGICA NOS INPUTS DO PAINEL
+    // 4. INJEÇÃO CIRÚRGICA NOS INPUTS DO PAINEL
     const inputNome = document.getElementById('editNomeCliente');
     const inputCpf = document.getElementById('editCpfCliente');
     const inputTelefone = document.getElementById('editTelefoneCliente');
@@ -8950,7 +8950,7 @@ async function logarTecnico() {
     if (inputNome) inputNome.value = nomeReal;
     if (inputCpf) inputCpf.value = cpfReal;
 
-    console.log("🎉 SUCESSO TOTAL! Sincronização concluída:", { nomeReal, cpfReal, telefoneReal, wifiReal });
+    console.log("🎉 Painel carregado com sucesso!", { nomeReal, cpfReal, telefoneReal, wifiReal });
 }
 
 
