@@ -9801,29 +9801,61 @@ window.abrirModalSenhaCliente = async function() {
     display.textContent = "Buscando...";
 
     try {
-        const params = new URLSearchParams(window.location.search);
-        let cpfId = params.get('cpf') || params.get('nfc');
-        if (!cpfId && window.location.hash) {
-            const match = window.location.hash.match(/cpf=([^&]+)/) || window.location.hash.match(/nfc=([^&]+)/);
-            if (match) cpfId = match[1];
-        }
+        const urlCompleta = window.location.href;
+        const dbInst = window.db;
+        
+        // 1. Tenta achar o MAC na URL (Padrão novo)
+        const regexMac = /[?&#](?:mac|MAC|mec|MEC)=([0-9A-Fa-f:]+)/;
+        const matchMac = urlCompleta.match(regexMac);
+        const macUrl = matchMac && matchMac[1] ? decodeURIComponent(matchMac[1]) : null;
 
-        if (!cpfId) {
-            display.textContent = "ID não identificado na URL.";
+        // 2. Tenta achar o CPF na URL (Padrão antigo/fallback)
+        const matchCpf = urlCompleta.match(/cpf=([^&]+)/);
+        const cpfId = matchCpf ? matchCpf[1] : null;
+
+        if (!macUrl && !cpfId) {
+            display.textContent = "ID ou MAC não identificado na URL.";
             return;
         }
 
-        const docRef = window.doc(window.db, "clientesNfc", cpfId);
-        const docSnap = await window.getDoc(docRef);
+        // --- ESTRATÉGIA 1: BUSCA POR MAC ---
+        if (macUrl) {
+            // Varre os clientes para achar quem tem esse MAC
+            const querySnapshot = await getDocs(collection(dbInst, "clientesNfc"));
+            let clienteEncontrado = null;
 
-        if (docSnap.exists()) {
-            const dados = docSnap.data();
-            const senha = dados.senhaWifi || dados.senha_wifi || "Nenhuma senha cadastrada";
-            display.textContent = senha;
-            window._senhaAtualCache = senha;
-        } else {
-            display.textContent = "Cliente não localizado no banco.";
+            querySnapshot.forEach((docSnap) => {
+                const dados = docSnap.data();
+                if (dados.mac && dados.mac.trim().toLowerCase() === macUrl.trim().toLowerCase()) {
+                    clienteEncontrado = dados;
+                }
+            });
+
+            if (clienteEncontrado) {
+                const senha = clienteEncontrado.senhaWifi || clienteEncontrado.senha_wifi || "Nenhuma senha cadastrada";
+                display.textContent = senha;
+                window._senhaAtualCache = senha;
+                return; // Encerra a função com sucesso
+            }
         }
+
+        // --- ESTRATÉGIA 2: BUSCA POR CPF (Para tags antigas) ---
+        if (cpfId) {
+            const docRef = window.doc(dbInst, "clientesNfc", cpfId);
+            const docSnap = await window.getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const dados = docSnap.data();
+                const senha = dados.senhaWifi || dados.senha_wifi || "Nenhuma senha cadastrada";
+                display.textContent = senha;
+                window._senhaAtualCache = senha;
+                return; // Encerra a função com sucesso
+            }
+        }
+
+        // Se chegou até aqui, nem o MAC nem o CPF retornaram resultados
+        display.textContent = "Cliente não localizado no banco.";
+
     } catch (e) {
         console.error("Erro ao buscar senha:", e);
         display.textContent = "Erro ao carregar senha.";
@@ -9993,9 +10025,75 @@ window.provedorCadastrarClienteNfc = async function() {
     }
 };
 
-// Mantém a ponte funcionando
-window.salvarDadosClienteTecnico = window.provedorCadastrarClienteNfc;
+window.salvarDadosClienteTecnico = async function() {
+    console.log("🔄 Iniciando processo de salvamento...");
+    
+    const inputNome = document.getElementById("editNomeCliente");
+    const inputCpf = document.getElementById("editCpfCliente");
+    const inputTelefone = document.getElementById("editTelefoneCliente");
+    const inputWifi = document.getElementById("editWifiCliente");
+    const msgBox = document.getElementById("techEditMsg");
 
+    if (!inputNome || !inputCpf) {
+        console.error("❌ IDs de edição não encontrados no HTML.");
+        return;
+    }
+
+    const nomeCompleto = inputNome.value.trim();
+    const cpf = inputCpf.value.trim();
+    const telefone = inputTelefone ? inputTelefone.value.trim() : "";
+    const senhaWifi = inputWifi ? inputWifi.value.trim() : "";
+
+    if (!nomeCompleto || !cpf) {
+        alert("Preencha os campos obrigatórios (Nome e CPF).");
+        return;
+    }
+
+    // --- A MÁGICA ACONTECE AQUI: CAPTURANDO O MAC DA URL ---
+    const urlCompleta = window.location.href;
+    const regexMac = /[?&#](?:mac|MAC|mec|MEC)=([0-9A-Fa-f:]+)/;
+    const match = urlCompleta.match(regexMac);
+    const macDaUrl = match && match[1] ? decodeURIComponent(match[1]) : "";
+    // -------------------------------------------------------
+
+    try {
+        let docId = cpf.replace(/\D/g, ''); 
+        if (typeof normalizarDocumento === 'function') {
+            docId = normalizarDocumento(cpf);
+        }
+        
+        console.log(`🔍 Tentando salvar no Firebase. CPF: ${docId} | MAC: ${macDaUrl}`);
+
+        const primeiroNome = nomeCompleto.split(' ')[0];
+        const dbInst = window.db || db; 
+        
+        await window.setDoc(window.doc(dbInst, "clientesNfc", docId), {
+            nome: nomeCompleto,
+            primeiroNome: primeiroNome, 
+            cpf: cpf,
+            telefone: telefone,
+            senhaWifi: senhaWifi,
+            mac: macDaUrl, // AGORA O MAC É SALVO JUNTO COM O CLIENTE!
+            ultimaEdicaoTecnico: new Date().toISOString()
+        }, { merge: true });
+
+        console.log("✅ DADOS E MAC SALVOS COM SUCESSO NO FIREBASE!");
+
+        if (msgBox) {
+            msgBox.innerText = "✅ Alterações e MAC salvos com sucesso!";
+            setTimeout(() => { msgBox.innerText = ""; }, 3500);
+        } else {
+            alert("✅ Alterações e MAC salvos com sucesso!");
+        }
+
+        // Opcional: Recarrega a página automaticamente após 1 segundo para forçar a tela do cliente a aparecer
+        setTimeout(() => { window.location.reload(); }, 1000);
+
+    } catch (e) {
+        console.error("❌ ERRO CRÍTICO ao salvar no Firebase:", e);
+        alert("Erro ao salvar no Firebase. Veja o console F12.");
+    }
+};
 </script>
 
 <!-- ========================================== -->
